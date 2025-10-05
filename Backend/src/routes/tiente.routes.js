@@ -10,6 +10,7 @@ router.post("/",authenticateToken, authorizeRole("HaiQuan"), currencyController.
 router.get("/", currencyController.getAllCurrencies);
 router.get("/:id_tt", currencyController.getCurrencyById);
 
+router.put("/:id_tt", authenticateToken, authorizeRole("HaiQuan"), currencyController.updateCurrency);
 
 module.exports = router;
 
