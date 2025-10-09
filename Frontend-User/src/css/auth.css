@@ -1,0 +1,150 @@
+/* ========== ECUSS AUTH PAGE ========== */
+.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #004e76 0%, #0a2b44 100%);
+  font-family: "Open Sans", sans-serif;
+  padding: 20px;
+}
+
+.auth-card {
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 450px;
+  padding: 40px 35px;
+  text-align: center;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.auth-header img.auth-logo {
+  width: 70px;
+  height: auto;
+  margin-bottom: 15px;
+}
+
+.auth-header h2 {
+  color: #004e76;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.auth-header p {
+  color: #606060;
+  font-size: 14px;
+  margin-bottom: 25px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #004e76;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  outline: none;
+  transition: border-color 0.3s;
+  font-size: 14px;
+}
+
+.form-group input:focus {
+  border-color: #ff8126;
+  box-shadow: 0 0 4px rgba(255, 129, 38, 0.3);
+}
+
+.btn-Login {
+  background-color: #004e76;
+  color: white;
+  font-weight: 600;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-top: 10px;
+}
+
+.btn-Login:hover {
+  background-color: #03619c;
+}
+
+.auth-footer {
+  margin-top: 20px;
+}
+
+.auth-footer p {
+  color: #505050;
+  font-size: 14px;
+}
+
+.auth-footer a {
+  color: #ff8126;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
+}
+
+.forgot-link {
+  display: block;
+  margin-top: 5px;
+  font-size: 13px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* Thêm vào cuối file auth.css */
+.auth-form .form-group input {
+  font-size: 14px;
+}
+
+.auth-form .form-group + .form-group {
+  margin-top: 10px;
+}
+
+.auth-form button.btn-login {
+  margin-top: 15px;
+}
+
+.auth-header h2 {
+  text-transform: uppercase;
+  font-size: 18px;
+  color: #004e76;
+}
+
+.auth-page {
+  background: linear-gradient(135deg, #004e76, #0a2b44);
+}

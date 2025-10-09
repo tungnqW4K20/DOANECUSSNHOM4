@@ -1,0 +1,458 @@
+:root {
+  --primary-color: #007bff; /* Định nghĩa màu chính, ví dụ: xanh dương */
+}
+
+.container {
+  max-width: 1200px; /* Giới hạn chiều rộng */
+  margin: 0 auto; /* Căn giữa */
+  padding: 0 20px; /* Khoảng cách lề */
+}
+
+
+/* --- HÀNG TRÊN: LOGO + HOTLINE --- */
+/* --- KHUNG CHUNG --- */
+.header-ecus {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000; /* đảm bảo luôn nổi trên tất cả các phần khác */
+  background: #fff; /* nền trắng hoặc màu bạn muốn */
+}
+
+/* --- BANNER HÌNH TÀU (nền) --- */
+.banner-header {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.banner-header img {
+  width: 100%;
+  object-fit: cover;
+  border-bottom: 4px solid #004e76;
+  display: block;
+}
+
+/* --- HÀNG TRÊN: LOGO + HOTLINE (đè trên banner) --- */
+.top-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 10px 0;
+  z-index: 2;
+}
+
+.container-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 90%;
+  margin: 0 auto;
+}
+
+.logo-block {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  gap: 10px;
+}
+
+.logo-block img {
+  height: 60px;
+}
+
+.hotline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hotline i {
+  font-size: 20px;
+  color: #004e76;
+}
+
+.hotline p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.hotline span {
+  color: #f7941d;
+  font-weight: 700;
+}
+
+/* --- MENU XANH DƯỚI --- */
+.main-nav {
+  background-color: #004e76;
+  display: flex;
+  justify-content: center;
+  position: relative; /* quan trọng để .search-box bám vào */
+}
+
+.main-nav ul {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 35px;
+  padding: 5px 0;
+  margin: 0;
+}
+
+.main-nav li {
+  position: relative;
+}
+
+.main-nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.main-nav a:hover {
+  text-decoration: underline;
+}
+
+/* --- ICON SEARCH --- */
+.main-nav .search i {
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* --- KHUNG TÌM KIẾM (đè lên, không đẩy menu) --- */
+.search-box {
+  position: absolute;
+  right: 170px; /* chỉnh vị trí gần icon */
+  top: 100%;
+  background: #004e76;
+  display: flex;
+  gap: 5px;
+  padding: 8px;
+  border-radius: 5px;
+  animation: fadeIn 0.2s ease;
+  z-index: 20;
+}
+
+.search-box input {
+  width: 220px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 7px 10px;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-box button {
+  background: #004e76;
+  border: 1px solid #ccc;
+  color: #fff;
+  border-radius: 5px;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.search-box button:hover {
+  background: #03619c;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* --- NÚT ĐĂNG NHẬP / ĐĂNG KÝ --- */
+.auth-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 30px;
+}
+
+.btn-login,
+.btn-register {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 5px 16px;
+  border-radius: 20px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn-login {
+  color: #fff;
+  border: 1px solid #fff;
+}
+
+.btn-login:hover {
+  background-color: #fff;
+  color: #004e76;
+}
+
+.btn-register {
+  background-color: #f7941d;
+  color: #fff;
+  border: 1px solid transparent;
+}
+
+.btn-register:hover {
+  background-color: #ffa733;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .banner-header {
+    height: 100px;
+  }
+
+  .hotline p {
+    font-size: 13px;
+  }
+
+  .main-nav ul {
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .auth-buttons {
+    margin-left: 0;
+    flex-direction: column;
+  }
+
+  .btn-login,
+  .btn-register {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}
+/* MENU RESPONSIVE */
+.menu-responsive {
+  transition: all 0.5s;
+  position: fixed; /* Sửa từ absolute sang fixed để khớp với App.jsx */
+  background-color: #fff;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100vh;
+  z-index: 30;
+  transform: translateX(-100%); /* Thêm để khớp với App.jsx */
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+
+  &.active {
+    transform: translateX(0); /* Sửa từ left: 0 để khớp với App.jsx */
+  }
+
+  .container-logo-responsive {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    text-decoration: none;
+
+    img {
+      width: 70px;
+    }
+
+    .logo-text {
+      font-size: 22px;
+      color: #000;
+      font-weight: 700;
+    }
+  }
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+
+    li {
+      list-style: none;
+
+      a {
+        text-decoration: none;
+        color: #333;
+        font-size: 18px;
+        font-weight: 600;
+
+        &.active {
+          color: var(--primary-color);
+        }
+      }
+    }
+  }
+
+  .btn-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    border: none;
+    background: none;
+
+    i {
+      color: #333;
+      font-size: 24px;
+    }
+  }
+}
+
+footer {
+  background-color: #1e2a38; 
+  color: #fff;
+
+  .footer-content {
+    display: flex;
+    flex-direction: column;
+    padding: 40px 0 20px;
+    gap: 30px;
+
+    .columns-footer {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      align-items: flex-start;
+      gap: 50px;
+
+      .column {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+
+        .container-logo {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+
+          img {
+            object-fit: contain;
+          }
+
+          .logo-text {
+            font-size: 22px;
+            color: #fff;
+            font-weight: 700;
+          }
+        }
+
+        span {
+          font-size: 15px;
+          font-weight: 600;
+          color: var(--primary-color);
+        }
+
+        p {
+          font-size: 14px;
+          line-height: 1.6;
+          color: #cfcfcf;
+        }
+
+        ul {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+
+          li {
+            list-style: none;
+
+            a {
+              text-decoration: none;
+              color: #a7a7a7;
+              font-size: 14px;
+              transition: color 0.3s;
+
+              &:hover {
+                color: var(--primary-color);
+              }
+            }
+          }
+        }
+
+        .container-social-links {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+
+          span {
+            font-size: 13px;
+            font-weight: 500;
+            color: #bcbcbc;
+          }
+
+          .links {
+            display: flex;
+            gap: 15px;
+
+            a {
+              text-decoration: none;
+              i {
+                color: var(--primary-color);
+                font-size: 20px;
+                transition: transform 0.2s;
+
+                &:hover {
+                  transform: scale(1.1);
+                }
+              }
+            }
+          }
+        }
+
+        .container-payment-methods {
+          display: flex;
+          justify-content: start;
+
+          img {
+            width: 80%;
+            max-width: 180px;
+            height: 40px;
+            object-fit: contain;
+          }
+        }
+      }
+    }
+  }
+
+  .copyright {
+    border-top: 1px solid #3c4c5c;
+    color: #aaa;
+    font-size: 12px;
+    padding: 10px 0;
+    text-align: center;
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .footer-content {
+      .columns-footer {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  }
+
+  @media (max-width: 600px) {
+    .footer-content {
+      padding: 30px 20px 10px 20px;
+
+      .columns-footer {
+        grid-template-columns: 1fr;
+        gap: 25px;
+        text-align: left;
+
+        .column {
+          align-items: flex-start;
+        }
+      }
+    }
+  }
+}
