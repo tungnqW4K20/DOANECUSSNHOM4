@@ -12,6 +12,9 @@ const tygiaRoutes = require('./routes/tygia.routes')
 const donvitinhHaiQuanRoutes = require('./routes/donvitinhHaiQuan.routes')
 const QuyDoiDonViSPRoutes = require('./routes/quydoi_sp.routes')
 const QuyDoiDonViDNRoutes = require('./routes/quydoi_dn.routes')
+const dinhmucRoutes = require('./routes/dinhmuc.route')
+const nguyenlieuRoutes = require('./routes/nguyenlieu.route')
+const hopdongRoutes = require('./routes/hopdong.route')
 
 const SanPhamRoutes = require('./routes/sanpham.route')
 
@@ -35,6 +38,9 @@ app.use('/api/tygia', tygiaRoutes)
 app.use('/api/don-vi-tinh-hai-quan',donvitinhHaiQuanRoutes )
 app.use('/api/quydoidonvisanpham',QuyDoiDonViSPRoutes )
 app.use('/api/quydoidonvidoanhnghiep',QuyDoiDonViDNRoutes )
+app.use('/api/dinh-muc',dinhmucRoutes )
+app.use('/api/nguyen-lieu',nguyenlieuRoutes )
+app.use('/api/hop-dong', hopdongRoutes )
 
 app.use('/api/san-pham',SanPhamRoutes )
 
