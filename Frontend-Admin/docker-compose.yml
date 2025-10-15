@@ -1,0 +1,18 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    hostname: localhost  
+    ports:
+      - "80:80"  
+    environment:
+      - NODE_ENV=production
+      - MYSQL_HOST=125.212.203.57  
+      - MYSQL_PORT=13311           
+      - MYSQL_DATABASE=Academi_v4
+      - MYSQL_USER=ams
+      - MYSQL_PASSWORD=aiavn@123
+    volumes:
+      - ./uploads:/app/uploads  
+    restart: unless-stopped  
