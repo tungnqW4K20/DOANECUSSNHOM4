@@ -17,6 +17,10 @@ const nguyenlieuRoutes = require('./routes/nguyenlieu.route')
 const hopdongRoutes = require('./routes/hopdong.route')
 
 const SanPhamRoutes = require('./routes/sanpham.route')
+const LoHangRoutes = require('./routes/lohang.route')
+const HoaDonNhapRoutes = require('./routes/hoadonnhap.route')
+const ToKhaiNhapRoutes = require('./routes/tokhainhap.route')
+const VanDonNhapRoutes = require('./routes/vandongnhap.route')
 
 const scheduleTyGiaUpdate = require('./cron/tygia.cron');
 
@@ -43,6 +47,10 @@ app.use('/api/nguyen-lieu',nguyenlieuRoutes )
 app.use('/api/hop-dong', hopdongRoutes )
 
 app.use('/api/san-pham',SanPhamRoutes )
+app.use('/api/lo-hang',LoHangRoutes )
+app.use('/api/to-khai-nhap',ToKhaiNhapRoutes )
+app.use('/api/hoa-don-nhap',HoaDonNhapRoutes )
+app.use('/api/van-don-nhap',VanDonNhapRoutes )
 
 // --- Kết nối DB và khởi động Server ---
 db.sequelize.authenticate()
