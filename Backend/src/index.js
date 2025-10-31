@@ -22,6 +22,17 @@ const HoaDonNhapRoutes = require('./routes/hoadonnhap.route')
 const ToKhaiNhapRoutes = require('./routes/tokhainhap.route')
 const VanDonNhapRoutes = require('./routes/vandongnhap.route')
 
+const hoaDonXuatRoutes = require('./routes/hoaDonXuat.routes');
+const hoaDonXuatChiTietRoutes = require('./routes/hoaDonXuatChiTiet.routes');
+const vanDonXuatRoutes = require('./routes/vanDonXuat.routes');
+const toKhaiXuatRoutes = require('./routes/toKhaiXuat.routes');
+
+const khoRoutes = require('./routes/kho.routes');
+const nhapKhoNPLRoutes = require('./routes/nhapKhoNPL.routes');
+const xuatKhoNPLRoutes = require('./routes/xuatKhoNPL.routes');
+const nhapKhoSPRoutes = require('./routes/nhapKhoSP.routes');
+const xuatKhoSPRoutes = require('./routes/xuatKhoSP.routes');
+const baocaothanhkhoanRoutes = require('./routes/baocaothanhkhoan.routes');
 const scheduleTyGiaUpdate = require('./cron/tygia.cron');
 
 // const donvitinhhaiquanRoutes = require('./routes/dvtinh.routes')
@@ -52,12 +63,24 @@ app.use('/api/to-khai-nhap',ToKhaiNhapRoutes )
 app.use('/api/hoa-don-nhap',HoaDonNhapRoutes )
 app.use('/api/van-don-nhap',VanDonNhapRoutes )
 
+app.use('/api/hoa-don-xuat', hoaDonXuatRoutes);
+app.use('/api/hoa-don-xuat-chi-tiet', hoaDonXuatChiTietRoutes);
+app.use('/api/van-don-xuat', vanDonXuatRoutes);
+app.use('/api/to-khai-xuat', toKhaiXuatRoutes);
+app.use('/api/kho', khoRoutes);
+app.use('/api/nhapkho-npl', nhapKhoNPLRoutes);
+app.use('/api/xuatkho-npl', xuatKhoNPLRoutes);
+app.use('/api/nhapkho-sp', nhapKhoSPRoutes);
+app.use('/api/xuatkho-sp', xuatKhoSPRoutes);
+app.use('/api/bao-cao-thanh-khoan', baocaothanhkhoanRoutes);
+
+
 // --- Kết nối DB và khởi động Server ---
 db.sequelize.authenticate()
   .then(() => {
     console.log(' Kết nối MySQL thành công!');
     return db.sequelize.sync(); // có thể dùng { alter: true } trong dev
-     //return db.sequelize.sync({ alter: true })
+    //  return db.sequelize.sync({ alter: true })
   })
 
   .then(() => {
