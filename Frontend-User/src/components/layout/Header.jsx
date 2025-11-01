@@ -2,6 +2,8 @@ import React from 'react';
 import { Layout, Avatar, Dropdown, Space, Typography, message } from 'antd';
 import { UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { logout } from '../../services/auth.service';
+
 
 const { Header } = Layout;
 const { Text } = Typography;
@@ -11,10 +13,8 @@ const AppHeader = () => {
     const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin user từ localStorage
 
     const handleLogout = () => {
-        // Xóa thông tin đăng nhập
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
-        message.success('Đăng xuất thành công!');
+        logout();
+        alert('Đăng xuất thành công!');
         navigate('/login');
     };
 
