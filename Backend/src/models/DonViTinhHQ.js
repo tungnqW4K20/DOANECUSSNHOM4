@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
       DonViTinhHQ.hasMany(models.QuyDoiDonViSP, { foreignKey: 'id_dvt_hq', as: 'quyDoiDonViSPs' });
     }
   }
+  
   DonViTinhHQ.init({
     id_dvt_hq: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     ten_dvt: { type: DataTypes.STRING(50), allowNull: false },

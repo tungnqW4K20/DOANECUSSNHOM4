@@ -40,8 +40,42 @@ const getCurrencyById = async (req, res) => {
   }
 };
 
+const updateCurrency = async (req, res) => {
+  try {
+    const { id_tt } = req.params;
+    const { ma_tt, ten_tt } = req.body;
+
+    if (isNaN(parseInt(id_tt))) {
+      return res.status(400).json({ success: false, message: "ID không hợp lệ" });
+    }
+
+    if (!ma_tt && !ten_tt) {
+      return res.status(400).json({ success: false, message: "Cần cung cấp ít nhất một trường để cập nhật" });
+    }
+
+    const result = await currencyService.updateCurrency(id_tt, { ma_tt, ten_tt });
+
+    res.status(200).json({
+      success: true,
+      message: "Cập nhật tiền tệ thành công",
+      data: result
+    });
+  } catch (error) {
+    console.error("Update Currency Error:", error.message);
+    if (error.message.includes("Không tìm thấy")) {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+    if (error.message.includes("đã tồn tại")) {
+      return res.status(409).json({ success: false, message: error.message });
+    }
+    res.status(500).json({ success: false, message: "Lỗi server khi cập nhật" });
+  }
+};
+
+
 module.exports = {
     createCurrency,
     getAllCurrencies,
-    getCurrencyById
+    getCurrencyById,
+    updateCurrency
 };

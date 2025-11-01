@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
       TyGia.belongsTo(models.TienTe, { foreignKey: 'id_tt', as: 'tienTe' });
     }
   }
+  
   TyGia.init({
     id_tg: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     id_tt: { type: DataTypes.INTEGER, allowNull: false },
@@ -18,5 +19,6 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'TyGia',
     timestamps: false,
   });
+
   return TyGia;
 };
