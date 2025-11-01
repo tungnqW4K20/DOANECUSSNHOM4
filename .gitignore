@@ -1,0 +1,3 @@
+# Ignore the entire backend folder
+Backend/
+```    *   Cái dấu `/` ở cuối rất quan trọng, nó đảm bảo Git hiểu đây là một thư mục. Lưu file lại.
