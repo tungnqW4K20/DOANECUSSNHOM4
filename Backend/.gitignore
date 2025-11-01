@@ -9,3 +9,6 @@ node_modules/
 
 # File log
 *.log
+
+# Thư mục lưu file upload
+uploads/
