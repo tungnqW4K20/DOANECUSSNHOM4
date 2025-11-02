@@ -10,8 +10,6 @@ const router = express.Router();
 
 router.post(
     '/file-giay-to',
-    authenticateToken,
-    authorizeRole("business"),
     // uploadMiddleware.single('productImage'), 
     uploadMiddleware.single('fileUpload'),
     uploadController.uploadProductImage
@@ -20,8 +18,6 @@ router.post(
 
 router.post(
     '/file-multi-giay-to',
-    authenticateToken,
-    authorizeRole("business"),
     // uploadMiddleware.array('productImages', 10),
     uploadMiddleware.array('fileUploads', 10),
     uploadController.uploadMultipleProductImages
