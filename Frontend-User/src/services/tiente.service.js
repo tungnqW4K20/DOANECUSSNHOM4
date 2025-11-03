@@ -1,0 +1,50 @@
+import axios from "axios";
+
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/tiente`;
+
+const api = axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+        "Content-Type": "application/json",
+    },
+});
+
+// 🧩 Interceptor: tự động gắn access token nếu có
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+/* ============================================================
+   🟢 LẤY DANH SÁCH TẤT CẢ TIỀN TỆ
+============================================================ */
+export const getAllTienTe = async () => {
+    try {
+        const res = await api.get("/");
+        return res.data; // { success, data }
+    } catch (err) {
+        console.error("❌ Lỗi getAllTienTe:", err);
+        throw err.response?.data || { message: "Lỗi khi lấy danh sách tiền tệ" };
+    }
+};
+
+/* ============================================================
+   🟢 LẤY CHI TIẾT TIỀN TỆ THEO ID
+============================================================ */
+export const getTienTeById = async (id_tt) => {
+    try {
+        const res = await api.get(`/${id_tt}`);
+        return res.data; // { success, data }
+    } catch (err) {
+        console.error("❌ Lỗi getTienTeById:", err);
+        throw err.response?.data || { message: "Lỗi khi lấy chi tiết tiền tệ" };
+    }
+};
+
+export default {
+    getAllTienTe,
+    getTienTeById,
+};
