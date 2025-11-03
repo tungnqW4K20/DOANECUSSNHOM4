@@ -10,8 +10,8 @@ const router = express.Router();
 
 router.post(
     '/file-giay-to',
-    authenticateToken,
-    authorizeRole("business"),
+    // authenticateToken,
+    // authorizeRole("business"), cho nó upload còn đăng ký chứ quang tùng ơi =))
     // uploadMiddleware.single('productImage'), 
     uploadMiddleware.single('fileUpload'),
     uploadController.uploadProductImage

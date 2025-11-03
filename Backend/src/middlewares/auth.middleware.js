@@ -38,7 +38,7 @@ const authenticateToken = async (req, res, next) => {
 const authorizeRole = (allowedRoles) => {
     return (req, res, next) => {
         if (!req.user || !req.user.role) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 success: false,
                 message: 'Không có quyền truy cập. Thông tin vai trò người dùng bị thiếu.'
             });
