@@ -6,15 +6,15 @@ const { Option } = Select;
 const { Title } = Typography;
 
 // --- Dữ liệu giả lập ---
-// Giả lập ID của doanh nghiệp đang đăng nhập. 
-const LOGGED_IN_DN_ID = 1;
+const userData = JSON.parse(localStorage.getItem('user'));
+const LOGGED_IN_DN_ID = userData?.id_dn;
 
 const spList = [
-    { id_sp: 1, ten_sp: 'Áo phông cổ tròn' }, 
+    { id_sp: 1, ten_sp: 'Áo phông cổ tròn' },
     { id_sp: 2, ten_sp: 'Quần Jeans Nam' }
 ];
 const nplList = [
-    { id_npl: 1, ten_npl: 'Vải Cotton 100%' }, 
+    { id_npl: 1, ten_npl: 'Vải Cotton 100%' },
     { id_npl: 2, ten_npl: 'Chỉ may Polyester' },
     { id_npl: 3, ten_npl: 'Cúc áo nhựa' }
 ];
@@ -53,7 +53,7 @@ const DinhMuc = () => {
     const onFinish = (values) => {
         if (editingRecord) {
             // Chế độ Sửa
-            const updatedData = allDinhMuc.map(item => 
+            const updatedData = allDinhMuc.map(item =>
                 item.id_dm === editingRecord.id_dm ? { ...item, ...values } : item
             );
             setAllDinhMuc(updatedData);
@@ -72,9 +72,9 @@ const DinhMuc = () => {
     };
 
     const columns = [
-        { 
-            title: 'Tên Sản phẩm', 
-            dataIndex: 'id_sp', 
+        {
+            title: 'Tên Sản phẩm',
+            dataIndex: 'id_sp',
             key: 'id_sp',
             render: (id_sp) => spList.find(sp => sp.id_sp === id_sp)?.ten_sp || 'Không xác định',
             sorter: (a, b) => {
@@ -83,23 +83,23 @@ const DinhMuc = () => {
                 return nameA.localeCompare(nameB);
             },
         },
-        { 
-            title: 'Tên Nguyên phụ liệu', 
-            dataIndex: 'id_npl', 
+        {
+            title: 'Tên Nguyên phụ liệu',
+            dataIndex: 'id_npl',
             key: 'id_npl',
             render: (id_npl) => nplList.find(npl => npl.id_npl === id_npl)?.ten_npl || 'Không xác định'
         },
-        { 
-            title: 'Số lượng cần', 
-            dataIndex: 'so_luong', 
+        {
+            title: 'Số lượng cần',
+            dataIndex: 'so_luong',
             key: 'so_luong',
             align: 'right',
             sorter: (a, b) => a.so_luong - b.so_luong,
         },
         {
-            title: 'Hành động', 
-            key: 'action', 
-            width: 180, 
+            title: 'Hành động',
+            key: 'action',
+            width: 180,
             align: 'center',
             render: (_, record) => (
                 <Space>
@@ -124,19 +124,19 @@ const DinhMuc = () => {
                     </Button>
                 </Col>
             </Row>
-            
+
             <Card bordered={false} className="content-card">
-                <Table 
-                    columns={columns} 
-                    dataSource={allDinhMuc} 
-                    rowKey="id_dm" 
+                <Table
+                    columns={columns}
+                    dataSource={allDinhMuc}
+                    rowKey="id_dm"
                 />
             </Card>
 
-            <Modal 
+            <Modal
                 title={editingRecord ? 'Chỉnh sửa Định mức' : 'Thêm mới Định mức'}
-                open={isModalOpen} 
-                onCancel={() => setIsModalOpen(false)} 
+                open={isModalOpen}
+                onCancel={() => setIsModalOpen(false)}
                 footer={null}
             >
                 <Form form={form} layout="vertical" onFinish={onFinish} initialValues={{ so_luong: 1 }}>
@@ -150,10 +150,10 @@ const DinhMuc = () => {
                             {nplList.map(npl => <Option key={npl.id_npl} value={npl.id_npl}>{npl.ten_npl}</Option>)}
                         </Select>
                     </Form.Item>
-                     <Form.Item name="so_luong" label="Số lượng cần" rules={[{ required: true, message: 'Vui lòng nhập số lượng!' }]}>
+                    <Form.Item name="so_luong" label="Số lượng cần" rules={[{ required: true, message: 'Vui lòng nhập số lượng!' }]}>
                         <InputNumber min={0.01} style={{ width: '100%' }} step="0.01" />
                     </Form.Item>
-                    
+
                     <div style={{ marginTop: 24, textAlign: 'right' }}>
                         <Space>
                             <Button onClick={() => setIsModalOpen(false)}>Hủy</Button>

@@ -15,7 +15,12 @@ const { Option } = Select;
 const { Title } = Typography;
 const { Search } = Input;
 
-const LOGGED_IN_DN_ID = localStorage.getItem('id_dn') || 1; // ✅ Lấy id doanh nghiệp đăng nhập (tạm giả định)
+
+const userData = JSON.parse(localStorage.getItem('user'));
+const LOGGED_IN_DN_ID = userData?.id_dn;
+console.log(LOGGED_IN_DN_ID);
+
+
 
 const HopDong = () => {
   const [form] = Form.useForm();

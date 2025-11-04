@@ -28,8 +28,8 @@ const Kho = () => {
   const [editingRecord, setEditingRecord] = useState(null);
   const [searchText, setSearchText] = useState("");
 
-  // ✅ Giả lập doanh nghiệp đang đăng nhập (sau này lấy từ token)
-  const LOGGED_IN_DN_ID = 1;
+  const userData = JSON.parse(localStorage.getItem('user'));
+  const LOGGED_IN_DN_ID = userData?.id_dn;
 
   // =============================
   // 📦 Lấy danh sách kho từ BE
