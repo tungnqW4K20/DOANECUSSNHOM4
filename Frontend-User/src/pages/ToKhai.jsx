@@ -9,17 +9,17 @@ const { Search } = Input;
 const { TabPane } = Tabs;
 
 // --- Dữ liệu giả lập ---
-const tienTeList = [ { id_tt: 1, ma_tt: 'USD' }, { id_tt: 2, ma_tt: 'VND' }];
+const tienTeList = [{ id_tt: 1, ma_tt: 'USD' }, { id_tt: 2, ma_tt: 'VND' }];
 const nplList = [{ id_npl: 1, ten_npl: 'Vải Cotton' }, { id_npl: 2, ten_npl: 'Chỉ may' }];
 const spList = [{ id_sp: 1, ten_sp: 'Áo phông cổ tròn' }];
 const toKhaiTrangThaiList = ['Chờ duyệt', 'Thông quan', 'Kiểm tra hồ sơ', 'Kiểm tra thực tế', 'Tái xuất', 'Tịch thu'];
 
 const initialToKhaiData = [
-    { 
+    {
         id: 'tkn_301', loai: 'Nhập', so_tk: "1059...", ngay_tk: "2025-04-13", trang_thai: "Thông quan", so_hd: 'HD-2025-001',
         details: {
             loHang: [{ id_lh: 1, so_lh: 'LH-001', ngay_dong_goi: '2025-04-10', ngay_xuat_cang: '2025-04-12', cang_xuat: 'Cảng Cát Lái', cang_nhap: 'Cảng Singapore', file_chung_tu: 'chungtu_lh1.pdf' }],
-            hoaDon: [{ id_hd_nhap: 101, so_hd: "INV-123", ngay_hd: "2025-04-09", id_tt: 1, tong_tien: 15000, file_hoa_don: 'hdn_101.pdf', chiTiet: [ { id_ct: 1001, id_npl: 1, so_luong: 1000, don_gia: 10, tri_gia: 10000 }, { id_ct: 1002, id_npl: 2, so_luong: 50, don_gia: 100, tri_gia: 5000 } ]}],
+            hoaDon: [{ id_hd_nhap: 101, so_hd: "INV-123", ngay_hd: "2025-04-09", id_tt: 1, tong_tien: 15000, file_hoa_don: 'hdn_101.pdf', chiTiet: [{ id_ct: 1001, id_npl: 1, so_luong: 1000, don_gia: 10, tri_gia: 10000 }, { id_ct: 1002, id_npl: 2, so_luong: 50, don_gia: 100, tri_gia: 5000 }] }],
             vanDon: [{ id_vd: 201, so_vd: "BL-ABC", ngay_phat_hanh: "2025-04-11", cang_xuat: 'Cảng Cát Lái', cang_nhap: 'Cảng Singapore', file_van_don: 'vdn_201.pdf' }],
         }
     },
@@ -29,7 +29,7 @@ const initialToKhaiData = [
 const ToKhai = () => {
     const [crudForm] = Form.useForm();
     const [dataSource, setDataSource] = useState(initialToKhaiData);
-    
+
     const [isCrudModalOpen, setIsCrudModalOpen] = useState(false);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isChiTietDrawerOpen, setIsChiTietDrawerOpen] = useState(false);
@@ -51,7 +51,7 @@ const ToKhai = () => {
             dateFields.forEach(field => { if (record[field]) recordWithDayjs[field] = dayjs(record[field]); });
             crudForm.setFieldsValue(recordWithDayjs);
             if (type === 'hoaDon' && record.chiTiet) {
-                setHoaDonChiTiet(record.chiTiet.map(ct => ({...ct, key: ct.id_ct || Date.now() })));
+                setHoaDonChiTiet(record.chiTiet.map(ct => ({ ...ct, key: ct.id_ct || Date.now() })));
             }
         }
         setIsCrudModalOpen(true);
@@ -81,14 +81,16 @@ const ToKhai = () => {
         { title: 'Số Tờ khai', dataIndex: 'so_tk' }, { title: 'Loại', dataIndex: 'loai', render: (text) => <Tag color={text === 'Nhập' ? 'blue' : 'green'}>{text.toUpperCase()}</Tag> },
         { title: 'Số Hợp đồng', dataIndex: 'so_hd' }, { title: 'Ngày khai', dataIndex: 'ngay_tk' },
         { title: 'Trạng thái', dataIndex: 'trang_thai', render: text => <Tag color={text === "Thông quan" ? "success" : "processing"}>{text}</Tag> },
-        { title: 'Hành động', key: 'action', align: 'center', render: (_, record) => (
-            <Space>
-                <Button icon={<FolderOpenOutlined />} onClick={() => showDrawer(record)}>Chi tiết</Button>
-                <Popconfirm title="Xóa Tờ khai và toàn bộ chứng từ liên quan?"><Button danger icon={<DeleteOutlined />}>Xóa</Button></Popconfirm>
-            </Space>
-        )},
+        {
+            title: 'Hành động', key: 'action', align: 'center', render: (_, record) => (
+                <Space>
+                    <Button icon={<FolderOpenOutlined />} onClick={() => showDrawer(record)}>Chi tiết</Button>
+                    <Popconfirm title="Xóa Tờ khai và toàn bộ chứng từ liên quan?"><Button danger icon={<DeleteOutlined />}>Xóa</Button></Popconfirm>
+                </Space>
+            )
+        },
     ];
-    
+
     const actionColumn = (type, onEditClick, onDeleteClick) => ({
         title: 'Hành động', key: 'action', width: 120, align: 'center', render: (_, record) => (
             <Space size="small">
@@ -99,11 +101,11 @@ const ToKhai = () => {
             </Space>
         )
     });
-    
+
     const loHangColumns = [
         { title: 'Số Lô hàng', dataIndex: 'so_lh' }, { title: 'Ngày đóng gói', dataIndex: 'ngay_dong_goi' },
         { title: 'Ngày xuất cảng', dataIndex: 'ngay_xuat_cang' }, { title: 'Cảng xuất', dataIndex: 'cang_xuat' },
-        { title: 'Cảng nhập', dataIndex: 'cang_nhap' }, { title: 'File', dataIndex: 'file_chung_tu', render: file => file ? <Tooltip title={file}><FileOutlined style={{color: '#1890ff'}}/></Tooltip> : null },
+        { title: 'Cảng nhập', dataIndex: 'cang_nhap' }, { title: 'File', dataIndex: 'file_chung_tu', render: file => file ? <Tooltip title={file}><FileOutlined style={{ color: '#1890ff' }} /></Tooltip> : null },
         actionColumn('loHang', handleOpenCrudModal, (record) => console.log('Delete Lô hàng', record.id_lh))
     ];
 
@@ -111,25 +113,27 @@ const ToKhai = () => {
         { title: 'Số Hóa đơn', dataIndex: 'so_hd' }, { title: 'Ngày HĐ', dataIndex: 'ngay_hd' },
         { title: 'Tổng tiền', dataIndex: 'tong_tien', render: (val) => val?.toLocaleString() }, { title: 'Tiền tệ', dataIndex: 'id_tt', render: (id) => tienTeList.find(t => t.id_tt === id)?.ma_tt },
         { title: 'Hàng hóa', key: 'chi_tiet', align: 'center', render: (_, record) => <Button type="link" onClick={() => showChiTietDrawer(record)}>Xem ({record.chiTiet?.length || 0})</Button> },
-        { title: 'File', dataIndex: 'file_hoa_don', render: file => file ? <Tooltip title={file}><FileOutlined style={{color: '#1890ff'}}/></Tooltip> : null },
+        { title: 'File', dataIndex: 'file_hoa_don', render: file => file ? <Tooltip title={file}><FileOutlined style={{ color: '#1890ff' }} /></Tooltip> : null },
         actionColumn('hoaDon', handleOpenCrudModal, (record) => console.log('Delete Hóa đơn', record.id_hd_nhap))
     ];
-    
+
     const vanDonColumns = [
         { title: 'Số Vận đơn', dataIndex: 'so_vd' }, { title: 'Ngày phát hành', dataIndex: 'ngay_phat_hanh' },
         { title: 'Cảng xuất', dataIndex: 'cang_xuat' }, { title: 'Cảng nhập', dataIndex: 'cang_nhap' },
-        { title: 'File', dataIndex: 'file_van_don', render: file => file ? <Tooltip title={file}><FileOutlined style={{color: '#1890ff'}}/></Tooltip> : null },
+        { title: 'File', dataIndex: 'file_van_don', render: file => file ? <Tooltip title={file}><FileOutlined style={{ color: '#1890ff' }} /></Tooltip> : null },
         actionColumn('vanDon', handleOpenCrudModal, (record) => console.log('Delete Vận đơn', record.id_vd))
     ];
-    
+
     const hoaDonChiTietColumns = [
-        { title: 'Hàng hóa', dataIndex: 'id_npl', render: (_, record) => (
-             <Select placeholder="Chọn hàng hóa" value={record.id_npl || record.id_sp} onChange={(val) => handleChiTietChange(record.key, selectedToKhai?.loai === 'Nhập' ? 'id_npl' : 'id_sp', val)} style={{width: '100%'}}>
-                { (selectedToKhai?.loai === 'Nhập' ? nplList : spList).map(item => <Option key={item.id_npl || item.id_sp} value={item.id_npl || item.id_sp}>{item.ten_npl || item.ten_sp}</Option>) }
-            </Select>
-        )},
-        { title: 'Số lượng', dataIndex: 'so_luong', width: 120, render: (_, record) => <InputNumber min={1} value={record.so_luong} onChange={(val) => handleChiTietChange(record.key, 'so_luong', val)} style={{width: '100%'}}/> },
-        { title: 'Đơn giá', dataIndex: 'don_gia', width: 150, render: (_, record) => <InputNumber min={0} value={record.don_gia} onChange={(val) => handleChiTietChange(record.key, 'don_gia', val)} style={{width: '100%'}}/> },
+        {
+            title: 'Hàng hóa', dataIndex: 'id_npl', render: (_, record) => (
+                <Select placeholder="Chọn hàng hóa" value={record.id_npl || record.id_sp} onChange={(val) => handleChiTietChange(record.key, selectedToKhai?.loai === 'Nhập' ? 'id_npl' : 'id_sp', val)} style={{ width: '100%' }}>
+                    {(selectedToKhai?.loai === 'Nhập' ? nplList : spList).map(item => <Option key={item.id_npl || item.id_sp} value={item.id_npl || item.id_sp}>{item.ten_npl || item.ten_sp}</Option>)}
+                </Select>
+            )
+        },
+        { title: 'Số lượng', dataIndex: 'so_luong', width: 120, render: (_, record) => <InputNumber min={1} value={record.so_luong} onChange={(val) => handleChiTietChange(record.key, 'so_luong', val)} style={{ width: '100%' }} /> },
+        { title: 'Đơn giá', dataIndex: 'don_gia', width: 150, render: (_, record) => <InputNumber min={0} value={record.don_gia} onChange={(val) => handleChiTietChange(record.key, 'don_gia', val)} style={{ width: '100%' }} /> },
         { title: 'Trị giá', dataIndex: 'tri_gia', width: 150, render: (text, record) => ((record.so_luong || 0) * (record.don_gia || 0)).toLocaleString() },
         { title: 'Hành động', width: 80, align: 'center', render: (_, record) => <Popconfirm title="Xóa dòng này?" onConfirm={() => handleRemoveChiTietRow(record.key)}><Button type="link" danger>Xóa</Button></Popconfirm> },
     ];
@@ -150,7 +154,7 @@ const ToKhai = () => {
                 <Row gutter={16}><Col span={12}><Form.Item name="ngay_hd" label="Ngày Hóa đơn" rules={[{ required: true }]}><DatePicker style={{ width: '100%' }} /></Form.Item></Col><Col span={12}><Form.Item name="id_tt" label="Tiền tệ"><Select>{tienTeList.map(t => <Option key={t.id_tt} value={t.id_tt}>{t.ma_tt}</Option>)}</Select></Form.Item></Col></Row>
                 <Form.Item name="file_hoa_don" label="File scan hóa đơn"><Upload maxCount={1}><Button icon={<UploadOutlined />}>Tải lên</Button></Upload></Form.Item>
                 <Title level={5}>Chi tiết hàng hóa</Title>
-                <Table columns={hoaDonChiTietColumns} dataSource={hoaDonChiTiet} rowKey="key" size="small" pagination={false} bordered/>
+                <Table columns={hoaDonChiTietColumns} dataSource={hoaDonChiTiet} rowKey="key" size="small" pagination={false} bordered />
                 <Button onClick={handleAddChiTietRow} icon={<PlusOutlined />} style={{ marginTop: 16 }} type="dashed">Thêm hàng hóa</Button>
             </>;
         }
@@ -176,7 +180,7 @@ const ToKhai = () => {
             <Modal title={crudModalContent.title} open={isCrudModalOpen} onCancel={() => setIsCrudModalOpen(false)} onOk={handleCrudSave} okText="Lưu" cancelText="Hủy" width={crudModalContent.type === 'hoaDon' ? 800 : 600}>
                 <Form form={crudForm} layout="vertical">{renderCrudForm()}</Form>
             </Modal>
-            
+
             <Drawer title={`Chi tiết Tờ khai: ${selectedToKhai?.so_tk}`} width="80vw" open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
                 {selectedToKhai?.details ? (
                     <Tabs defaultActiveKey="1" type="card">
@@ -195,7 +199,7 @@ const ToKhai = () => {
                     </Tabs>
                 ) : <Text>Không có dữ liệu chi tiết cho Tờ khai này.</Text>}
             </Drawer>
-            
+
             <Drawer title={`Chi tiết Hóa đơn: ${selectedHoaDon?.so_hd}`} width={720} open={isChiTietDrawerOpen} onClose={() => setIsChiTietDrawerOpen(false)}>
                 <Table title={() => <Text strong>Danh sách hàng hóa</Text>} columns={hoaDonChiTietColumns.slice(0, 4)} dataSource={selectedHoaDon?.chiTiet} rowKey="id_ct" size="small" pagination={false} bordered />
             </Drawer>
