@@ -11,6 +11,7 @@ import {
   ShoppingCartOutlined,
   FileSyncOutlined,
   HomeOutlined,
+  BoxPlotOutlined,
 } from '@ant-design/icons';
 
 // Hàm tạo item cho menu
@@ -23,12 +24,14 @@ const items = [
   getItem(<Link to="/tong-quan">Tổng quan</Link>, '1', <DashboardOutlined />),
   getItem('Quản lý Nghiệp vụ', 'sub1', <AppstoreOutlined />, [
     getItem(<Link to="/hop-dong">Hợp đồng</Link>, '2', <FileTextOutlined />),
+    getItem(<Link to="/lo-hang">Quản lý Lô hàng</Link>, 'lo_hang', <BoxPlotOutlined />),
     getItem(<Link to="/san-pham">Sản phẩm</Link>, '3'),
     getItem(<Link to="/nguyen-phu-lieu">Nguyên phụ liệu</Link>, '4'),
     getItem(<Link to="/dinh-muc">Định mức</Link>, '5'),
   ]),
 
   getItem('Tờ khai Hải quan', 'sub2', <ContainerOutlined />, [
+    getItem(<Link to="/to-khai">Quản lý Tờ khai</Link>, 'tk_quan_ly'),
     getItem(<Link to="/to-khai-nhap">Nhập Tờ khai nhập</Link>, '6'),
     getItem(<Link to="/to-khai-xuat">Nhập Tờ khai xuất</Link>, '7'),
   ]),
