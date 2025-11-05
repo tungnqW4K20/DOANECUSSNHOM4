@@ -37,18 +37,17 @@ const items = [
   ]),
 
   getItem('Quản lý Kho', 'sub3', <ShoppingCartOutlined />, [
-     getItem(<Link to="/kho">Danh sách kho</Link>, 'kho_list', <HomeOutlined />),
+    getItem(<Link to="/kho">Danh sách kho</Link>, 'kho_list', <HomeOutlined />),
     getItem(<Link to="/kho/nhap-npl">Nhập kho NPL</Link>, '8'),
     getItem(<Link to="/kho/xuat-npl">Xuất kho NPL</Link>, '9'),
     getItem(<Link to="/kho/nhap-sp">Nhập kho SP</Link>, '10'),
     getItem(<Link to="/kho/xuat-sp">Xuất kho SP</Link>, '11'),
   ]),
-  
+
   getItem(<Link to="/thanh-khoan">Thanh khoản & Báo cáo</Link>, '12', <FileSyncOutlined />),
 
   getItem('Thiết lập', 'sub4', <SettingOutlined />, [
     getItem(<Link to="/ty-gia">Tỷ giá</Link>, '13', <SwapOutlined />),
-    getItem(<Link to="/don-vi-tinh">Đơn vị tính</Link>, '14'),
     getItem(<Link to="/quy-doi-don-vi">Quy đổi đơn vị</Link>, '15'),
   ]),
 ];
