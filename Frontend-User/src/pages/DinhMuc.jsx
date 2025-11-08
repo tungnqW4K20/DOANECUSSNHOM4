@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Table, Button, Modal, Form, Select, InputNumber, Space, message, Typography, Row, Col, Card, Popconfirm } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Select, InputNumber, Space, message, Typography, Row, Col, Card } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 // --- Dữ liệu giả lập ---
-// Giả lập ID của doanh nghiệp đang đăng nhập. 
 const LOGGED_IN_DN_ID = 1;
 
 const spList = [
@@ -19,96 +18,142 @@ const nplList = [
     { id_npl: 3, ten_npl: 'Cúc áo nhựa' }
 ];
 
-// Định mức đã có, đây là nguồn dữ liệu chính cho bảng
-const initialDinhMuc = [
-    { id_dm: 1, id_dn: 1, id_sp: 1, id_npl: 1, so_luong: 1.5 },
-    { id_dm: 2, id_dn: 1, id_sp: 1, id_npl: 2, so_luong: 0.05 },
-    { id_dm: 3, id_dn: 1, id_sp: 2, id_npl: 3, so_luong: 4 },
+// Dữ liệu giả lập theo cấu trúc nhóm
+const initialDinhMucGrouped = [
+    { 
+        id_sp: 1, 
+        ten_sp: 'Áo phông cổ tròn',
+        dinh_muc_chi_tiet: [
+            { id_dm: 1, id_npl: 1, so_luong: 1.5 },
+            { id_dm: 2, id_npl: 2, so_luong: 0.05 }
+        ]
+    }
 ];
 // -----------------------
 
 const DinhMuc = () => {
     const [form] = Form.useForm();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingRecord, setEditingRecord] = useState(null);
-    const [allDinhMuc, setAllDinhMuc] = useState(initialDinhMuc);
+    const [editingProduct, setEditingProduct] = useState(null);
+    const [dinhMucDetails, setDinhMucDetails] = useState([]); // State để quản lý các dòng NPL trong modal
+    const [allDinhMuc, setAllDinhMuc] = useState(initialDinhMucGrouped);
 
-    const handleAdd = () => {
-        setEditingRecord(null);
-        form.resetFields();
-        setIsModalOpen(true);
-    };
-
-    const handleEdit = (record) => {
-        setEditingRecord(record);
-        form.setFieldsValue(record);
-        setIsModalOpen(true);
-    };
-
-    const handleDelete = (id_dm) => {
-        setAllDinhMuc(allDinhMuc.filter(item => item.id_dm !== id_dm));
-        message.success('Xóa định mức thành công!');
-    };
-
-    const onFinish = (values) => {
-        if (editingRecord) {
-            // Chế độ Sửa
-            const updatedData = allDinhMuc.map(item => 
-                item.id_dm === editingRecord.id_dm ? { ...item, ...values } : item
-            );
-            setAllDinhMuc(updatedData);
-            message.success('Cập nhật định mức thành công!');
+    const handleOpenModal = (product = null) => {
+        setEditingProduct(product);
+        if (product) {
+            // Chế độ sửa: tải chi tiết định mức của sản phẩm được chọn
+            const details = product.dinh_muc_chi_tiet.map(dm => ({ ...dm, key: dm.id_dm || Date.now() }));
+            setDinhMucDetails(details);
+            form.setFieldsValue({ id_sp: product.id_sp });
         } else {
-            // Chế độ Thêm mới
-            const newRecord = {
-                id_dm: Date.now(), // Tạo ID tạm thời
-                id_dn: LOGGED_IN_DN_ID, // Gán ID doanh nghiệp đang đăng nhập
-                ...values
-            };
-            setAllDinhMuc([...allDinhMuc, newRecord]);
-            message.success('Thêm định mức thành công!');
+            // Chế độ thêm mới: reset
+            setDinhMucDetails([]);
+            form.resetFields();
         }
-        setIsModalOpen(false);
+        setIsModalOpen(true);
     };
 
-    const columns = [
+    const handleAddRow = () => {
+        const newRow = { key: Date.now(), id_npl: null, so_luong: 1 };
+        setDinhMucDetails([...dinhMucDetails, newRow]);
+    };
+
+    const handleRemoveRow = (key) => {
+        setDinhMucDetails(dinhMucDetails.filter(item => item.key !== key));
+    };
+    
+    const handleRowChange = (key, field, value) => {
+        const newData = dinhMucDetails.map(item => item.key === key ? { ...item, [field]: value } : item);
+        setDinhMucDetails(newData);
+    };
+
+    const handleSave = async () => {
+        try {
+            const values = await form.validateFields();
+            if (dinhMucDetails.length === 0 || dinhMucDetails.some(d => !d.id_npl || !d.so_luong || d.so_luong <= 0)) {
+                message.error('Vui lòng thêm và điền đầy đủ thông tin cho ít nhất một nguyên phụ liệu!');
+                return;
+            }
+            
+            // Chuẩn bị dữ liệu gửi lên API theo format BE cần
+            const payload = {
+                id_sp: values.id_sp,
+                dinh_muc_chi_tiet: dinhMucDetails.map(({ id_npl, so_luong }) => ({ id_nguyen_lieu: id_npl, so_luong }))
+            };
+            console.log("Payload to send to BE:", payload);
+            
+            // --- Logic giả lập cập nhật state ---
+            const ten_sp_selected = spList.find(sp => sp.id_sp === values.id_sp)?.ten_sp;
+            const newDinhMucData = {
+                id_sp: values.id_sp,
+                ten_sp: ten_sp_selected,
+                dinh_muc_chi_tiet: dinhMucDetails
+            };
+            
+            if (editingProduct) {
+                setAllDinhMuc(allDinhMuc.map(item => item.id_sp === editingProduct.id_sp ? newDinhMucData : item));
+            } else {
+                setAllDinhMuc([...allDinhMuc, newDinhMucData]);
+            }
+            // ------------------------------------
+
+            message.success('Lưu định mức thành công!');
+            setIsModalOpen(false);
+        } catch (error) {
+            console.log("Validation Failed:", error);
+        }
+    };
+
+    const columnsMain = [
         { 
             title: 'Tên Sản phẩm', 
-            dataIndex: 'id_sp', 
-            key: 'id_sp',
-            render: (id_sp) => spList.find(sp => sp.id_sp === id_sp)?.ten_sp || 'Không xác định',
-            sorter: (a, b) => {
-                const nameA = spList.find(sp => sp.id_sp === a.id_sp)?.ten_sp || '';
-                const nameB = spList.find(sp => sp.id_sp === b.id_sp)?.ten_sp || '';
-                return nameA.localeCompare(nameB);
-            },
+            dataIndex: 'ten_sp', 
+            key: 'ten_sp' 
         },
         { 
-            title: 'Tên Nguyên phụ liệu', 
-            dataIndex: 'id_npl', 
-            key: 'id_npl',
-            render: (id_npl) => nplList.find(npl => npl.id_npl === id_npl)?.ten_npl || 'Không xác định'
-        },
-        { 
-            title: 'Số lượng cần', 
-            dataIndex: 'so_luong', 
-            key: 'so_luong',
-            align: 'right',
-            sorter: (a, b) => a.so_luong - b.so_luong,
+            title: 'Số Nguyên phụ liệu trong Định mức', 
+            key: 'count_npl', 
+            align: 'center',
+            render: (_, record) => record.dinh_muc_chi_tiet.length
         },
         {
             title: 'Hành động', 
             key: 'action', 
-            width: 180, 
+            width: 150, 
             align: 'center',
             render: (_, record) => (
                 <Space>
-                    <Button icon={<EditOutlined />} onClick={() => handleEdit(record)}>Sửa</Button>
-                    <Popconfirm title="Bạn có chắc muốn xóa?" onConfirm={() => handleDelete(record.id_dm)}>
-                        <Button icon={<DeleteOutlined />} danger>Xóa</Button>
-                    </Popconfirm>
+                    <Button icon={<EditOutlined />} onClick={() => handleOpenModal(record)}>
+                        Xem / Sửa
+                    </Button>
                 </Space>
             ),
+        },
+    ];
+
+    const columnsModal = [
+        { 
+            title: 'Tên Nguyên phụ liệu', 
+            dataIndex: 'id_npl', 
+            render: (_, record) => (
+                <Select style={{ width: '100%' }} placeholder="Chọn NPL" value={record.id_npl} onChange={(val) => handleRowChange(record.key, 'id_npl', val)}>
+                    {nplList.map(npl => <Option key={npl.id_npl} value={npl.id_npl}>{npl.ten_npl}</Option>)}
+                </Select>
+            )
+        },
+        { 
+            title: 'Số lượng cần', 
+            dataIndex: 'so_luong', 
+            width: 150,
+            render: (_, record) => (
+                <InputNumber min={0.01} style={{ width: '100%' }} value={record.so_luong} step="0.01" onChange={(val) => handleRowChange(record.key, 'so_luong', val)} />
+            )
+        },
+        { 
+            title: 'Hành động', 
+            width: 100, 
+            align: 'center', 
+            render: (_, record) => <Button icon={<DeleteOutlined/>} danger onClick={() => handleRemoveRow(record.key)} />
         },
     ];
 
@@ -119,45 +164,52 @@ const DinhMuc = () => {
                     <Title level={3} className="page-header-heading">Quản lý Định mức Sản phẩm</Title>
                 </Col>
                 <Col>
-                    <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-                        Thêm Định mức
+                    <Button type="primary" icon={<PlusOutlined />} onClick={() => handleOpenModal()}>
+                        Khai báo Định mức
                     </Button>
                 </Col>
             </Row>
             
             <Card bordered={false} className="content-card">
                 <Table 
-                    columns={columns} 
+                    columns={columnsMain} 
                     dataSource={allDinhMuc} 
-                    rowKey="id_dm" 
+                    rowKey="id_sp" 
                 />
             </Card>
 
             <Modal 
-                title={editingRecord ? 'Chỉnh sửa Định mức' : 'Thêm mới Định mức'}
+                title={editingProduct ? `Định mức cho sản phẩm: ${editingProduct.ten_sp}` : 'Khai báo Định mức mới'}
                 open={isModalOpen} 
                 onCancel={() => setIsModalOpen(false)} 
-                footer={null}
+                footer={null} 
+                width={800}
             >
-                <Form form={form} layout="vertical" onFinish={onFinish} initialValues={{ so_luong: 1 }}>
+                <Form form={form} layout="vertical">
                     <Form.Item name="id_sp" label="Sản phẩm" rules={[{ required: true, message: 'Vui lòng chọn sản phẩm!' }]}>
-                        <Select placeholder="Chọn sản phẩm">
+                        <Select placeholder="Chọn sản phẩm" disabled={!!editingProduct}>
                             {spList.map(sp => <Option key={sp.id_sp} value={sp.id_sp}>{sp.ten_sp}</Option>)}
                         </Select>
                     </Form.Item>
-                    <Form.Item name="id_npl" label="Nguyên phụ liệu" rules={[{ required: true, message: 'Vui lòng chọn nguyên phụ liệu!' }]}>
-                        <Select placeholder="Chọn nguyên phụ liệu">
-                            {nplList.map(npl => <Option key={npl.id_npl} value={npl.id_npl}>{npl.ten_npl}</Option>)}
-                        </Select>
-                    </Form.Item>
-                     <Form.Item name="so_luong" label="Số lượng cần" rules={[{ required: true, message: 'Vui lòng nhập số lượng!' }]}>
-                        <InputNumber min={0.01} style={{ width: '100%' }} step="0.01" />
-                    </Form.Item>
+                    
+                    <Text strong>Danh sách Nguyên phụ liệu cấu thành:</Text>
+                    <Table 
+                        columns={columnsModal} 
+                        dataSource={dinhMucDetails} 
+                        pagination={false} 
+                        rowKey="key" 
+                        bordered 
+                        size="small" 
+                        style={{ margin: '16px 0' }}
+                    />
+                    <Button onClick={handleAddRow} type="dashed" icon={<PlusOutlined />} style={{ width: '100%' }}>
+                        Thêm Nguyên phụ liệu
+                    </Button>
                     
                     <div style={{ marginTop: 24, textAlign: 'right' }}>
                         <Space>
                             <Button onClick={() => setIsModalOpen(false)}>Hủy</Button>
-                            <Button type="primary" htmlType="submit">Lưu</Button>
+                            <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>Lưu Định mức</Button>
                         </Space>
                     </div>
                 </Form>

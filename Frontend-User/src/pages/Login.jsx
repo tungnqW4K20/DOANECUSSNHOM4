@@ -5,19 +5,40 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
 
+// --- Giả lập API đăng nhập ---
+const mockLoginAPI = (values) => {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            if (values.ma_so_thue === '0123' && values.mat_khau === '123') {
+                resolve({
+                    accessToken: 'your_real_auth_token_from_server',
+                    user: { ten_dn: 'Công ty TNHH May Mặc ABC', id_dn: 1 }
+                });
+            } else {
+                reject(new Error('Mã số thuế hoặc mật khẩu không chính xác!'));
+            }
+        }, 1000); // Giả lập độ trễ mạng
+    });
+};
+// -----------------------------
+
 const Login = () => {
     const navigate = useNavigate();
 
     const onFinish = (values) => {
-        console.log('Thông tin đăng nhập:', values);
-        // Logic gọi API đăng nhập ở đây
-        // Nếu thành công:
-        message.success('Đăng nhập thành công!');
-        // Lưu token hoặc thông tin user vào localStorage/sessionStorage
-        localStorage.setItem('authToken', 'your_mock_auth_token'); // Giả lập token
-        localStorage.setItem('user', JSON.stringify({ ten_dn: 'Công ty TNHH May Mặc ABC', id_dn: 1 })); // Giả lập thông tin user
-
-        navigate('/'); // Chuyển hướng về trang chủ
+        // Sử dụng .then() và .catch() thay vì async/await
+        mockLoginAPI(values)
+            .then(response => {
+                // XỬ LÝ KHI THÀNH CÔNG
+                message.success('Đăng nhập thành công!');
+                localStorage.setItem('authToken', response.accessToken);
+                localStorage.setItem('user', JSON.stringify(response.user));
+                navigate('/'); // Chuyển hướng
+            })
+            .catch(error => {
+                // XỬ LÝ KHI THẤT BẠI
+                message.error(error.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
+            });
     };
 
     return (
@@ -36,7 +57,9 @@ const Login = () => {
                     <a style={{ float: 'right' }} href="">Quên mật khẩu?</a>
                 </Form.Item>
                 <Form.Item>
-                    <Button type="primary" htmlType="submit" style={{ width: '100%' }}>Đăng nhập</Button>
+                    <Button type="primary" htmlType="submit" style={{ width: '100%' }}>
+                        Đăng nhập
+                    </Button>
                 </Form.Item>
                 <div style={{ textAlign: 'center' }}>
                     Chưa có tài khoản? <Link to="/auth/register">Đăng ký ngay!</Link>

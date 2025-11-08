@@ -8,14 +8,18 @@ const { Text } = Typography;
 
 const AppHeader = () => {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user')); // Lấy thông tin user từ localStorage
+
+    // SỬA LỖI: Thêm bước kiểm tra an toàn trước khi parse JSON
+    const userJSON = localStorage.getItem('user'); // 1. Lấy chuỗi JSON từ localStorage
+    const user = userJSON ? JSON.parse(userJSON) : null; // 2. Chỉ parse nếu chuỗi đó tồn tại (không phải null)
 
     const handleLogout = () => {
         // Xóa thông tin đăng nhập
         localStorage.removeItem('authToken');
         localStorage.removeItem('user');
         message.success('Đăng xuất thành công!');
-        navigate('/login');
+        // SỬA LẠI ĐƯỜNG DẪN ĐĂNG XUẤT CHO ĐÚNG
+        navigate('/auth/login');
     };
 
     const menuItems = [
@@ -38,6 +42,7 @@ const AppHeader = () => {
                 <a onClick={(e) => e.preventDefault()}>
                     <Space>
                         <Avatar icon={<UserOutlined />} />
+                        {/* Kiểm tra `user` tồn tại trước khi truy cập `user.ten_dn` để tránh lỗi */}
                         <Text strong>{user ? user.ten_dn : 'Doanh nghiệp'}</Text>
                     </Space>
                 </a>
