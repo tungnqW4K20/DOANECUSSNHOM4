@@ -20,12 +20,11 @@ api.interceptors.request.use((config) => {
 /**
  * Upload 1 file (ảnh, pdf, docx, xlsx, v.v.)
  * @param {File} file - File người dùng chọn
- * @param {string} fieldName - Tên field trong multer (ví dụ: 'fileUpload')
  */
-export const uploadSingleFile = async (file, fieldName = "fileUpload") => {
+export const uploadSingleFile = async (file) => {
     try {
         const formData = new FormData();
-        formData.append(fieldName, file);
+        formData.append("fileUpload", file);
 
         const res = await api.post("/file-giay-to", formData);
         return res.data; // backend nên trả về URL hoặc thông tin file
@@ -37,12 +36,11 @@ export const uploadSingleFile = async (file, fieldName = "fileUpload") => {
 /**
  * Upload nhiều file cùng lúc
  * @param {FileList | File[]} files
- * @param {string} fieldName
  */
-export const uploadMultipleFiles = async (files, fieldName = "filesUpload") => {
+export const uploadMultipleFiles = async (files) => {
     try {
         const formData = new FormData();
-        Array.from(files).forEach((f) => formData.append(fieldName, f));
+        Array.from(files).forEach((f) => formData.append("fileUpload", f));
 
         const res = await api.post("/file-multi-giay-to", formData);
         return res.data;
