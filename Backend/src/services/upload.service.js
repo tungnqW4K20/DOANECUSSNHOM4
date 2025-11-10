@@ -9,8 +9,7 @@ const handleProductImageUpload = async (file, req) => {
     }
 
     const baseUrl = `${req.protocol}://${req.get('host')}`;
-    // const imageUrl = `${baseUrl}/uploads/products/${file.filename}`;
-    const imageUrl = `${baseUrl}/uploads/${file.filename}`;
+    const imageUrl = `${baseUrl}/uploads/products/${file.filename}`;
 
     return imageUrl;
 };
@@ -34,7 +33,7 @@ const handleMultipleProductImagesUpload = async (files, req) => {
 
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     const imageUrls = files.map(file => {
-        return `${baseUrl}/uploads/${file.filename}`;
+        return `${baseUrl}/uploads/products/${file.filename}`;
     });
 
     return imageUrls;
@@ -52,7 +51,7 @@ const handleMultipleProductImagesUpload = async (files, req) => {
 
 module.exports = {
     handleProductImageUpload,
-    handleMultipleProductImagesUpload
+    handleMultipleProductImagesUpload 
 };
 
 

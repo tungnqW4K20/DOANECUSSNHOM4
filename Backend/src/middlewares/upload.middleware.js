@@ -4,14 +4,14 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-const uploadDir = path.join(__dirname, '../uploads');
+const uploadDir = path.join(__dirname, '../uploads'); 
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, uploadDir);
+        cb(null, uploadDir); 
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -19,42 +19,19 @@ const storage = multer.diskStorage({
     }
 });
 
-//CODE CŨ CỦA TÙNG CHỈ CHO UPLOAD ẢNH
-// const imageFileFilter = (req, file, cb) => {
-//     if (file.mimetype.startsWith('giayto/')) {
-//         cb(null, true);
-//     } else {
-//         cb(new Error('Chỉ cho phép tải lên tệp hình ảnh!'), false);
-//     }
-// };
-
-
-//TRƯỜNG SỬA: ho phép upload ảnh hoặc file PDF
-const fileFilter = (req, file, cb) => {
-    const allowedTypes = [
-        'image/jpeg',
-        'image/png',
-        'image/jpg',
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    ];
-
-    if (allowedTypes.includes(file.mimetype)) {
+const imageFileFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith('giayto/')) {
         cb(null, true);
     } else {
-        cb(new Error('Chỉ cho phép tải lên ảnh (jpg, png), PDF, Word (.doc/.docx), hoặc Excel (.xls/.xlsx)!'), false);
+        cb(new Error('Chỉ cho phép tải lên tệp hình ảnh!'), false);
     }
 };
 
 const upload = multer({
     storage: storage,
-    // fileFilter: imageFileFilter,
-    fileFilter: fileFilter,
+    fileFilter: imageFileFilter,
     limits: {
-        fileSize: 1024 * 1024 * 10
+        fileSize: 1024 * 1024 * 10 
     }
 });
 

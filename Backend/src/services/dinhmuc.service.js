@@ -16,7 +16,7 @@ const createDinhMucSanPham = async ({ id_sp, dinh_muc_chi_tiet }) => {
     const { id_nguyen_lieu, so_luong, ghi_chu } = item;
     const nl = await NguyenPhuLieu.findByPk(id_nguyen_lieu);
     if (!nl) throw new Error(`Nguyên liệu ID=${id_nguyen_lieu} không tồn tại`);
-    const created = await DinhMucSanPham.create({ id_sp, id_npl: id_nguyen_lieu, so_luong, ghi_chu });
+    const created = await DinhMucSanPham.create({ id_sp, id_nguyenlieu: id_nguyen_lieu, so_luong, ghi_chu });
     records.push(created);
   }
 

@@ -42,26 +42,26 @@ const port = process.env.PORT || 3001;
 
 // Middleware
 app.use(corsMiddleware);
-app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/api/auth', authRoutes);
+app.use(express.json()); 
+//app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/auth', authRoutes); 
 app.use('/api/uploads', uploadRoutes);
-app.use('/api/doanh-nghiep', doanhnghiepRoutes)
-app.use('/api/tiente', tienteRoutes)
+app.use('/api/doanh-nghiep',doanhnghiepRoutes)
+app.use('/api/tiente',tienteRoutes)
 app.use('/api/tygia', tygiaRoutes)
 
-app.use('/api/don-vi-tinh-hai-quan', donvitinhHaiQuanRoutes)
-app.use('/api/quydoidonvisanpham', QuyDoiDonViSPRoutes)
-app.use('/api/quydoidonvidoanhnghiep', QuyDoiDonViDNRoutes)
-app.use('/api/dinh-muc', dinhmucRoutes)
-app.use('/api/nguyen-lieu', nguyenlieuRoutes)
-app.use('/api/hop-dong', hopdongRoutes)
+app.use('/api/don-vi-tinh-hai-quan',donvitinhHaiQuanRoutes )
+app.use('/api/quydoidonvisanpham',QuyDoiDonViSPRoutes )
+app.use('/api/quydoidonvidoanhnghiep',QuyDoiDonViDNRoutes )
+app.use('/api/dinh-muc',dinhmucRoutes )
+app.use('/api/nguyen-lieu',nguyenlieuRoutes )
+app.use('/api/hop-dong', hopdongRoutes )
 
-app.use('/api/san-pham', SanPhamRoutes)
-app.use('/api/lo-hang', LoHangRoutes)
-app.use('/api/to-khai-nhap', ToKhaiNhapRoutes)
-app.use('/api/hoa-don-nhap', HoaDonNhapRoutes)
-app.use('/api/van-don-nhap', VanDonNhapRoutes)
+app.use('/api/san-pham',SanPhamRoutes )
+app.use('/api/lo-hang',LoHangRoutes )
+app.use('/api/to-khai-nhap',ToKhaiNhapRoutes )
+app.use('/api/hoa-don-nhap',HoaDonNhapRoutes )
+app.use('/api/van-don-nhap',VanDonNhapRoutes )
 
 app.use('/api/hoa-don-xuat', hoaDonXuatRoutes);
 app.use('/api/hoa-don-xuat-chi-tiet', hoaDonXuatChiTietRoutes);
@@ -86,11 +86,11 @@ db.sequelize.authenticate()
   .then(() => {
     console.log('✅ Đồng bộ bảng thành công!');
 
-
+    
 
     app.listen(port, () => {
       console.log(` Server chạy tại http://localhost:${port}`);
-      scheduleTyGiaUpdate();
+      scheduleTyGiaUpdate(); 
     });
   })
   .catch(err => {
