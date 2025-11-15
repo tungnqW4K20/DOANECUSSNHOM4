@@ -2,22 +2,40 @@ import React from 'react';
 import { Form, Input, Button, Checkbox, Card, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
+import { loginBusiness } from '../services/auth.service';
 
 const { Title } = Typography;
 
 const Login = () => {
     const navigate = useNavigate();
 
-    const onFinish = (values) => {
+    const onFinish = async (values) => {
         console.log('Thông tin đăng nhập:', values);
-        // Logic gọi API đăng nhập ở đây
-        // Nếu thành công:
-        message.success('Đăng nhập thành công!');
-        // Lưu token hoặc thông tin user vào localStorage/sessionStorage
-        localStorage.setItem('authToken', 'your_mock_auth_token'); // Giả lập token
-        localStorage.setItem('user', JSON.stringify({ ten_dn: 'Công ty TNHH May Mặc ABC', id_dn: 1 })); // Giả lập thông tin user
 
-        navigate('/'); // Chuyển hướng về trang chủ
+        try {
+            const res = await loginBusiness({
+                ma_so_thue: values.ma_so_thue,
+                mat_khau: values.mat_khau,
+            });
+            console.log("Kết quả đăng nhập:", res);
+
+            const doanhNghiep = res?.data?.DoanhNghiep;
+            console.log(doanhNghiep);
+
+            if (doanhNghiep?.token) localStorage.setItem('accessToken', doanhNghiep.token);
+            if (doanhNghiep?.refreshToken) localStorage.setItem('refreshToken', doanhNghiep.refreshToken);
+            localStorage.setItem('user', JSON.stringify(doanhNghiep));
+            // message.success('Đăng nhập thành công!');
+            alert('Đăng nhập thành công!');
+
+            navigate('/');
+
+        } catch (err) {
+            console.error("Lỗi doanh nghiệp đăng nhập:", err);
+            const msg = err?.message || err?.error || "Đăng nhập thất bại, vui lòng thử lại!";
+            // message.error(msg);
+            alert(msg);
+        }
     };
 
     return (

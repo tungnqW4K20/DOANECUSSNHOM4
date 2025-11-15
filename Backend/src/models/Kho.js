@@ -9,6 +9,8 @@ module.exports = (sequelize, DataTypes) => {
       Kho.hasMany(models.XuatKhoNPL, { foreignKey: 'id_kho', as: 'xuatKhoNPLs' });
       Kho.hasMany(models.NhapKhoSP, { foreignKey: 'id_kho', as: 'nhapKhoSPs' });
       Kho.hasMany(models.XuatKhoSP, { foreignKey: 'id_kho', as: 'xuatKhoSPs' });
+      Kho.hasMany(models.TonKhoNPL, { foreignKey: 'id_kho', as: 'tonKhoNPLs' });
+      Kho.hasMany(models.TonKhoSP, { foreignKey: 'id_kho', as: 'tonKhoSPs' });
     }
   }
 

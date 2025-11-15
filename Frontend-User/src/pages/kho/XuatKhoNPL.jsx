@@ -30,9 +30,9 @@ const XuatKhoNPL = () => {
             setChiTietXuat(newData);
         }
     };
-    
+
     const onFinish = (values) => {
-        if(chiTietXuat.length === 0) {
+        if (chiTietXuat.length === 0) {
             message.error("Vui lòng thêm ít nhất một nguyên phụ liệu để xuất kho!");
             return;
         }
@@ -41,18 +41,23 @@ const XuatKhoNPL = () => {
     };
 
     const columns = [
-        { title: 'Nguyên phụ liệu', dataIndex: 'id_npl', render: (_, record) => (
-            <Select style={{ width: '100%' }} placeholder="Chọn NPL" onChange={(val) => handleRowChange(record.key, 'id_npl', val)}>
-                {nplList.map(npl => <Option key={npl.id_npl} value={npl.id_npl}>{npl.ten_npl}</Option>)}
-            </Select>
-        )},
-        { title: 'Số lượng xuất', dataIndex: 'so_luong', render: (_, record) => (
-            <InputNumber min={1} style={{ width: '100%' }} defaultValue={1} onChange={(val) => handleRowChange(record.key, 'so_luong', val)} />
-        )},
-        { title: 'Hành động', render: (_, record) => 
-            <Popconfirm title="Chắc chắn xóa?" onConfirm={() => handleRemoveRow(record.key)}>
-                <Button icon={<DeleteOutlined/>} danger />
-            </Popconfirm>
+        {
+            title: 'Nguyên phụ liệu', dataIndex: 'id_npl', render: (_, record) => (
+                <Select style={{ width: '100%' }} placeholder="Chọn NPL" onChange={(val) => handleRowChange(record.key, 'id_npl', val)}>
+                    {nplList.map(npl => <Option key={npl.id_npl} value={npl.id_npl}>{npl.ten_npl}</Option>)}
+                </Select>
+            )
+        },
+        {
+            title: 'Số lượng xuất', dataIndex: 'so_luong', render: (_, record) => (
+                <InputNumber min={1} style={{ width: '100%' }} defaultValue={1} onChange={(val) => handleRowChange(record.key, 'so_luong', val)} />
+            )
+        },
+        {
+            title: 'Hành động', render: (_, record) =>
+                <Popconfirm title="Chắc chắn xóa?" onConfirm={() => handleRemoveRow(record.key)}>
+                    <Button icon={<DeleteOutlined />} danger />
+                </Popconfirm>
         },
     ];
 
@@ -68,13 +73,13 @@ const XuatKhoNPL = () => {
                 <Form.Item label="Ngày xuất kho" name="ngay_xuat" rules={[{ required: true }]}>
                     <DatePicker style={{ width: '100%' }} />
                 </Form.Item>
-                 <Form.Item label="File phiếu xuất (nếu có)" name="file_phieu">
+                <Form.Item label="File phiếu xuất (nếu có)" name="file_phieu">
                     <Upload><Button icon={<UploadOutlined />}>Tải lên</Button></Upload>
                 </Form.Item>
-                
+
                 <Title level={4}>Chi tiết Nguyên Phụ Liệu Cần Xuất</Title>
                 <Button onClick={handleAddRow} type="dashed" icon={<PlusOutlined />} style={{ marginBottom: 16 }}>Thêm Nguyên phụ liệu</Button>
-                <Table columns={columns} dataSource={chiTietXuat} pagination={false} rowKey="key" bordered/>
+                <Table columns={columns} dataSource={chiTietXuat} pagination={false} rowKey="key" bordered />
 
                 <Form.Item style={{ marginTop: 24 }}>
                     <Button type="primary" htmlType="submit" icon={<SaveOutlined />}>Lưu Phiếu xuất</Button>

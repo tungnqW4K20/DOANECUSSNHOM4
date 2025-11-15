@@ -35,7 +35,7 @@ const registerBusiness = async (DoanhNghiepData) => {
         dia_chi,
         email,
         sdt,
-        mat_khau, 
+        mat_khau,
         file_giay_phep,
         status: "PENDING"
     });
@@ -82,7 +82,7 @@ const loginBussiness = async (loginData) => {
     console.log("payload", payload)
 
     const token = generateToken(payload, 'business');
-    const refreshToken = generateRefreshToken(payload, 'business' )
+    const refreshToken = generateRefreshToken(payload, 'business')
     const { password: _, ...DoanhNghiepInfo } = doanhnghiep.toJSON();
 
     return { token, refreshToken, DoanhNghiep: DoanhNghiepInfo };
@@ -96,11 +96,11 @@ const loginHQ = async (loginData) => {
     if (!tai_khoan || !mat_khau) {
         throw new Error('Vui lòng nhập tài khoản và mật khẩu.');
     }
-    
+
 
     const haiquan = await HaiQuan.findOne({
         where: {
-            [db.Sequelize.Op.or]: [ { tai_khoan: tai_khoan }]
+            [db.Sequelize.Op.or]: [{ tai_khoan: tai_khoan }]
         }
     });
     if (!haiquan) {
@@ -120,7 +120,7 @@ const loginHQ = async (loginData) => {
     };
 
     const token = generateToken(payload, 'HaiQuan');
-    const refreshToken = generateRefreshToken(payload, 'HaiQuan' )
+    const refreshToken = generateRefreshToken(payload, 'HaiQuan')
 
     const { password: _, ...HaiQuanInfo } = haiquan.toJSON();
     return { token, refreshToken, HaiQuan: HaiQuanInfo };
@@ -129,37 +129,37 @@ const loginHQ = async (loginData) => {
 const newRefreshToken = async () => {
     try {
         const decoded = verifyRefreshToken(token);
-        const {iat, exp, ...payload} = decoded
-        
+        const { iat, exp, ...payload } = decoded
+
         const newAccessToken = generateToken(payload, payload.role)
         const newRefreshToken = generateRefreshToken(payload, payload.role)
 
         return {
-            accessToken : newAccessToken,
+            accessToken: newAccessToken,
             refreshToken: newRefreshToken,
             user: payload
         }
     } catch (error) {
-        
+
     }
 }
 
 const generateNewTokens = async (refreshToken) => {
-  try {
-    const decoded = verifyRefreshToken(refreshToken)
-    const { iat, exp, ...payload } = decoded
+    try {
+        const decoded = verifyRefreshToken(refreshToken)
+        const { iat, exp, ...payload } = decoded
 
-    const newAccessToken = generateToken(payload, payload.role)
-    const newRefreshToken = generateRefreshToken(payload, payload.role)
+        const newAccessToken = generateToken(payload, payload.role)
+        const newRefreshToken = generateRefreshToken(payload, payload.role)
 
-    return {
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
-      user: payload
+        return {
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+            user: payload
+        }
+    } catch (error) {
+        throw error
     }
-  } catch (error) {
-    throw error
-  }
 }
 
 module.exports = {

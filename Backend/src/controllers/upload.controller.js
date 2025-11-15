@@ -17,14 +17,14 @@ const uploadProductImage = async (req, res, next) => {
 
         res.status(201).json({
             success: true,
-            message: 'Tải ảnh sản phẩm thành công!',
+            message: 'Upload thành công!',
             data: {
                 imageUrl: imageUrl
             }
         });
     } catch (error) {
         console.error("Upload Product Image Error:", error.message, error.stack);
-        
+
         res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi tải ảnh lên.' });
     }
 };
@@ -52,7 +52,7 @@ const uploadProductImage = async (req, res, next) => {
 //         });
 //     } catch (error) {
 //         console.error("Upload Product Image Error:", error.message, error.stack);
-        
+
 //         res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi tải ảnh lên.' });
 //     }
 // };
@@ -78,7 +78,7 @@ const uploadMultipleProductImages = async (req, res, next) => {
             }
         });
     } catch (error) {
-        console.error("Upload Multiple Product Images Error:", error.message, error.stack); 
+        console.error("Upload Multiple Product Images Error:", error.message, error.stack);
         res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi tải nhiều ảnh lên.' });
     }
 };
@@ -110,7 +110,7 @@ const uploadMultipleProductImages = async (req, res, next) => {
 
 module.exports = {
     uploadProductImage,
-    uploadMultipleProductImages 
+    uploadMultipleProductImages
 };
 
 

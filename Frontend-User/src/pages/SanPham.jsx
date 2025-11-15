@@ -1,30 +1,75 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Space, Popconfirm, message } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from "react";
+import {
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  Space,
+  Popconfirm,
+  message,
+  Spin,
+} from "antd";
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
+
+// 🧩 Import services
+import {
+  getAllSanPham,
+  createSanPham,
+  updateSanPham,
+  deleteSanPham,
+} from "../services/sanpham.service";
+import { getAllDonViTinhHQ } from "../services/donvitinhHaiQuan.service";
 
 const { Option } = Select;
 
-// Dữ liệu giả lập - Trong thực tế bạn sẽ fetch từ API
-const initialData = [
-  { id_sp: 1, ten_sp: 'Áo phông cổ tròn', mo_ta: 'Vải cotton 100%', id_dvt_hq: 1, ten_dvt: 'Cái' },
-  { id_sp: 2, ten_sp: 'Quần Jeans Nam', mo_ta: 'Vải bò co giãn', id_dvt_hq: 1, ten_dvt: 'Cái' },
-  { id_sp: 3, ten_sp: 'Váy công sở', mo_ta: 'Vải lụa', id_dvt_hq: 1, ten_dvt: 'Cái' },
-];
-
-// Giả lập danh sách đơn vị tính hải quan
-const dvtHqList = [
-    { id_dvt_hq: 1, ten_dvt: 'Cái' },
-    { id_dvt_hq: 2, ten_dvt: 'Bộ' },
-    { id_dvt_hq: 3, ten_dvt: 'KGM' },
-]
-
 const SanPham = () => {
   const [form] = Form.useForm();
-  const [dataSource, setDataSource] = useState(initialData);
-  const [filteredData, setFilteredData] = useState(initialData);
+  const [dataSource, setDataSource] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [dvtHqList, setDvtHqList] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
 
+  /* ============================================================
+     🟢 FETCH DỮ LIỆU BAN ĐẦU
+  ============================================================ */
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [spRes, dvtRes] = await Promise.all([getAllSanPham(), getAllDonViTinhHQ()]);
+      if (spRes?.success && dvtRes?.success) {
+        const list = spRes.data.map((sp) => ({
+          ...sp,
+          ten_dvt: sp?.donViTinhHQ?.ten_dvt || "—",
+        }));
+        setDataSource(list);
+        setFilteredData(list);
+        setDvtHqList(dvtRes.data);
+      } else {
+        message.error("Không thể tải dữ liệu!");
+      }
+    } catch (err) {
+      message.error(err.message || "Lỗi khi tải dữ liệu");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  /* ============================================================
+     🟢 XỬ LÝ CRUD
+  ============================================================ */
   const handleAdd = () => {
     setEditingRecord(null);
     form.resetFields();
@@ -33,77 +78,92 @@ const SanPham = () => {
 
   const handleEdit = (record) => {
     setEditingRecord(record);
-    form.setFieldsValue(record);
+    form.setFieldsValue({
+      ten_sp: record.ten_sp,
+      mo_ta: record.mo_ta,
+      id_dvt_hq: record.id_dvt_hq,
+    });
     setIsModalVisible(true);
   };
 
-  const handleDelete = (id_sp) => {
-    // Logic gọi API xóa
-    setDataSource(dataSource.filter(item => item.id_sp !== id_sp));
-    setFilteredData(filteredData.filter(item => item.id_sp !== id_sp));
-    message.success('Xóa sản phẩm thành công!');
+  const handleDelete = async (id_sp) => {
+    try {
+      await deleteSanPham(id_sp);
+      message.success("Xóa sản phẩm thành công!");
+      fetchData();
+    } catch (err) {
+      message.error(err.message || "Lỗi khi xóa sản phẩm");
+    }
   };
 
   const handleCancel = () => {
     setIsModalVisible(false);
   };
 
-  const onFinish = (values) => {
-    if (editingRecord) {
-      // Logic gọi API cập nhật
-      const updatedData = dataSource.map(item =>
-        item.id_sp === editingRecord.id_sp ? { ...editingRecord, ...values } : item
-      );
-      setDataSource(updatedData);
-      setFilteredData(updatedData);
-      message.success('Cập nhật sản phẩm thành công!');
-    } else {
-      // Logic gọi API thêm mới
-      const newRecord = {
-        id_sp: Math.max(...dataSource.map(item => item.id_sp)) + 1, // id tạm
-        ...values,
-        ten_dvt: dvtHqList.find(dvt => dvt.id_dvt_hq === values.id_dvt_hq)?.ten_dvt || ''
-      };
-      setDataSource([...dataSource, newRecord]);
-      setFilteredData([...dataSource, newRecord]);
-      message.success('Thêm sản phẩm thành công!');
+  const onFinish = async (values) => {
+    try {
+      if (editingRecord) {
+        await updateSanPham(editingRecord.id_sp, values);
+        message.success("Cập nhật sản phẩm thành công!");
+      } else {
+        await createSanPham(values);
+        message.success("Thêm sản phẩm thành công!");
+      }
+      setIsModalVisible(false);
+      fetchData();
+    } catch (err) {
+      message.error(err.message || "Lỗi khi lưu sản phẩm");
     }
-    setIsModalVisible(false);
   };
 
+  /* ============================================================
+     🟢 TÌM KIẾM
+  ============================================================ */
   const handleSearch = (e) => {
-      const value = e.target.value.toLowerCase();
-      const filtered = dataSource.filter(item => 
+    const value = e.target.value.toLowerCase();
+    const filtered = dataSource.filter(
+      (item) =>
         item.ten_sp.toLowerCase().includes(value) ||
-        item.mo_ta.toLowerCase().includes(value)
-      );
-      setFilteredData(filtered);
-  }
+        (item.mo_ta || "").toLowerCase().includes(value)
+    );
+    setFilteredData(filtered);
+  };
 
+  /* ============================================================
+     🟢 CỘT TABLE
+  ============================================================ */
   const columns = [
-    { title: 'Mã SP', dataIndex: 'id_sp', key: 'id_sp', sorter: (a, b) => a.id_sp - b.id_sp },
-    { title: 'Tên sản phẩm', dataIndex: 'ten_sp', key: 'ten_sp' },
-    { title: 'Mô tả', dataIndex: 'mo_ta', key: 'mo_ta' },
-    { title: 'Đơn vị tính HQ', dataIndex: 'ten_dvt', key: 'ten_dvt' },
+    { title: "Mã SP", dataIndex: "id_sp", key: "id_sp", sorter: (a, b) => a.id_sp - b.id_sp },
+    { title: "Tên sản phẩm", dataIndex: "ten_sp", key: "ten_sp" },
+    { title: "Mô tả", dataIndex: "mo_ta", key: "mo_ta" },
+    { title: "Đơn vị tính HQ", dataIndex: "ten_dvt", key: "ten_dvt" },
     {
-      title: 'Hành động',
-      key: 'action',
+      title: "Hành động",
+      key: "action",
+      width: 180,
       render: (_, record) => (
-        <Space size="middle">
-          <Button icon={<EditOutlined />} onClick={() => handleEdit(record)}>Sửa</Button>
+        <Space>
+          <Button icon={<EditOutlined />} onClick={() => handleEdit(record)}>
+            Sửa
+          </Button>
           <Popconfirm
             title="Bạn có chắc muốn xóa?"
             onConfirm={() => handleDelete(record.id_sp)}
             okText="Có"
             cancelText="Không"
           >
-            <Button icon={<DeleteOutlined />} danger>Xóa</Button>
+            <Button icon={<DeleteOutlined />} danger>
+              Xóa
+            </Button>
           </Popconfirm>
         </Space>
       ),
     },
   ];
 
+  /* ============================================================
+     🟢 GIAO DIỆN
+  ============================================================ */
   return (
     <div>
       <h2>Quản lý Sản phẩm</h2>
@@ -111,53 +171,59 @@ const SanPham = () => {
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
           Thêm mới
         </Button>
-        <Input 
-            placeholder="Tìm kiếm sản phẩm..." 
-            prefix={<SearchOutlined />}
-            onChange={handleSearch}
-            style={{ width: 300 }}
+        <Input
+          placeholder="Tìm kiếm sản phẩm..."
+          prefix={<SearchOutlined />}
+          onChange={handleSearch}
+          style={{ width: 300 }}
         />
       </Space>
-      <Table columns={columns} dataSource={filteredData} rowKey="id_sp" />
+
+      <Spin spinning={loading}>
+        <Table columns={columns} dataSource={filteredData} rowKey="id_sp" />
+      </Spin>
 
       <Modal
-        title={editingRecord ? 'Chỉnh sửa Sản phẩm' : 'Thêm mới Sản phẩm'}
-        visible={isModalVisible}
+        title={editingRecord ? "Chỉnh sửa Sản phẩm" : "Thêm mới Sản phẩm"}
+        open={isModalVisible}
         onCancel={handleCancel}
         footer={null}
+        destroyOnClose
       >
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Form.Item
             name="ten_sp"
             label="Tên sản phẩm"
-            rules={[{ required: true, message: 'Vui lòng nhập tên sản phẩm!' }]}
+            rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm!" }]}
           >
             <Input />
           </Form.Item>
-          <Form.Item
-            name="mo_ta"
-            label="Mô tả"
-          >
+
+          <Form.Item name="mo_ta" label="Mô tả">
             <Input.TextArea />
           </Form.Item>
+
           <Form.Item
             name="id_dvt_hq"
             label="Đơn vị tính Hải quan"
-            rules={[{ required: true, message: 'Vui lòng chọn đơn vị tính!' }]}
+            rules={[{ required: true, message: "Vui lòng chọn đơn vị tính!" }]}
           >
             <Select placeholder="Chọn đơn vị tính">
-                {dvtHqList.map(dvt => (
-                    <Option key={dvt.id_dvt_hq} value={dvt.id_dvt_hq}>{dvt.ten_dvt}</Option>
-                ))}
+              {dvtHqList.map((dvt) => (
+                <Option key={dvt.id_dvt_hq} value={dvt.id_dvt_hq}>
+                  {dvt.ten_dvt}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
+
           <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Lưu
-            </Button>
-            <Button style={{ marginLeft: 8 }} onClick={handleCancel}>
-              Hủy
-            </Button>
+            <Space>
+              <Button type="primary" htmlType="submit">
+                Lưu
+              </Button>
+              <Button onClick={handleCancel}>Hủy</Button>
+            </Space>
           </Form.Item>
         </Form>
       </Modal>

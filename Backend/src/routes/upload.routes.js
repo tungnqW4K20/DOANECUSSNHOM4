@@ -3,25 +3,27 @@
 const express = require('express');
 const uploadController = require('../controllers/upload.controller');
 const { authenticateToken, authorizeRole } = require('../middlewares/auth.middleware');
-const uploadMiddleware = require('../middlewares/upload.middleware'); 
-const multer = require('multer'); 
+const uploadMiddleware = require('../middlewares/upload.middleware');
+const multer = require('multer');
 
 const router = express.Router();
 
 router.post(
     '/file-giay-to',
-    authenticateToken,
-    authorizeRole("business"),
-    uploadMiddleware.single('productImage'), 
+    // authenticateToken,
+    // authorizeRole("business"), cho nó upload còn đăng ký chứ quang tùng ơi =))
+    // uploadMiddleware.single('productImage'), 
+    uploadMiddleware.single('fileUpload'),
     uploadController.uploadProductImage
 );
 
 
 router.post(
-    '/file-multi-giay-to', 
+    '/file-multi-giay-to',
     authenticateToken,
     authorizeRole("business"),
-    uploadMiddleware.array('productImages', 10), 
+    // uploadMiddleware.array('productImages', 10),
+    uploadMiddleware.array('fileUploads', 10),
     uploadController.uploadMultipleProductImages
 );
 

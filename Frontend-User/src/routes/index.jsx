@@ -15,8 +15,10 @@ import Register from '../pages/Register';
 import TongQuan from '../pages/TongQuan';
 import SanPham from '../pages/SanPham';
 import HopDong from '../pages/HopDong';
+import LoHang from '../pages/LoHang';
 import NguyenPhuLieu from '../pages/NguyenPhuLieu';
 import TyGia from '../pages/TyGia';
+import ToKhai from '../pages/ToKhai';
 import NhapToKhaiNhap from '../pages/NhapToKhaiNhap';
 import NhapToKhaiXuat from '../pages/NhapToKhaiXuat';
 import Kho from '../pages/Kho';
@@ -42,9 +44,11 @@ const router = createBrowserRouter([
       { index: true, element: <Navigate to="/tong-quan" replace /> },    
       { path: 'tong-quan', element: <TongQuan /> },
       { path: 'hop-dong', element: <HopDong /> },
+      { path: 'lo-hang', element: <LoHang /> },
       { path: 'san-pham', element: <SanPham /> },
       { path: 'nguyen-phu-lieu', element: <NguyenPhuLieu /> },
       { path: 'dinh-muc', element: <DinhMuc /> },
+      { path: 'to-khai', element: <ToKhai /> },
       { path: 'to-khai-nhap', element: <NhapToKhaiNhap /> },
       { path: 'to-khai-xuat', element: <NhapToKhaiXuat /> },
       { path: 'kho', element: <Kho /> },

@@ -11,9 +11,9 @@ module.exports = (sequelize, DataTypes) => {
     id_ct: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     id_hd_nhap: { type: DataTypes.INTEGER, allowNull: false },
     id_npl: { type: DataTypes.INTEGER, allowNull: false },
-    so_luong: { type: DataTypes.DECIMAL(18,2), allowNull: true },
-    don_gia: { type: DataTypes.DECIMAL(18,2), allowNull: true },
-    tri_gia: { type: DataTypes.DECIMAL(18,2), allowNull: true }
+    so_luong: { type: DataTypes.DECIMAL(18, 2), allowNull: true },
+    don_gia: { type: DataTypes.DECIMAL(18, 2), allowNull: true },
+    tri_gia: { type: DataTypes.DECIMAL(18, 2), allowNull: true }
   }, {
     sequelize,
     modelName: 'HoaDonNhapChiTiet',

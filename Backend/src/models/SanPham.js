@@ -7,6 +7,8 @@ module.exports = (sequelize, DataTypes) => {
       SanPham.hasMany(models.DinhMucSanPham, { foreignKey: 'id_sp', as: 'dinhMucs' });
       SanPham.hasMany(models.QuyDoiDonViSP, { foreignKey: 'id_sp', as: 'quyDoiDonViSPs' });
       SanPham.hasMany(models.HoaDonXuatChiTiet, { foreignKey: 'id_sp', as: 'hoaDonXuatChiTiets' });
+      SanPham.hasMany(models.TonKhoSP, { foreignKey: 'id_sp', as: 'tonKhoSPs' });
+
     }
   }
   SanPham.init({

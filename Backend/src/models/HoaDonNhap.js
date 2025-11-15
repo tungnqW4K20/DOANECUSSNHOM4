@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     so_hd: { type: DataTypes.STRING(50), allowNull: false },
     ngay_hd: { type: DataTypes.DATEONLY, allowNull: false },
     id_tt: { type: DataTypes.INTEGER, allowNull: true },
-    tong_tien: { type: DataTypes.DECIMAL(18,2), allowNull: true },
+    tong_tien: { type: DataTypes.DECIMAL(18, 2), allowNull: true },
     file_hoa_don: { type: DataTypes.STRING(255), allowNull: true }
   }, {
     sequelize,

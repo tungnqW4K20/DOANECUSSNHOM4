@@ -5,17 +5,66 @@ const XuatKhoSPChiTiet = db.XuatKhoSPChiTiet;
 const Kho = db.Kho;
 const SanPham = db.SanPham;
 const HoaDonXuat = db.HoaDonXuat;
+const TonKhoSP = db.TonKhoSP;
 
-const createXuatSP = async ({ id_kho, id_hd_xuat, ngay_xuat, file_phieu }) => {
+// const createXuatSP = async ({ id_kho, id_hd_xuat, ngay_xuat, file_phieu }) => {
+//   if (!id_kho || !ngay_xuat) throw new Error('Thiếu dữ liệu bắt buộc (id_kho, ngay_xuat)');
+//   const kho = await Kho.findByPk(id_kho);
+//   if (!kho) throw new Error(`Không tìm thấy kho ID=${id_kho}`);
+//   if (id_hd_xuat) {
+//     const hd = await HoaDonXuat.findByPk(id_hd_xuat);
+//     if (!hd) throw new Error(`Không tìm thấy hóa đơn xuất ID=${id_hd_xuat}`);
+//   }
+//   const created = await XuatKhoSP.create({ id_kho, id_hd_xuat, ngay_xuat, file_phieu });
+//   return created;
+// };
+const createXuatSP = async ({ id_kho, ngay_xuat, file_phieu, chi_tiets }) => {
   if (!id_kho || !ngay_xuat) throw new Error('Thiếu dữ liệu bắt buộc (id_kho, ngay_xuat)');
+  if (!Array.isArray(chi_tiets) || chi_tiets.length === 0)
+    throw new Error('Danh sách chi tiết xuất kho không hợp lệ');
+
   const kho = await Kho.findByPk(id_kho);
   if (!kho) throw new Error(`Không tìm thấy kho ID=${id_kho}`);
-  if (id_hd_xuat) {
-    const hd = await HoaDonXuat.findByPk(id_hd_xuat);
-    if (!hd) throw new Error(`Không tìm thấy hóa đơn xuất ID=${id_hd_xuat}`);
+
+  const t = await db.sequelize.transaction();
+
+  try {
+    const phieu = await XuatKhoSP.create({ id_kho, ngay_xuat, file_phieu }, { transaction: t });
+
+    for (const ct of chi_tiets) {
+      const { id_sp, so_luong } = ct;
+      if (!id_sp || !so_luong) throw new Error('Thiếu id_sp hoặc so_luong');
+
+      const sp = await SanPham.findByPk(id_sp, { transaction: t });
+      if (!sp) throw new Error(`Không tìm thấy SP ID=${id_sp}`);
+
+      const tonKho = await TonKhoSP.findOne({ where: { id_kho, id_sp }, transaction: t });
+      if (!tonKho)
+        throw new Error(`Kho ID=${id_kho} chưa có tồn kho cho SP ID=${id_sp}`);
+
+      if (tonKho.so_luong_ton < so_luong)
+        throw new Error(`SP ID=${id_sp} không đủ tồn kho. Hiện có ${tonKho.so_luong_ton}`);
+
+      await XuatKhoSPChiTiet.create(
+        { id_xuat: phieu.id_xuat, id_sp, so_luong },
+        { transaction: t }
+      );
+
+      await tonKho.decrement('so_luong_ton', { by: so_luong, transaction: t });
+    }
+
+    await t.commit();
+
+    return await XuatKhoSP.findByPk(phieu.id_xuat, {
+      include: [
+        { model: XuatKhoSPChiTiet, as: 'chiTiets' },
+        { model: Kho, as: 'kho' }
+      ]
+    });
+  } catch (err) {
+    if (!t.finished) await t.rollback();
+    throw err;
   }
-  const created = await XuatKhoSP.create({ id_kho, id_hd_xuat, ngay_xuat, file_phieu });
-  return created;
 };
 
 const getAllXuatSP = async () => {
