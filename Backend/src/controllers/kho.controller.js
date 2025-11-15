@@ -12,7 +12,14 @@ exports.create = async (req, res) => {
 
 exports.getAll = async (req, res) => {
   try {
-    const data = await khoService.getAllKho();
+    const id_dn = req.user?.id;   
+ if (!id_dn) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu id_dn trong token!"
+      });
+    }
+    const data = await khoService.getAllKho(id_dn);
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });

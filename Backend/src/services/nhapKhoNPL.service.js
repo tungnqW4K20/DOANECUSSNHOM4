@@ -103,10 +103,10 @@ const createNhapNPL = async ({ id_kho, id_hd_nhap, ngay_nhap, file_phieu, chi_ti
 
     // 5️⃣ Xử lý từng dòng chi tiết
     for (const ct of chi_tiets) {
-      const { id_npl, so_luong } = ct;
+      const { id_npl, so_luong_nhap } = ct;
 
-      if (!id_npl || !so_luong)
-        throw new Error('Thiếu id_npl hoặc so_luong trong chi tiết');
+      if (!id_npl || !so_luong_nhap)
+        throw new Error('Thiếu id_npl hoặc so_luong_nhap trong chi tiết');
 
       // 5.1️⃣ Kiểm tra nguyên phụ liệu tồn tại
       const npl = await NguyenPhuLieu.findByPk(id_npl, { transaction: t });
@@ -118,7 +118,7 @@ const createNhapNPL = async ({ id_kho, id_hd_nhap, ngay_nhap, file_phieu, chi_ti
         {
           id_nhap: phieu.id_nhap,
           id_npl,
-          so_luong
+          so_luong: so_luong_nhap
         },
         { transaction: t }
       );
@@ -131,14 +131,14 @@ const createNhapNPL = async ({ id_kho, id_hd_nhap, ngay_nhap, file_phieu, chi_ti
 
       if (ton) {
         // Nếu đã có → cộng thêm
-        await ton.increment("so_luong_ton", { by: so_luong, transaction: t });
+        await ton.increment("so_luong_ton", { by: so_luong_nhap, transaction: t });
       } else {
         // Nếu chưa có → tạo mới
         await TonKhoNPL.create(
           {
             id_kho,
             id_npl,
-            so_luong_ton: so_luong
+            so_luong_ton: so_luong_nhap
           },
           { transaction: t }
         );
