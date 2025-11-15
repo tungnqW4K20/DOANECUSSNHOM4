@@ -5,13 +5,63 @@ const XuatKhoNPLChiTiet = db.XuatKhoNPLChiTiet;
 const Kho = db.Kho;
 const NguyenPhuLieu = db.NguyenPhuLieu;
 
-const createXuatNPL = async ({ id_kho, ngay_xuat, file_phieu }) => {
+// const createXuatNPL = async ({ id_kho, ngay_xuat, file_phieu }) => {
+//   if (!id_kho || !ngay_xuat) throw new Error('Thiếu dữ liệu bắt buộc (id_kho, ngay_xuat)');
+//   const kho = await Kho.findByPk(id_kho);
+//   if (!kho) throw new Error(`Không tìm thấy kho ID=${id_kho}`);
+
+//   const created = await XuatKhoNPL.create({ id_kho, ngay_xuat, file_phieu });
+//   return created;
+// };
+
+const createXuatNPL = async ({ id_kho, ngay_xuat, file_phieu, chi_tiets }) => {
   if (!id_kho || !ngay_xuat) throw new Error('Thiếu dữ liệu bắt buộc (id_kho, ngay_xuat)');
+  if (!Array.isArray(chi_tiets) || chi_tiets.length === 0)
+    throw new Error('Danh sách chi tiết xuất kho không hợp lệ');
+
   const kho = await Kho.findByPk(id_kho);
   if (!kho) throw new Error(`Không tìm thấy kho ID=${id_kho}`);
 
-  const created = await XuatKhoNPL.create({ id_kho, ngay_xuat, file_phieu });
-  return created;
+  const t = await db.sequelize.transaction();
+  try {
+    // Tạo phiếu xuất chính
+    const phieu = await XuatKhoNPL.create({ id_kho, ngay_xuat, file_phieu }, { transaction: t });
+
+    // Tạo chi tiết phiếu xuất
+    for (const ct of chi_tiets) {
+      const { id_npl, so_luong } = ct;
+      if (!id_npl || !so_luong) throw new Error('Thiếu id_npl hoặc so_luong trong chi tiết');
+
+      const npl = await NguyenPhuLieu.findByPk(id_npl);
+      if (!npl) throw new Error(`Không tìm thấy nguyên phụ liệu ID=${id_npl}`);
+      //  Kiểm tra đủ tồn kho hay không
+      // if (npl.so_luong_ton < so_luong)
+      //   throw new Error(
+      //     `Nguyên phụ liệu ID=${id_npl} không đủ tồn kho (còn ${npl.so_luong_ton})`
+      //   );
+      await XuatKhoNPLChiTiet.create(
+        { id_xuat: phieu.id_xuat, id_npl, so_luong },
+        { transaction: t }
+      );
+
+      // Trừ tồn kho
+      // await npl.decrement('so_luong_ton', {
+      //   by: so_luong,
+      //   transaction: t
+      // });
+
+    }
+
+    await t.commit();
+
+    // Trả kết quả đầy đủ (có chi tiết)
+    return await XuatKhoNPL.findByPk(phieu.id_xuat, {
+      include: [{ model: XuatKhoNPLChiTiet, as: 'chiTiets' }, { model: Kho, as: 'kho' }]
+    });
+  } catch (err) {
+    await t.rollback();
+    throw err;
+  }
 };
 
 const getAllXuatNPL = async () => {

@@ -64,7 +64,7 @@ const loginBussiness = async (loginData) => {
     });
 
     if (!doanhnghiep) {
-        throw new Error('Thông tin đăng nhập của doanh nghiệp ko chính xác!');
+        throw new Error('Thông tin đăng nhập của doanh nghiệp không chính xác!');
     }
 
 
