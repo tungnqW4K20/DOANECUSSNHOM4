@@ -117,6 +117,9 @@ const NhapKhoNPL = () => {
        🟢 SUBMIT FORM — TẠO PHIẾU NHẬP KHO
     ============================================================ */
     const onFinish = async (values) => {
+        console.log("values-----------------", values)
+            console.log("values----------------- 🟢 Chi tiết NPL:", chiTietNhap);
+
         if (!chiTietNhap.length) {
             message.warning("Vui lòng chọn hóa đơn nhập và nhập chi tiết NPL!");
             return;
@@ -129,6 +132,7 @@ const NhapKhoNPL = () => {
                 ? dayjs(values.ngay_nhap).format("YYYY-MM-DD")
                 : null,
             file_phieu: fileUrl || null,
+            chi_tiets: chiTietNhap
         };
 
         console.log("📦 Dữ liệu gửi đi:", payloadPhieu);

@@ -98,75 +98,130 @@ const NhapKhoSP = () => {
     };
 
     /* submit */
+    // const onFinish = async (values) => {
+    //     if (!chiTietNhap.length) {
+    //         message.error("Vui lòng thêm ít nhất một sản phẩm!");
+    //         return;
+    //     }
+
+    //     // validate each row has product selected and quantity >0
+    //     for (const row of chiTietNhap) {
+    //         if (!row.id_sp) {
+    //             message.error("Vui lòng chọn sản phẩm cho tất cả dòng!");
+    //             return;
+    //         }
+    //         if (!row.so_luong || Number(row.so_luong) <= 0) {
+    //             message.error("Số lượng phải lớn hơn 0 cho tất cả dòng!");
+    //             return;
+    //         }
+    //     }
+
+    //     const payloadPhieu = {
+    //         id_kho: values.id_kho,
+    //         ngay_nhap: values.ngay_nhap ? dayjs(values.ngay_nhap).format("YYYY-MM-DD") : null,
+    //         file_phieu: fileUrl || null, // backend: nếu không có cột, bạn có thể bỏ (but backend nhapkho-sp có file_phieu)
+    //     };
+
+    //     try {
+    //         setSubmitting(true);
+
+    //         // 1) tạo phiếu nhập
+    //         const resPhieu = await createNhapKhoSP(payloadPhieu);
+    //         // resPhieu could be { success, data } or data object
+    //         const success = resPhieu?.success ?? true;
+    //         const data = resPhieu?.data || resPhieu;
+    //         const id_nhap = data?.id_nhap || data?.id || data?.idNhap || null;
+
+    //         if (!success || !id_nhap) {
+    //             console.error("createNhapKhoSP response:", resPhieu);
+    //             message.error(resPhieu?.message || "Không tạo được phiếu nhập!");
+    //             return;
+    //         }
+
+    //         // 2) thêm chi tiết (gửi id_nhap trong body để backend chấp nhận)
+    //         const promises = chiTietNhap.map(row =>
+    //             addChiTietNhapKhoSP(id_nhap, {
+    //                 id_nhap: id_nhap,
+    //                 id_sp: row.id_sp,
+    //                 so_luong: row.so_luong,
+    //             })
+    //         );
+
+    //         const results = await Promise.all(promises);
+    //         const allSuccess = results.every(r => r?.success ?? true);
+
+    //         if (allSuccess) {
+    //             message.success("Tạo phiếu nhập và chi tiết thành công!");
+    //             form.resetFields();
+    //             setChiTietNhap([]);
+    //             setFileUrl(null);
+    //         } else {
+    //             console.warn("Một số chi tiết trả lỗi:", results);
+    //             message.warning("Phiếu nhập tạo thành công nhưng có chi tiết bị lỗi. Kiểm tra console.");
+    //         }
+    //     } catch (err) {
+    //         console.error(err);
+    //         message.error(err?.message || "Lỗi khi tạo phiếu nhập!");
+    //     } finally {
+    //         setSubmitting(false);
+    //     }
+    // };
     const onFinish = async (values) => {
+        console.log("⭕ FORM VALUES:", values);
+        console.log("⭕ CHI TIẾT SẢN PHẨM:", chiTietNhap);
+
         if (!chiTietNhap.length) {
             message.error("Vui lòng thêm ít nhất một sản phẩm!");
             return;
         }
 
-        // validate each row has product selected and quantity >0
-        for (const row of chiTietNhap) {
-            if (!row.id_sp) {
+        // Validate chi tiết
+        for (const item of chiTietNhap) {
+            if (!item.id_sp) {
                 message.error("Vui lòng chọn sản phẩm cho tất cả dòng!");
                 return;
             }
-            if (!row.so_luong || Number(row.so_luong) <= 0) {
-                message.error("Số lượng phải lớn hơn 0 cho tất cả dòng!");
+            if (!item.so_luong || item.so_luong <= 0) {
+                message.error("Số lượng phải lớn hơn 0!");
                 return;
             }
         }
 
-        const payloadPhieu = {
+        const payload = {
             id_kho: values.id_kho,
-            ngay_nhap: values.ngay_nhap ? dayjs(values.ngay_nhap).format("YYYY-MM-DD") : null,
-            file_phieu: fileUrl || null, // backend: nếu không có cột, bạn có thể bỏ (but backend nhapkho-sp có file_phieu)
+            ngay_nhap: values.ngay_nhap
+                ? dayjs(values.ngay_nhap).format("YYYY-MM-DD")
+                : null,
+            file_phieu: fileUrl || null,
+            chi_tiets: chiTietNhap
         };
+
+        console.log("📦 Payload gửi backend:", payload);
 
         try {
             setSubmitting(true);
 
-            // 1) tạo phiếu nhập
-            const resPhieu = await createNhapKhoSP(payloadPhieu);
-            // resPhieu could be { success, data } or data object
-            const success = resPhieu?.success ?? true;
-            const data = resPhieu?.data || resPhieu;
-            const id_nhap = data?.id_nhap || data?.id || data?.idNhap || null;
+            const res = await createNhapKhoSP(payload);
 
-            if (!success || !id_nhap) {
-                console.error("createNhapKhoSP response:", resPhieu);
-                message.error(resPhieu?.message || "Không tạo được phiếu nhập!");
+            if (!res?.success) {
+                message.error(res?.message || "Không tạo được phiếu nhập!");
                 return;
             }
 
-            // 2) thêm chi tiết (gửi id_nhap trong body để backend chấp nhận)
-            const promises = chiTietNhap.map(row =>
-                addChiTietNhapKhoSP(id_nhap, {
-                    id_nhap: id_nhap,
-                    id_sp: row.id_sp,
-                    so_luong: row.so_luong,
-                })
-            );
+            message.success("Tạo phiếu nhập kho thành công!");
 
-            const results = await Promise.all(promises);
-            const allSuccess = results.every(r => r?.success ?? true);
+            // Reset form
+            form.resetFields();
+            setChiTietNhap([]);
+            setFileUrl(null);
 
-            if (allSuccess) {
-                message.success("Tạo phiếu nhập và chi tiết thành công!");
-                form.resetFields();
-                setChiTietNhap([]);
-                setFileUrl(null);
-            } else {
-                console.warn("Một số chi tiết trả lỗi:", results);
-                message.warning("Phiếu nhập tạo thành công nhưng có chi tiết bị lỗi. Kiểm tra console.");
-            }
         } catch (err) {
             console.error(err);
-            message.error(err?.message || "Lỗi khi tạo phiếu nhập!");
+            message.error("Lỗi khi tạo phiếu nhập!");
         } finally {
             setSubmitting(false);
         }
     };
-
     /* columns */
     const columns = [
         {
