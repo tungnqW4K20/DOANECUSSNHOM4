@@ -1,32 +1,51 @@
-import React, { useState } from 'react';
-import { Table, Button, Space, Tag, message, Row, Col, Typography, Card, Input, Dropdown, Drawer, Descriptions, Statistic, Popconfirm } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Table, Button, Space, Tag, message, Row, Col, Typography, Card, Input, Dropdown, Drawer, Descriptions, Statistic, Popconfirm, Spin } from 'antd';
 import { StopOutlined, CheckCircleOutlined, EyeOutlined, MoreOutlined, WarningOutlined, FileDoneOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import { contractLiquidityAPI } from '../../services/api.service';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
 
-// --- Dữ liệu giả lập ---
-const initialData = [
-  { id_bc: 1, id_hd: 1, so_hd: 'HD-2025-001', ten_dn: 'Công ty May Mặc ABC', thoi_gian_tao: '2025-09-15 10:30', tong_npl_nhap: 15000.50, tong_npl_su_dung: 14800.00, tong_npl_ton: 200.50, tong_sp_xuat: 10000, ket_luan: 'HopLe', trang_thai: 'HopLe' },
-  { id_bc: 2, id_hd: 2, so_hd: 'HD-2025-002', ten_dn: 'Xí nghiệp Dệt Phong Phú', thoi_gian_tao: '2025-09-18 14:00', tong_npl_nhap: 25000.00, tong_npl_su_dung: 24000.00, tong_npl_ton: 1000.00, tong_sp_xuat: 12000, ket_luan: 'DuNPL', trang_thai: 'HopLe' },
-  { id_bc: 3, id_hd: 3, so_hd: 'HD-2025-003', ten_dn: 'Công ty Gỗ An Cường', thoi_gian_tao: '2025-09-20 11:00', tong_npl_nhap: 5000.00, tong_npl_su_dung: 5200.00, tong_npl_ton: -200.00, tong_sp_xuat: 3000, ket_luan: 'ViPham', trang_thai: 'TamKhoa' },
-  { id_bc: 4, id_hd: 4, so_hd: 'HD-2025-004', ten_dn: 'Công ty May Mặc ABC', thoi_gian_tao: '2025-09-21 09:30', tong_npl_nhap: 8000.00, tong_npl_su_dung: 7500.00, tong_npl_ton: 500.00, tong_sp_xuat: 4000, ket_luan: 'HopLe', trang_thai: 'Huy' },
-];
-// -----------------------
-
 const ThanhKhoanAdmin = () => {
-  const [dataSource, setDataSource] = useState(initialData);
+  const [dataSource, setDataSource] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState('');
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
+
+  // Load dữ liệu từ API
+  const loadReports = async () => {
+    try {
+      setLoading(true);
+      const response = await contractLiquidityAPI.getAll();
+      setDataSource(response.data?.data || response.data || []);
+    } catch (error) {
+      console.error('Lỗi khi tải danh sách báo cáo thanh khoản:', error);
+      message.error('Không thể tải danh sách báo cáo thanh khoản');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadReports();
+  }, []);
 
   const showDrawer = (record) => { setSelectedReport(record); setDrawerVisible(true); };
   const closeDrawer = () => { setDrawerVisible(false); };
 
-  const handleStatusChange = (id_bc, newStatus) => {
-    setDataSource(dataSource.map(item => item.id_bc === id_bc ? { ...item, trang_thai: newStatus } : item));
-    const statusText = newStatus === 'TamKhoa' ? 'Tạm khóa' : 'Hủy';
-    message.success(`${statusText} báo cáo thanh khoản thành công!`);
+  const handleStatusChange = async (id_bc, newStatus) => {
+    try {
+      // Note: Backend có thể cần endpoint riêng để update status admin
+      // Hiện tại tạm thời update local state
+      setDataSource(dataSource.map(item => item.id_bc === id_bc ? { ...item, trang_thai: newStatus } : item));
+      const statusText = newStatus === 'TamKhoa' ? 'Tạm khóa' : 'Hủy';
+      message.success(`${statusText} báo cáo thanh khoản thành công!`);
+    } catch (error) {
+      console.error('Lỗi khi cập nhật trạng thái:', error);
+      message.error('Không thể cập nhật trạng thái báo cáo');
+    }
   };
 
   const getKetLuanTag = (ketLuan) => {
@@ -90,8 +109,14 @@ const ThanhKhoanAdmin = () => {
     },
   ];
 
-  const hopLeCount = dataSource.filter(r => r.ket_luan === 'HopLe').length;
-  const batThuongCount = dataSource.filter(r => r.ket_luan === 'DuNPL' || r.ket_luan === 'ViPham').length;
+  // Lọc dữ liệu theo search
+  const filteredData = dataSource.filter(item =>
+    item.so_hd?.toLowerCase().includes(searchText.toLowerCase()) ||
+    item.ten_dn?.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  const hopLeCount = filteredData.filter(r => r.ket_luan === 'HopLe').length;
+  const batThuongCount = filteredData.filter(r => r.ket_luan === 'DuNPL' || r.ket_luan === 'ViPham').length;
 
   return (
     <>
@@ -105,9 +130,16 @@ const ThanhKhoanAdmin = () => {
       <Card bordered={false} className="content-card">
         <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
             <Col><Text strong>Danh sách Báo cáo Thanh khoản</Text></Col>
-            <Col><Search placeholder="Tìm theo HĐ hoặc tên DN..." style={{ width: 300 }} /></Col>
+            <Col><Search
+              placeholder="Tìm theo HĐ hoặc tên DN..."
+              style={{ width: 300 }}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            /></Col>
         </Row>
-        <Table columns={columns} dataSource={dataSource} rowKey="id_bc" />
+        <Spin spinning={loading}>
+          <Table columns={columns} dataSource={filteredData} rowKey="id_bc" />
+        </Spin>
       </Card>
       
       <Drawer title={`Chi tiết Báo cáo #${selectedReport?.id_bc}`} width={600} onClose={closeDrawer} open={drawerVisible}>
