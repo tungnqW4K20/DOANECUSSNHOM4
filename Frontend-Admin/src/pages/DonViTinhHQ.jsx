@@ -1,22 +1,34 @@
-import React, { useState } from 'react';
-import { Table, Button, Modal, Form, Input, Space, Popconfirm, message, Row, Col, Typography, Card } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Table, Button, Modal, Form, Input, Space, Popconfirm, message, Row, Col, Typography, Card, Spin } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { unitAPI } from '../services/api.service';
 
 const { Title } = Typography;
 
-// Dữ liệu giả lập
-const initialData = [
-  { id_dvt_hq: 1, ten_dvt: 'KGM', mo_ta: 'Kilogram' },
-  { id_dvt_hq: 2, ten_dvt: 'M', mo_ta: 'Mét' },
-  { id_dvt_hq: 3, ten_dvt: 'Cái', mo_ta: 'Đơn vị sản phẩm đếm được' },
-  { id_dvt_hq: 4, ten_dvt: 'L', mo_ta: 'Lít' },
-];
-
 const DonViTinhHQ = () => {
   const [form] = Form.useForm();
-  const [dataSource, setDataSource] = useState(initialData);
+  const [dataSource, setDataSource] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
+
+  // Load dữ liệu từ API
+  const loadUnits = async () => {
+    try {
+      setLoading(true);
+      const response = await unitAPI.getAll();
+      setDataSource(response.data?.data || response.data || []);
+    } catch (error) {
+      console.error('Lỗi khi tải danh sách đơn vị tính:', error);
+      message.error('Không thể tải danh sách đơn vị tính');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUnits();
+  }, []);
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -30,24 +42,32 @@ const DonViTinhHQ = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id_dvt_hq) => {
-    setDataSource(dataSource.filter(item => item.id_dvt_hq !== id_dvt_hq));
-    message.success('Xóa đơn vị tính thành công!');
+  const handleDelete = async (id_dvt_hq) => {
+    try {
+      await unitAPI.delete(id_dvt_hq);
+      message.success('Xóa đơn vị tính thành công!');
+      loadUnits(); // Reload data
+    } catch (error) {
+      console.error('Lỗi khi xóa đơn vị tính:', error);
+      message.error('Không thể xóa đơn vị tính');
+    }
   };
 
-  const onFinish = (values) => {
-    if (editingRecord) {
-      setDataSource(dataSource.map(item => item.id_dvt_hq === editingRecord.id_dvt_hq ? { ...editingRecord, ...values } : item));
-      message.success('Cập nhật thành công!');
-    } else {
-      const newRecord = { 
-        id_dvt_hq: Math.max(...dataSource.map(item => item.id_dvt_hq), 0) + 1, 
-        ...values 
-      };
-      setDataSource([...dataSource, newRecord]);
-      message.success('Thêm mới thành công!');
+  const onFinish = async (values) => {
+    try {
+      if (editingRecord) {
+        await unitAPI.update(editingRecord.id_dvt_hq, values);
+        message.success('Cập nhật đơn vị tính thành công!');
+      } else {
+        await unitAPI.create(values);
+        message.success('Thêm đơn vị tính mới thành công!');
+      }
+      setIsModalOpen(false);
+      loadUnits(); // Reload data
+    } catch (error) {
+      console.error('Lỗi khi lưu đơn vị tính:', error);
+      message.error('Không thể lưu đơn vị tính');
     }
-    setIsModalOpen(false);
   };
 
   const columns = [
@@ -92,7 +112,9 @@ const DonViTinhHQ = () => {
       </Row>
 
       <Card bordered={false} className="content-card">
-        <Table columns={columns} dataSource={dataSource} rowKey="id_dvt_hq" />
+        <Spin spinning={loading}>
+          <Table columns={columns} dataSource={dataSource} rowKey="id_dvt_hq" />
+        </Spin>
       </Card>
       
       <Modal 

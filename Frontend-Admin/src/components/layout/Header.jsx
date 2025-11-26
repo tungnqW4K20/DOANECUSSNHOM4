@@ -8,7 +8,7 @@ const { Text } = Typography;
 
 const AppHeader = () => {
     const navigate = useNavigate();
-    const adminUser = JSON.parse(localStorage.getItem('adminUser'));
+    const adminUser = JSON.parse(localStorage.getItem('adminUser') || '{}');
 
     const handleLogout = () => {
         localStorage.removeItem('adminAuthToken');
@@ -28,7 +28,7 @@ const AppHeader = () => {
                 <a onClick={(e) => e.preventDefault()}>
                     <Space>
                         <Avatar style={{ backgroundColor: '#87d068' }} icon={<UserOutlined />} />
-                        <Text strong>{adminUser ? adminUser.ten_admin : 'Admin'}</Text>
+                        <Text strong>{adminUser?.ten_admin || adminUser?.email || 'Admin'}</Text>
                     </Space>
                 </a>
             </Dropdown>

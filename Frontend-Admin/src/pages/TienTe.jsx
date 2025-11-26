@@ -1,35 +1,64 @@
-import React, { useState } from 'react';
-import { Table, Button, Modal, Form, Input, Space, Popconfirm, message, Row, Col, Typography, Card } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Table, Button, Modal, Form, Input, Space, Popconfirm, message, Row, Col, Typography, Card, Spin } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { currencyAPI } from '../services/api.service';
 
 const { Title } = Typography;
 
-// Dữ liệu giả lập
-const initialData = [
-  { id_tt: 1, ma_tt: 'USD', ten_tt: 'Đô la Mỹ' },
-  { id_tt: 2, ma_tt: 'VND', ten_tt: 'Việt Nam Đồng' },
-  { id_tt: 3, ma_tt: 'JPY', ten_tt: 'Yên Nhật' },
-];
-
 const TienTe = () => {
   const [form] = Form.useForm();
-  const [dataSource, setDataSource] = useState(initialData);
+  const [dataSource, setDataSource] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
 
+  // Load dữ liệu từ API
+  const loadCurrencies = async () => {
+    try {
+      setLoading(true);
+      const response = await currencyAPI.getAll();
+      setDataSource(response.data?.data || response.data || []);
+    } catch (error) {
+      console.error('Lỗi khi tải danh sách tiền tệ:', error);
+      message.error('Không thể tải danh sách tiền tệ');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCurrencies();
+  }, []);
+
   const handleAdd = () => { setEditingRecord(null); form.resetFields(); setIsModalOpen(true); };
   const handleEdit = (record) => { setEditingRecord(record); form.setFieldsValue(record); setIsModalOpen(true); };
-  const handleDelete = (id_tt) => { setDataSource(dataSource.filter(item => item.id_tt !== id_tt)); message.success('Xóa thành công!'); };
 
-  const onFinish = (values) => {
-    if (editingRecord) {
-      setDataSource(dataSource.map(item => item.id_tt === editingRecord.id_tt ? { ...editingRecord, ...values } : item));
-      message.success('Cập nhật thành công!');
-    } else {
-      setDataSource([...dataSource, { id_tt: Date.now(), ...values }]);
-      message.success('Thêm mới thành công!');
+  const handleDelete = async (id_tt) => {
+    try {
+      await currencyAPI.delete(id_tt);
+      message.success('Xóa tiền tệ thành công!');
+      loadCurrencies(); // Reload data
+    } catch (error) {
+      console.error('Lỗi khi xóa tiền tệ:', error);
+      message.error('Không thể xóa tiền tệ');
     }
-    setIsModalOpen(false);
+  };
+
+  const onFinish = async (values) => {
+    try {
+      if (editingRecord) {
+        await currencyAPI.update(editingRecord.id_tt, values);
+        message.success('Cập nhật tiền tệ thành công!');
+      } else {
+        await currencyAPI.create(values);
+        message.success('Thêm tiền tệ mới thành công!');
+      }
+      setIsModalOpen(false);
+      loadCurrencies(); // Reload data
+    } catch (error) {
+      console.error('Lỗi khi lưu tiền tệ:', error);
+      message.error('Không thể lưu tiền tệ');
+    }
   };
 
   const columns = [
@@ -55,7 +84,9 @@ const TienTe = () => {
       </Row>
 
       <Card bordered={false} className="content-card">
-        <Table columns={columns} dataSource={dataSource} rowKey="id_tt" />
+        <Spin spinning={loading}>
+          <Table columns={columns} dataSource={dataSource} rowKey="id_tt" />
+        </Spin>
       </Card>
       
       <Modal title={editingRecord ? 'Chỉnh sửa' : 'Thêm mới'} open={isModalOpen} onCancel={() => setIsModalOpen(false)} footer={null}>
