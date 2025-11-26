@@ -28,28 +28,25 @@ const getAllBusiness = async () => {
 };
 
 
-const approveBussiness = async (id_dn) => {
+const approveBussiness = async (id_dn, status) => {
+  const valid = ["APPROVED", "REJECTED", "PENDING"];
 
     if (!id_dn) {
         throw new Error('Thiếu id doanh nghiệp');
     }
 
-    const [rowsUpdated] = await db.DoanhNghiep.update(
-        { status: 'APPROVED' },
-        { where: { id_dn, status: 'PENDING' } }
-    );
+     if (!status || !valid.includes(status)) {
+    throw new Error("Trạng thái không hợp lệ");
+  }
 
-    if (rowsUpdated === 0) {
-        throw new Error('Không tìm thấy doanh nghoepej');
-    }
+  const [updated] = await db.DoanhNghiep.update(
+    { status },
+    { where: { id_dn } }
+  );
 
-    const doanhnghiep = await DoanhNghiep.findOne({
-        where: {
-            [db.Sequelize.Op.or]: [
-                { id_dn },]
-        }
-    });
-    return doanhnghiep
+  if (updated === 0) throw new Error("Không tìm thấy doanh nghiệp");
+
+  return await db.DoanhNghiep.findByPk(id_dn);
 };
 
 const getCategoryById = async (categoryId) => {

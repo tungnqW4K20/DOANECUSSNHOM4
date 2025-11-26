@@ -47,9 +47,10 @@ const getAll = async (req, res, next) => {
 
 const approveBussiness = async (req, res, next) => {
     try {
-        const { idDoanhNghiep } = req.body;
-      
-        const result = await doanhnghiepService.approveBussiness(idDoanhNghiep);
+        const { id_dn, status  } = req.body;
+       if (!id_dn || !status)
+      return res.status(400).json({ success: false, message: "Thiếu tham số" });
+        const result = await doanhnghiepService.approveBussiness(id_dn, status );
         
 
         res.status(200).json({

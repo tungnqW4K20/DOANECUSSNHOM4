@@ -6,10 +6,10 @@ const { authenticateToken, authorizeRole } = require('../middlewares/auth.middle
 
 const router = express.Router();
 
-router.post("/", authenticateToken, authorizeRole("HaiQuan"), quyDoiSPController.create);
+router.post("/", authenticateToken, authorizeRole("Admin"), quyDoiSPController.create);
 router.get("/", quyDoiSPController.getAll);
 router.get("/:id_qd", quyDoiSPController.getById);
-router.put("/:id_qd", authenticateToken, authorizeRole("HaiQuan"), quyDoiSPController.update);
-router.delete("/:id_qd", authenticateToken, authorizeRole("HaiQuan"), quyDoiSPController.remove);
+router.put("/:id_qd", authenticateToken, authorizeRole("Admin"), quyDoiSPController.update);
+router.delete("/:id_qd", authenticateToken, authorizeRole("Admin"), quyDoiSPController.remove);
 
 module.exports = router;

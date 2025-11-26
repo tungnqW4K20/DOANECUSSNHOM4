@@ -116,11 +116,11 @@ const loginHQ = async (loginData) => {
     const payload = {
         id: haiquan.id_hq,
         ten_hq: haiquan.ten_hq,
-        role: "HaiQuan"
+        role: "Admin"
     };
 
-    const token = generateToken(payload, 'HaiQuan');
-    const refreshToken = generateRefreshToken(payload, 'HaiQuan')
+    const token = generateToken(payload, 'Admin');
+    const refreshToken = generateRefreshToken(payload, 'Admin')
 
     const { password: _, ...HaiQuanInfo } = haiquan.toJSON();
     return { token, refreshToken, HaiQuan: HaiQuanInfo };
@@ -161,6 +161,7 @@ const generateNewTokens = async (refreshToken) => {
         throw error
     }
 }
+
 
 module.exports = {
     registerBusiness,

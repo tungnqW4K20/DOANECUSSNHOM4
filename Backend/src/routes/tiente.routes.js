@@ -6,11 +6,11 @@ const { authenticateToken, authorizeRole } = require('../middlewares/auth.middle
 
 const router = express.Router();
 
-router.post("/",authenticateToken, authorizeRole("HaiQuan"), currencyController.createCurrency);
+router.post("/",authenticateToken, authorizeRole("Admin"), currencyController.createCurrency);
 router.get("/", currencyController.getAllCurrencies);
 router.get("/:id_tt", currencyController.getCurrencyById);
 
-router.put("/:id_tt", authenticateToken, authorizeRole("HaiQuan"), currencyController.updateCurrency);
+router.put("/:id_tt", authenticateToken, authorizeRole("Admin"), currencyController.updateCurrency);
 
 module.exports = router;
 
