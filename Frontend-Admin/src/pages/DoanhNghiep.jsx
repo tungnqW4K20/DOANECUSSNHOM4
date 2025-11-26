@@ -1,428 +1,319 @@
-
-// import React, { useState, useEffect } from "react";
-// import {
-//   Table,
-//   Button,
-//   Space,
-//   Tag,
-//   message,
-//   Row,
-//   Col,
-//   Typography,
-//   Card,
-//   Input,
-//   Dropdown,
-//   Drawer,
-//   Descriptions,
-// } from "antd";
-// import {
-//   CheckCircleOutlined,
-//   CloseCircleOutlined,
-//   EyeOutlined,
-//   MoreOutlined,
-// } from "@ant-design/icons";
-// import dayjs from "dayjs";
-// import axios from "axios";
-// import { getAllDoanhNghiep } from "../services/doanhnghiep.service";
-
-// const { Title } = Typography;
-// const { Search } = Input;
-
-// const DoanhNghiep = () => {
-//   const [dataSource, setDataSource] = useState([]);
-//   const [loading, setLoading] = useState(false);
-//   const [drawerVisible, setDrawerVisible] = useState(false);
-//   const [selectedDN, setSelectedDN] = useState(null);
-
-//   // Lấy danh sách doanh nghiệp từ API
-//    useEffect(() => {
-//     const fetchDN = async () => {
-//       try {
-//         setLoading(true);
-
-//         const res = await getAllDoanhNghiep(); // gọi service
-
-//         const list = res?.data || [];
-
-//         // Map dữ liệu BE -> FE (giữ nguyên cấu trúc cũ)
-//         const mapped = list.map((item) => ({
-//           id_dn: item.id_dn,
-//           ten_dn: item.ten_dn,
-//           ma_so_thue: item.ma_so_thue,
-//           email: item.email,
-//           sdt: item.sdt,
-//           dia_chi: item.dia_chi,
-//           file_giay_phep: item.file_giay_phep,
-//           trang_thai: item.status, // FE đang dùng "trang_thai"
-//           ngay_tao: item.ngay_tao || item.createdAt || null,
-//         }));
-
-//         setDataSource(mapped);
-//       } catch (err) {
-//         message.error(err?.message || "Không lấy được danh sách doanh nghiệp!");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchDN();
-//   }, []);
-
-//   const showDrawer = (record) => {
-//     setSelectedDN(record);
-//     setDrawerVisible(true);
-//   };
-
-//   const closeDrawer = () => {
-//     setDrawerVisible(false);
-//   };
-
-//   // Hiện tại chỉ đổi status trên FE, nếu muốn lưu xuống DB thì sau này thêm API update
-//   const handleStatusChange = (id_dn, newStatus) => {
-//     setDataSource((prev) =>
-//       prev.map((item) =>
-//         item.id_dn === id_dn ? { ...item, trang_thai: newStatus } : item
-//       )
-//     );
-//     const statusText = newStatus === 1 ? "Duyệt" : "Từ chối";
-//     message.success(`${statusText} tài khoản thành công!`);
-//   };
-
-//   const getStatusTag = (status) => {
-//     if (status === 1) return <Tag color="success">Đã duyệt</Tag>;
-//     if (status === 2) return <Tag color="error">Đã từ chối</Tag>;
-//     return <Tag color="warning">Chờ duyệt</Tag>;
-//   };
-
-//   const columns = [
-//     { title: "Tên Doanh nghiệp", dataIndex: "ten_dn", key: "ten_dn" },
-//     { title: "Mã số thuế", dataIndex: "ma_so_thue", key: "ma_so_thue" },
-//     { title: "Email", dataIndex: "email", key: "email" },
-//     {
-//       title: "Ngày đăng ký",
-//       dataIndex: "ngay_tao",
-//       key: "ngay_tao",
-//       render: (text) =>
-//         text ? dayjs(text).format("DD/MM/YYYY") : "--",
-//     },
-//     {
-//       title: "Trạng thái",
-//       dataIndex: "trang_thai",
-//       key: "trang_thai",
-//       render: getStatusTag,
-//     },
-//     {
-//       title: "Hành động",
-//       key: "action",
-//       width: 120,
-//       align: "center",
-//       render: (_, record) => (
-//         <Space>
-//           <Button icon={<EyeOutlined />} onClick={() => showDrawer(record)} />
-//           <Dropdown
-//             menu={{
-//               items: [
-//                 {
-//                   key: "1",
-//                   label: "Duyệt",
-//                   icon: <CheckCircleOutlined />,
-//                   onClick: () => handleStatusChange(record.id_dn, 1),
-//                   disabled: record.trang_thai === 1,
-//                 },
-//                 {
-//                   key: "2",
-//                   label: "Từ chối",
-//                   icon: <CloseCircleOutlined />,
-//                   onClick: () => handleStatusChange(record.id_dn, 2),
-//                   disabled: record.trang_thai === 2,
-//                 },
-//               ],
-//             }}
-//           >
-//             <Button icon={<MoreOutlined />} />
-//           </Dropdown>
-//         </Space>
-//       ),
-//     },
-//   ];
-
-//   return (
-//     <>
-//       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-//         <Col>
-//           <Title level={3} className="page-header-heading">
-//             Quản lý Doanh nghiệp
-//           </Title>
-//         </Col>
-//         <Col>
-//           <Search
-//             placeholder="Tìm kiếm doanh nghiệp..."
-//             style={{ width: 300 }}
-//           />
-//         </Col>
-//       </Row>
-
-//       <Card bordered={false} className="content-card">
-//         <Table
-//           columns={columns}
-//           dataSource={dataSource}
-//           rowKey="id_dn"
-//           loading={loading}
-//         />
-//       </Card>
-
-//       <Drawer
-//         title="Thông tin chi tiết Doanh nghiệp"
-//         width={600}
-//         onClose={closeDrawer}
-//         open={drawerVisible}
-//       >
-//         {selectedDN && (
-//           <Descriptions bordered column={1}>
-//             <Descriptions.Item label="Tên DN">
-//               {selectedDN.ten_dn}
-//             </Descriptions.Item>
-//             <Descriptions.Item label="Mã số thuế">
-//               {selectedDN.ma_so_thue}
-//             </Descriptions.Item>
-//             <Descriptions.Item label="Email">
-//               {selectedDN.email}
-//             </Descriptions.Item>
-//             <Descriptions.Item label="Số điện thoại">
-//               {selectedDN.sdt}
-//             </Descriptions.Item>
-//             <Descriptions.Item label="Địa chỉ">
-//               {selectedDN.dia_chi}
-//             </Descriptions.Item>
-//             <Descriptions.Item label="Trạng thái">
-//               {getStatusTag(selectedDN.trang_thai)}
-//             </Descriptions.Item>
-//             <Descriptions.Item label="Ngày đăng ký">
-//               {selectedDN.ngay_tao
-//                 ? dayjs(selectedDN.ngay_tao).format("DD/MM/YYYY HH:mm")
-//                 : "--"}
-//             </Descriptions.Item>
-//             <Descriptions.Item label="Giấy phép KD">
-//               <a href="#">{selectedDN.file_giay_phep}</a>
-//             </Descriptions.Item>
-//           </Descriptions>
-//         )}
-//       </Drawer>
-//     </>
-//   );
-// };
-
-// export default DoanhNghiep;
-
-import React, { useState, useEffect } from "react";
-import {
-  Table,
-  Button,
-  Space,
-  Tag,
-  message,
-  Row,
-  Col,
-  Typography,
-  Card,
-  Input,
-  Dropdown,
-  Drawer,
-  Descriptions,
-} from "antd";
-import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  EyeOutlined,
-  MoreOutlined,
-} from "@ant-design/icons";
-import dayjs from "dayjs";
-
-import {
-  getAllDoanhNghiep,
-  updateStatus,
-} from "../services/doanhnghiep.service";
+import React, { useState, useEffect } from 'react';
+import { Table, Button, Space, Tag, message, Row, Col, Typography, Card, Input, Dropdown, Drawer, Descriptions, Modal, Form, Select, Upload, Spin, Popconfirm, Statistic } from 'antd';
+import { CheckCircleOutlined, CloseCircleOutlined, EyeOutlined, MoreOutlined, UploadOutlined, ReloadOutlined } from '@ant-design/icons';
+import { InboxOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
+import { businessAdminAPI } from  '../services/api.service';
 
 const { Title } = Typography;
 const { Search } = Input;
+const { Option } = Select;
+const { Dragger } = Upload;
 
 const DoanhNghiep = () => {
+  // State management
   const [dataSource, setDataSource] = useState([]);
   const [loading, setLoading] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedDN, setSelectedDN] = useState(null);
+  const [searchText, setSearchText] = useState('');
+  const [statusFilter, setStatusFilter] = useState(null);
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
+  const [rejectModalVisible, setRejectModalVisible] = useState(false);
+  const [uploadModalVisible, setUploadModalVisible] = useState(false);
+  const [rejectForm] = Form.useForm();
+  const [uploadForm] = Form.useForm();
+  const [selectedDNForAction, setSelectedDNForAction] = useState(null);
 
-  // ========================
-  // FETCH API DOANH NGHIỆP
-  // ========================
+  // Load data from API
+  const loadBusinesses = async (params = {}) => {
+    try {
+      setLoading(true);
+      const searchParams = {
+        page: params.page || pagination.current,
+        limit: params.limit || pagination.pageSize,
+        search: params.search !== undefined ? params.search : searchText,
+        status: params.status !== undefined ? params.status : statusFilter,
+      };
+
+      const response = await businessAdminAPI.getAll(searchParams);
+      const data = response.data;
+      
+      setDataSource(data.data || data);
+      setPagination(prev => ({
+        ...prev,
+        total: data.total || (data.data ? data.data.length : 0)
+      }));
+    } catch (error) {
+      console.error('Lỗi khi tải danh sách doanh nghiệp:', error);
+      message.error('Không thể tải danh sách doanh nghiệp');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDN = async () => {
-      try {
-        setLoading(true);
-
-        const res = await getAllDoanhNghiep();
-        const list = res?.data || [];
-
-        // Map BE → FE
-        const mapped = list.map((item) => ({
-          id_dn: item.id_dn,
-          ten_dn: item.ten_dn,
-          ma_so_thue: item.ma_so_thue,
-          email: item.email,
-          sdt: item.sdt,
-          dia_chi: item.dia_chi,
-          file_giay_phep: item.file_giay_phep,
-
-          // Convert status BE → FE
-          trang_thai:
-            item.status === "APPROVED"
-              ? 1
-              : item.status === "REJECTED"
-              ? 2
-              : 0,
-
-          ngay_tao: item.ngay_tao || item.createdAt || null,
-        }));
-
-        setDataSource(mapped);
-      } catch (err) {
-        message.error(err?.message || "Không lấy được danh sách doanh nghiệp!");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDN();
+    loadBusinesses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Handle table change (pagination, sorting, filtering)
+  const handleTableChange = (newPagination) => {
+    setPagination(newPagination);
+    loadBusinesses({ page: newPagination.current, limit: newPagination.pageSize });
+  };
+
+  // Search handler
+  const handleSearch = (value) => {
+    setSearchText(value);
+    const newPagination = { ...pagination, current: 1 };
+    setPagination(newPagination);
+    loadBusinesses({ search: value, page: 1, limit: newPagination.pageSize });
+  };
+
+  // Status filter handler
+  const handleStatusFilter = (value) => {
+    setStatusFilter(value);
+    const newPagination = { ...pagination, current: 1 };
+    setPagination(newPagination);
+    loadBusinesses({ status: value, page: 1, limit: newPagination.pageSize });
+  };
+
+  // Refresh data
+  const handleRefresh = () => {
+    loadBusinesses();
+    message.success('Đã làm mới dữ liệu');
+  };
+
+  // Drawer handlers
   const showDrawer = (record) => {
     setSelectedDN(record);
     setDrawerVisible(true);
   };
-  const closeDrawer = () => setDrawerVisible(false);
+  const closeDrawer = () => { setDrawerVisible(false); };
 
-  // ================================
-  // HANDLE APPROVE / REJECT
-  // ================================
-  const handleApprove = async (record) => {
+  // Approve business
+  const handleApprove = async (id_dn) => {
     try {
-      await updateStatus(record.id_dn, "APPROVED");
-
-      setDataSource((prev) =>
-        prev.map((item) =>
-          item.id_dn === record.id_dn ? { ...item, trang_thai: 1 } : item
-        )
-      );
-
-      message.success("Duyệt doanh nghiệp thành công!");
-    } catch (err) {
-      message.error(err?.message || "Lỗi khi duyệt doanh nghiệp");
+      await businessAdminAPI.approve(id_dn);
+      message.success('Duyệt doanh nghiệp thành công');
+      loadBusinesses();
+    } catch (error) {
+      console.error('Lỗi khi duyệt doanh nghiệp:', error);
+      message.error('Không thể duyệt doanh nghiệp');
     }
   };
 
-  const handleReject = async (record) => {
+  // Show reject modal
+  const showRejectModal = (record) => {
+    setSelectedDNForAction(record);
+    setRejectModalVisible(true);
+    rejectForm.resetFields();
+  };
+
+  // Reject business
+  const handleReject = async (values) => {
     try {
-      await updateStatus(record.id_dn, "REJECTED");
-
-      setDataSource((prev) =>
-        prev.map((item) =>
-          item.id_dn === record.id_dn ? { ...item, trang_thai: 2 } : item
-        )
-      );
-
-      message.success("Từ chối doanh nghiệp thành công!");
-    } catch (err) {
-      message.error(err?.message || "Lỗi khi từ chối doanh nghiệp");
+      await businessAdminAPI.reject(selectedDNForAction.id_dn, values.reason);
+      message.success('Từ chối doanh nghiệp thành công');
+      setRejectModalVisible(false);
+      loadBusinesses();
+    } catch (error) {
+      console.error('Lỗi khi từ chối doanh nghiệp:', error);
+      message.error('Không thể từ chối doanh nghiệp');
     }
   };
 
-  // ================================
-  // STATUS TAG
-  // ================================
+  // Show upload modal
+  const showUploadModal = (record) => {
+    setSelectedDNForAction(record);
+    setUploadModalVisible(true);
+    uploadForm.resetFields();
+  };
+
+  // Handle file upload
+  const handleUpload = async (values) => {
+    try {
+      const file = values.file?.fileList?.[0]?.originFileObj;
+      if (!file) {
+        message.error('Vui lòng chọn file');
+        return;
+      }
+
+      await businessAdminAPI.uploadLicense(selectedDNForAction.id_dn, file);
+      message.success('Upload giấy phép kinh doanh thành công');
+      setUploadModalVisible(false);
+      loadBusinesses();
+    } catch (error) {
+      console.error('Lỗi khi upload file:', error);
+      message.error('Không thể upload file');
+    }
+  };
+
+  // Status tag renderer
   const getStatusTag = (status) => {
-    if (status === 1) return <Tag color="green">Đã duyệt</Tag>;
-    if (status === 2) return <Tag color="red">Đã từ chối</Tag>;
-    return <Tag color="orange">Chờ duyệt</Tag>;
+    const statusUpper = status?.toUpperCase();
+    switch (statusUpper) {
+      case 'APPROVED': return <Tag color="success">Đã duyệt</Tag>;
+      case 'REJECTED': return <Tag color="error">Đã từ chối</Tag>;
+      case 'PENDING': return <Tag color="warning">Chờ duyệt</Tag>;
+      default: return <Tag color="default">{status || 'Không xác định'}</Tag>;
+    }
   };
 
+  // Table columns
   const columns = [
-    { title: "Tên Doanh nghiệp", dataIndex: "ten_dn", key: "ten_dn" },
-    { title: "Mã số thuế", dataIndex: "ma_so_thue", key: "ma_so_thue" },
-    { title: "Email", dataIndex: "email", key: "email" },
     {
-      title: "Ngày đăng ký",
-      dataIndex: "ngay_tao",
-      key: "ngay_tao",
-      render: (text) =>
-        text ? dayjs(text).format("DD/MM/YYYY") : "--",
+      title: 'Tên Doanh nghiệp',
+      dataIndex: 'ten_dn',
+      key: 'ten_dn',
+      sorter: (a, b) => a.ten_dn.localeCompare(b.ten_dn),
+    },
+    { title: 'Mã số thuế', dataIndex: 'ma_so_thue', key: 'ma_so_thue' },
+    { title: 'Email', dataIndex: 'email', key: 'email' },
+    { title: 'Số điện thoại', dataIndex: 'sdt', key: 'sdt' },
+    {
+      title: 'Ngày đăng ký',
+      dataIndex: 'ngay_tao',
+      key: 'ngay_tao',
+      render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-',
+      sorter: (a, b) => dayjs(a.ngay_tao).unix() - dayjs(b.ngay_tao).unix(),
     },
     {
-      title: "Trạng thái",
-      dataIndex: "trang_thai",
-      key: "trang_thai",
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      key: 'status',
       render: getStatusTag,
+      filters: [
+        { text: 'Chờ duyệt', value: 'PENDING' },
+        { text: 'Đã duyệt', value: 'APPROVED' },
+        { text: 'Đã từ chối', value: 'REJECTED' },
+      ],
+      onFilter: (value, record) => record.status?.toUpperCase() === value,
     },
     {
-      title: "Hành động",
-      key: "action",
-      width: 120,
-      align: "center",
+      title: 'Hành động',
+      key: 'action',
+      width: 200,
+      align: 'center',
       render: (_, record) => (
         <Space>
-          <Button icon={<EyeOutlined />} onClick={() => showDrawer(record)} />
-
-          <Dropdown
-            menu={{
-              items: [
-                {
-                  key: "1",
-                  label: "Duyệt",
-                  icon: <CheckCircleOutlined />,
-                  onClick: () => handleApprove(record),
-                  disabled: record.trang_thai === 1,
-                },
-                {
-                  key: "2",
-                  label: "Từ chối",
-                  icon: <CloseCircleOutlined />,
-                  onClick: () => handleReject(record),
-                  disabled: record.trang_thai === 2,
-                },
-              ],
-            }}
-          >
-            <Button icon={<MoreOutlined />} />
+          <Button
+            icon={<EyeOutlined />}
+            onClick={() => showDrawer(record)}
+            size="small"
+          />
+          <Dropdown menu={{
+            items: [
+              {
+                key: 'approve',
+                label: 'Duyệt',
+                icon: <CheckCircleOutlined />,
+                onClick: () => handleApprove(record.id_dn),
+                disabled: record.status?.toUpperCase() === 'APPROVED'
+              },
+              {
+                key: 'reject',
+                label: 'Từ chối',
+                icon: <CloseCircleOutlined />,
+                onClick: () => showRejectModal(record),
+                disabled: record.status?.toUpperCase() === 'REJECTED'
+              },
+              {
+                key: 'upload',
+                label: 'Upload GPKD',
+                icon: <UploadOutlined />,
+                onClick: () => showUploadModal(record)
+              }
+            ]
+          }}>
+            <Button icon={<MoreOutlined />} size="small" />
           </Dropdown>
         </Space>
       ),
     },
   ];
 
+  // Statistics
+  const totalCount = dataSource.length;
+  const approvedCount = dataSource.filter(item => item.status?.toUpperCase() === 'APPROVED').length;
+  const pendingCount = dataSource.filter(item => item.status?.toUpperCase() === 'PENDING').length;
+  const rejectedCount = dataSource.filter(item => item.status?.toUpperCase() === 'REJECTED').length;
+
   return (
     <>
-      {/* Header */}
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+        <Col><Title level={3} className="page-header-heading">Quản lý Doanh nghiệp</Title></Col>
         <Col>
-          <Title level={3} className="page-header-heading">
-            Quản lý Doanh nghiệp
-          </Title>
-        </Col>
-        <Col>
-          <Search placeholder="Tìm kiếm doanh nghiệp..." style={{ width: 300 }} />
+          <Space>
+            <Button icon={<ReloadOutlined />} onClick={handleRefresh}>
+              Làm mới
+            </Button>
+          </Space>
         </Col>
       </Row>
 
-      {/* Table */}
+      {/* Statistics Cards */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic title="Tổng số DN" value={totalCount} />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic title="Đã duyệt" value={approvedCount} valueStyle={{ color: '#3f8600' }} />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic title="Chờ duyệt" value={pendingCount} valueStyle={{ color: '#cf1322' }} />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic title="Đã từ chối" value={rejectedCount} />
+          </Card>
+        </Col>
+      </Row>
+
       <Card bordered={false} className="content-card">
-        <Table
-          columns={columns}
-          dataSource={dataSource}
-          rowKey="id_dn"
-          loading={loading}
-        />
+        <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+          <Col>
+            <Space>
+              <Search
+                placeholder="Tìm kiếm doanh nghiệp..."
+                style={{ width: 300 }}
+                onSearch={handleSearch}
+                onChange={(e) => !e.target.value && handleSearch('')}
+              />
+              <Select
+                placeholder="Lọc theo trạng thái"
+                style={{ width: 150 }}
+                allowClear
+                onChange={handleStatusFilter}
+              >
+                <Option value="PENDING">Chờ duyệt</Option>
+                <Option value="APPROVED">Đã duyệt</Option>
+                <Option value="REJECTED">Đã từ chối</Option>
+              </Select>
+            </Space>
+          </Col>
+        </Row>
+
+        <Spin spinning={loading}>
+          <Table
+            columns={columns}
+            dataSource={dataSource}
+            rowKey="id_dn"
+            pagination={pagination}
+            onChange={handleTableChange}
+            scroll={{ x: 1000 }}
+          />
+        </Spin>
       </Card>
 
-      {/* Drawer */}
+      {/* Detail Drawer */}
       <Drawer
         title="Thông tin chi tiết Doanh nghiệp"
         width={600}
@@ -431,35 +322,91 @@ const DoanhNghiep = () => {
       >
         {selectedDN && (
           <Descriptions bordered column={1}>
-            <Descriptions.Item label="Tên DN">
-              {selectedDN.ten_dn}
-            </Descriptions.Item>
-            <Descriptions.Item label="Mã số thuế">
-              {selectedDN.ma_so_thue}
-            </Descriptions.Item>
-            <Descriptions.Item label="Email">
-              {selectedDN.email}
-            </Descriptions.Item>
-            <Descriptions.Item label="Số điện thoại">
-              {selectedDN.sdt}
-            </Descriptions.Item>
-            <Descriptions.Item label="Địa chỉ">
-              {selectedDN.dia_chi}
-            </Descriptions.Item>
-            <Descriptions.Item label="Trạng thái">
-              {getStatusTag(selectedDN.trang_thai)}
-            </Descriptions.Item>
+            <Descriptions.Item label="Tên DN">{selectedDN.ten_dn}</Descriptions.Item>
+            <Descriptions.Item label="Mã số thuế">{selectedDN.ma_so_thue}</Descriptions.Item>
+            <Descriptions.Item label="Email">{selectedDN.email}</Descriptions.Item>
+            <Descriptions.Item label="Số điện thoại">{selectedDN.sdt}</Descriptions.Item>
+            <Descriptions.Item label="Địa chỉ">{selectedDN.dia_chi}</Descriptions.Item>
+            <Descriptions.Item label="Trạng thái">{getStatusTag(selectedDN.status)}</Descriptions.Item>
             <Descriptions.Item label="Ngày đăng ký">
-              {selectedDN.ngay_tao
-                ? dayjs(selectedDN.ngay_tao).format("DD/MM/YYYY HH:mm")
-                : "--"}
+              {selectedDN.ngay_tao ? dayjs(selectedDN.ngay_tao).format('DD/MM/YYYY HH:mm') : '-'}
             </Descriptions.Item>
             <Descriptions.Item label="Giấy phép KD">
-              <a href="#">{selectedDN.file_giay_phep}</a>
+              {selectedDN.file_giay_phep ? (
+                <a href="#" target="_blank">{selectedDN.file_giay_phep}</a>
+              ) : (
+                <span style={{ color: '#999' }}>Chưa upload</span>
+              )}
             </Descriptions.Item>
+            {selectedDN.ly_do_tu_choi && (
+              <Descriptions.Item label="Lý do từ chối">
+                <span style={{ color: '#cf1322' }}>{selectedDN.ly_do_tu_choi}</span>
+              </Descriptions.Item>
+            )}
           </Descriptions>
         )}
       </Drawer>
+
+      {/* Reject Modal */}
+      <Modal
+        title="Từ chối doanh nghiệp"
+        open={rejectModalVisible}
+        onCancel={() => setRejectModalVisible(false)}
+        onOk={() => rejectForm.submit()}
+        okText="Từ chối"
+        cancelText="Hủy"
+      >
+        <Form
+          form={rejectForm}
+          layout="vertical"
+          onFinish={handleReject}
+        >
+          <Form.Item
+            name="reason"
+            label="Lý do từ chối"
+            rules={[{ required: true, message: 'Vui lòng nhập lý do từ chối' }]}
+          >
+            <Input.TextArea rows={4} placeholder="Nhập lý do từ chối..." />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Upload Modal */}
+      <Modal
+        title="Upload Giấy phép kinh doanh"
+        open={uploadModalVisible}
+        onCancel={() => setUploadModalVisible(false)}
+        onOk={() => uploadForm.submit()}
+        okText="Upload"
+        cancelText="Hủy"
+      >
+        <Form
+          form={uploadForm}
+          layout="vertical"
+          onFinish={handleUpload}
+        >
+          <Form.Item
+            name="file"
+            label="Chọn file"
+            rules={[{ required: true, message: 'Vui lòng chọn file' }]}
+          >
+            <Dragger
+              name="file"
+              multiple={false}
+              accept=".pdf,.jpg,.jpeg,.png"
+              beforeUpload={() => false}
+            >
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined />
+              </p>
+              <p className="ant-upload-text">Click hoặc kéo thả file vào đây</p>
+              <p className="ant-upload-hint">
+                Chỉ hỗ trợ file PDF, JPG, PNG. Dung lượng tối đa 10MB
+              </p>
+            </Dragger>
+          </Form.Item>
+        </Form>
+      </Modal>
     </>
   );
 };
