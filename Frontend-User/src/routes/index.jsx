@@ -28,6 +28,7 @@ import NhapKhoNPL from '../pages/kho/NhapKhoNPL';
 import XuatKhoNPL from '../pages/kho/XuatKhoNPL';
 import NhapKhoSP from '../pages/kho/NhapKhoSP';
 import XuatKhoSP from '../pages/kho/XuatKhoSP';
+import BaoCaoTonKho from '../pages/BaoCaoTonKho';
 import DinhMuc from '../pages/DinhMuc';
 import QuyDoiDonVi from '../pages/QuyDoiDonVi';
 import ThanhKhoan from '../pages/ThanhKhoan';
@@ -60,6 +61,7 @@ const router = createBrowserRouter([
       { path: 'kho/xuat-npl', element: <XuatKhoNPL /> },
       { path: 'kho/nhap-sp', element: <NhapKhoSP /> },
       { path: 'kho/xuat-sp', element: <XuatKhoSP /> },
+      { path: 'ton-kho', element: <BaoCaoTonKho /> },
       { path: 'thanh-khoan', element: <ThanhKhoan /> },
       { path: 'ty-gia', element: <TyGia /> },
       { path: 'quy-doi-don-vi', element: <QuyDoiDonVi /> },
