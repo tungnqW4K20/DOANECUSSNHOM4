@@ -12,6 +12,7 @@ const tygiaRoutes = require('./routes/tygia.routes')
 const donvitinhHaiQuanRoutes = require('./routes/donvitinhHaiQuan.routes')
 const QuyDoiDonViSPRoutes = require('./routes/quydoi_sp.routes')
 const QuyDoiDonViDNRoutes = require('./routes/quydoi_dn.routes')
+const QuyDoiDonNPLDNRoutes = require('./routes/quydoi_npl.route')
 const dinhmucRoutes = require('./routes/dinhmuc.route')
 const nguyenlieuRoutes = require('./routes/nguyenlieu.route')
 const hopdongRoutes = require('./routes/hopdong.route')
@@ -51,8 +52,9 @@ app.use('/api/tiente', tienteRoutes)
 app.use('/api/tygia', tygiaRoutes)
 
 app.use('/api/don-vi-tinh-hai-quan', donvitinhHaiQuanRoutes)
-app.use('/api/quydoidonvisanpham', QuyDoiDonViSPRoutes)
-app.use('/api/quydoidonvidoanhnghiep', QuyDoiDonViDNRoutes)
+app.use('/api/quy-doi-don-vi-san-pham', QuyDoiDonViSPRoutes)
+app.use('/api/quy-doi-don-vi-doanh-nghiep', QuyDoiDonViDNRoutes)
+app.use('/api/quy-doi-don-vi-npl', QuyDoiDonNPLDNRoutes)
 app.use('/api/dinh-muc', dinhmucRoutes)
 app.use('/api/nguyen-lieu', nguyenlieuRoutes)
 app.use('/api/hop-dong', hopdongRoutes)
@@ -73,6 +75,7 @@ app.use('/api/xuatkho-npl', xuatKhoNPLRoutes);
 app.use('/api/nhapkho-sp', nhapKhoSPRoutes);
 app.use('/api/xuatkho-sp', xuatKhoSPRoutes);
 app.use('/api/bao-cao-thanh-khoan', baocaothanhkhoanRoutes);
+app.use('/api/thanh-khoan', baocaothanhkhoanRoutes);
 
 
 // --- Kết nối DB và khởi động Server ---
@@ -80,7 +83,7 @@ db.sequelize.authenticate()
   .then(() => {
     console.log(' Kết nối MySQL thành công!');
     return db.sequelize.sync(); // có thể dùng { alter: true } trong dev
-    //  return db.sequelize.sync({ alter: true })
+      //return db.sequelize.sync({ alter: true })
   })
 
   .then(() => {
