@@ -3,12 +3,23 @@
 const db = require('../models');
 const QuyDoiDonViSP = db.QuyDoiDonViSP;
 const DonViTinhHQ = db.DonViTinhHQ;
+const DoanhNghiep = db.DoanhNghiep;
+const SanPham = db.SanPham;
 
-const createQD = async ({ id_sp, ten_dvt_sp, id_dvt_hq, he_so }) => {
-  if (!id_sp || !ten_dvt_sp || !id_dvt_hq || !he_so) throw new Error("Thiếu dữ liệu bắt buộc");
-  const exists = await DonViTinhHQ.findByPk(id_dvt_hq);
-  if (!exists) throw new Error("Đơn vị tính hải quan không tồn tại");
-  return await QuyDoiDonViSP.create({ id_sp, ten_dvt_sp, id_dvt_hq, he_so });
+const createQD = async ({ id_dn, id_sp, ten_dvt_sp, id_dvt_hq, he_so }) => {
+  if (!id_dn || !id_sp || !ten_dvt_sp || !id_dvt_hq || !he_so)
+    throw new Error("Thiếu dữ liệu bắt buộc");
+
+  const checkDN = await DoanhNghiep.findByPk(id_dn);
+  if (!checkDN) throw new Error("Doanh nghiệp không tồn tại");
+
+  const checkHQ = await DonViTinhHQ.findByPk(id_dvt_hq);
+  if (!checkHQ) throw new Error("Đơn vị tính hải quan không tồn tại");
+
+  const checkSP = await SanPham.findByPk(id_sp);
+  if (!checkSP) throw new Error("Sản phẩm không tồn tại");
+
+  return await QuyDoiDonViSP.create({ id_dn, id_sp, ten_dvt_sp, id_dvt_hq, he_so });
 };
 
 const getAllQD = async () => {
@@ -37,3 +48,4 @@ const deleteQD = async (id_qd) => {
 };
 
 module.exports = { createQD, getAllQD, getQDById, updateQD, deleteQD };
+
