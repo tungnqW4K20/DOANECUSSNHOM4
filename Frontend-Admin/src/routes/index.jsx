@@ -11,9 +11,7 @@ import TongQuan from '../pages/TongQuan';
 import DoanhNghiep from '../pages/DoanhNghiep';
 import TienTe from '../pages/TienTe';
 import DonViTinhHQ from '../pages/DonViTinhHQ';
-import ToKhai from '../pages/theo-doi/ToKhai';
-import AuditLog from '../pages/theo-doi/AuditLog';
-import ThanhKhoanAdmin from '../pages/theo-doi/ThanhKhoan';
+import TaiKhoan from '../pages/TaiKhoan';
 
 
 const router = createBrowserRouter([
@@ -34,9 +32,7 @@ const router = createBrowserRouter([
       { path: 'doanh-nghiep', element: <DoanhNghiep /> },
       { path: 'tien-te', element: <TienTe /> },
       { path: 'don-vi-tinh-hq', element: <DonViTinhHQ /> },
-      { path: 'theo-doi/to-khai', element: <ToKhai /> },
-      { path: 'theo-doi/audit-log', element: <AuditLog /> },
-      { path: 'theo-doi/thanh-khoan', element: <ThanhKhoanAdmin /> },
+      { path: 'tai-khoan', element: <TaiKhoan /> },
     ],
   },
   { path: '*', element: <Navigate to="/" replace /> },

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Button, Space, Tag, message, Row, Col, Typography, Card, Input, Dropdown, Drawer, Descriptions, Modal, Form, Select, Upload, Spin, Popconfirm, Statistic } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, EyeOutlined, MoreOutlined, UploadOutlined, ReloadOutlined } from '@ant-design/icons';
 import { InboxOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
+import 'dayjs';
 import { businessAdminAPI } from  '../services/api.service';
 
 const { Title } = Typography;
@@ -21,11 +21,11 @@ const DoanhNghiep = () => {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [uploadModalVisible, setUploadModalVisible] = useState(false);
-  const [rejectForm] = Form.useForm();
   const [uploadForm] = Form.useForm();
   const [selectedDNForAction, setSelectedDNForAction] = useState(null);
 
   // Load data from API
+<<<<<<< Updated upstream
   const loadBusinesses = useCallback(async (params = {}) => {
     try {
       setLoading(true);
@@ -38,12 +38,34 @@ const DoanhNghiep = () => {
       };
 
       const response = await businessAdminAPI.getAll(searchParams);
+=======
+  const loadBusinesses = async () => {
+    try {
+      setLoading(true);
+      const response = await businessAdminAPI.getAll();
+>>>>>>> Stashed changes
       const data = response.data;
       
-      setDataSource(data.data || data);
+      let businesses = data.data || data || [];
+      
+      // Lọc theo search text
+      if (searchText) {
+        businesses = businesses.filter(item =>
+          item.ten_dn?.toLowerCase().includes(searchText.toLowerCase()) ||
+          item.ma_so_thue?.toLowerCase().includes(searchText.toLowerCase()) ||
+          item.email?.toLowerCase().includes(searchText.toLowerCase())
+        );
+      }
+      
+      // Lọc theo status
+      if (statusFilter) {
+        businesses = businesses.filter(item => item.status?.toUpperCase() === statusFilter);
+      }
+      
+      setDataSource(businesses);
       setPagination(prev => ({
         ...prev,
-        total: data.total || (data.data ? data.data.length : 0)
+        total: businesses.length
       }));
     } catch (error) {
       console.error('Lỗi khi tải danh sách doanh nghiệp:', error);
@@ -55,26 +77,41 @@ const DoanhNghiep = () => {
 
   useEffect(() => {
     loadBusinesses();
+<<<<<<< Updated upstream
   }, [loadBusinesses]);
 
   // Handle table change (pagination, sorting, filtering)
   const handleTableChange = (pagination) => {
     setPagination(pagination);
     loadBusinesses({ page: pagination.current, limit: pagination.pageSize });
+=======
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText, statusFilter]);
+
+  // Handle table change (pagination, sorting, filtering)
+  const handleTableChange = (newPagination) => {
+    setPagination(newPagination);
+>>>>>>> Stashed changes
   };
 
   // Search handler
   const handleSearch = (value) => {
     setSearchText(value);
     setPagination(prev => ({ ...prev, current: 1 }));
+<<<<<<< Updated upstream
     loadBusinesses({ search: value, page: 1 });
+=======
+>>>>>>> Stashed changes
   };
 
   // Status filter handler
   const handleStatusFilter = (value) => {
     setStatusFilter(value);
     setPagination(prev => ({ ...prev, current: 1 }));
+<<<<<<< Updated upstream
     loadBusinesses({ trang_thai: value, page: 1 });
+=======
+>>>>>>> Stashed changes
   };
 
   // Refresh data
@@ -98,7 +135,7 @@ const DoanhNghiep = () => {
       loadBusinesses();
     } catch (error) {
       console.error('Lỗi khi duyệt doanh nghiệp:', error);
-      message.error('Không thể duyệt doanh nghiệp');
+      message.error(error.response?.data?.message || 'Không thể duyệt doanh nghiệp');
     }
   };
 
@@ -110,15 +147,15 @@ const DoanhNghiep = () => {
   };
 
   // Reject business
-  const handleReject = async (values) => {
+  const handleReject = async () => {
     try {
-      await businessAdminAPI.reject(selectedDNForAction.id_dn, values.reason);
+      await businessAdminAPI.reject(selectedDNForAction.id_dn);
       message.success('Từ chối doanh nghiệp thành công');
       setRejectModalVisible(false);
       loadBusinesses();
     } catch (error) {
       console.error('Lỗi khi từ chối doanh nghiệp:', error);
-      message.error('Không thể từ chối doanh nghiệp');
+      message.error(error.response?.data?.message || 'Không thể từ chối doanh nghiệp');
     }
   };
 
@@ -138,13 +175,23 @@ const DoanhNghiep = () => {
         return;
       }
 
-      await businessAdminAPI.uploadLicense(selectedDNForAction.id_dn, file);
+      const response = await businessAdminAPI.uploadLicense(selectedDNForAction.id_dn, file);
+      
+      // Cập nhật file_giay_phep cho doanh nghiệp trong state
+      const fileUrl = response.data?.data?.imageUrl || response.data?.imageUrl;
+      if (fileUrl) {
+        setDataSource(dataSource.map(item => 
+          item.id_dn === selectedDNForAction.id_dn 
+            ? { ...item, file_giay_phep: fileUrl }
+            : item
+        ));
+      }
+      
       message.success('Upload giấy phép kinh doanh thành công');
       setUploadModalVisible(false);
-      loadBusinesses();
     } catch (error) {
       console.error('Lỗi khi upload file:', error);
-      message.error('Không thể upload file');
+      message.error(error.response?.data?.message || 'Không thể upload file');
     }
   };
 
@@ -169,13 +216,6 @@ const DoanhNghiep = () => {
     { title: 'Mã số thuế', dataIndex: 'ma_so_thue', key: 'ma_so_thue' },
     { title: 'Email', dataIndex: 'email', key: 'email' },
     { title: 'Số điện thoại', dataIndex: 'sdt', key: 'sdt' },
-    {
-      title: 'Ngày đăng ký',
-      dataIndex: 'ngay_tao',
-      key: 'ngay_tao',
-      render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-',
-      sorter: (a, b) => dayjs(a.ngay_tao).unix() - dayjs(b.ngay_tao).unix(),
-    },
     {
       title: 'Trạng thái',
       dataIndex: 'trang_thai',
@@ -253,23 +293,23 @@ const DoanhNghiep = () => {
       {/* Statistics Cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic title="Tổng số DN" value={totalCount} />
+          <Card style={{ borderLeft: '4px solid #1890ff', background: '#e6f7ff' }}>
+            <Statistic title="Tổng số DN" value={totalCount} valueStyle={{ color: '#1890ff' }} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic title="Đã duyệt" value={approvedCount} valueStyle={{ color: '#3f8600' }} />
+          <Card style={{ borderLeft: '4px solid #52c41a', background: '#f6ffed' }}>
+            <Statistic title="Đã duyệt" value={approvedCount} valueStyle={{ color: '#52c41a' }} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic title="Chờ duyệt" value={pendingCount} valueStyle={{ color: '#cf1322' }} />
+          <Card style={{ borderLeft: '4px solid #faad14', background: '#fffbe6' }}>
+            <Statistic title="Chờ duyệt" value={pendingCount} valueStyle={{ color: '#faad14' }} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic title="Đã từ chối" value={rejectedCount} />
+          <Card style={{ borderLeft: '4px solid #ff4d4f', background: '#fff1f0' }}>
+            <Statistic title="Đã từ chối" value={rejectedCount} valueStyle={{ color: '#ff4d4f' }} />
           </Card>
         </Col>
       </Row>
@@ -324,13 +364,27 @@ const DoanhNghiep = () => {
             <Descriptions.Item label="Email">{selectedDN.email}</Descriptions.Item>
             <Descriptions.Item label="Số điện thoại">{selectedDN.sdt}</Descriptions.Item>
             <Descriptions.Item label="Địa chỉ">{selectedDN.dia_chi}</Descriptions.Item>
+<<<<<<< Updated upstream
             <Descriptions.Item label="Trạng thái">{getStatusTag(selectedDN.trang_thai)}</Descriptions.Item>
             <Descriptions.Item label="Ngày đăng ký">
               {selectedDN.ngay_tao ? dayjs(selectedDN.ngay_tao).format('DD/MM/YYYY HH:mm') : '-'}
             </Descriptions.Item>
+=======
+            <Descriptions.Item label="Trạng thái">{getStatusTag(selectedDN.status)}</Descriptions.Item>
+>>>>>>> Stashed changes
             <Descriptions.Item label="Giấy phép KD">
               {selectedDN.file_giay_phep ? (
-                <a href="#" target="_blank">{selectedDN.file_giay_phep}</a>
+                <a 
+                  href={selectedDN.file_giay_phep.startsWith('http') 
+                    ? selectedDN.file_giay_phep 
+                    : `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}/uploads/${selectedDN.file_giay_phep}`
+                  } 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ color: '#1890ff' }}
+                >
+                  <UploadOutlined /> Xem giấy phép
+                </a>
               ) : (
                 <span style={{ color: '#999' }}>Chưa upload</span>
               )}
@@ -349,23 +403,14 @@ const DoanhNghiep = () => {
         title="Từ chối doanh nghiệp"
         open={rejectModalVisible}
         onCancel={() => setRejectModalVisible(false)}
-        onOk={() => rejectForm.submit()}
+        onOk={handleReject}
         okText="Từ chối"
         cancelText="Hủy"
       >
-        <Form
-          form={rejectForm}
-          layout="vertical"
-          onFinish={handleReject}
-        >
-          <Form.Item
-            name="reason"
-            label="Lý do từ chối"
-            rules={[{ required: true, message: 'Vui lòng nhập lý do từ chối' }]}
-          >
-            <Input.TextArea rows={4} placeholder="Nhập lý do từ chối..." />
-          </Form.Item>
-        </Form>
+        <p>Bạn có chắc chắn muốn từ chối doanh nghiệp <strong>{selectedDNForAction?.ten_dn}</strong>?</p>
+        <p style={{ color: '#ff4d4f', marginTop: 16 }}>
+          ⚠️ Lưu ý: Backend hiện chưa hỗ trợ lưu lý do từ chối. Chức năng này sẽ được cập nhật sau.
+        </p>
       </Modal>
 
       {/* Upload Modal */}

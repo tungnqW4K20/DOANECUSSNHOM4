@@ -76,13 +76,14 @@ export const businessAPI = {
 
 // API cho quản lý doanh nghiệp (Admin)
 export const businessAdminAPI = {
-    // Lấy danh sách doanh nghiệp với phân trang và filter
-    getAll: (params = {}) => api.get('/doanh-nghiep', { params }),
+    // Lấy danh sách doanh nghiệp
+    getAll: () => api.get('/doanh-nghiep'),
     
-    // Lấy chi tiết doanh nghiệp
-    getById: (id) => api.get(`/doanh-nghiep/${id}`),
+    // Cập nhật trạng thái doanh nghiệp (APPROVED, REJECTED, PENDING)
+    updateStatus: (id_dn, status) => api.post('/doanh-nghiep/update-status', { id_dn, status }),
     
     // Duyệt doanh nghiệp
+<<<<<<< Updated upstream
     approve: (id) => api.post(`/doanh-nghiep/approve`, { id_dn: id }),
     
     // Từ chối doanh nghiệp
@@ -90,22 +91,33 @@ export const businessAdminAPI = {
         id_dn: id,
         ly_do_tu_choi: reason
     }),
+=======
+    approve: (id_dn) => api.post('/doanh-nghiep/update-status', { id_dn, status: 'APPROVED' }),
+    
+    // Từ chối doanh nghiệp
+    reject: (id_dn) => api.post('/doanh-nghiep/update-status', { id_dn, status: 'REJECTED' }),
+>>>>>>> Stashed changes
     
     // Upload giấy phép kinh doanh
     uploadLicense: (id, file) => {
         const formData = new FormData();
-        formData.append('file', file);
-        formData.append('id_dn', id);
-        return api.post('/upload/file-giay-to', formData, {
+        formData.append('fileUpload', file);
+        return api.post('/uploads/file-giay-to', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
     },
+};
+
+// API cho tài khoản Hải quan
+export const accountAPI = {
+    // Lấy thông tin tài khoản
+    getProfile: () => api.get('/haiquan/profile'),
     
-    // Cập nhật thông tin doanh nghiệp
-    update: (id, data) => api.put(`/doanh-nghiep/${id}`, data),
+    // Cập nhật thông tin tài khoản
+    updateProfile: (data) => api.put('/haiquan/profile', data),
     
-    // Xóa doanh nghiệp (soft delete)
-    delete: (id) => api.delete(`/doanh-nghiep/${id}`),
+    // Đổi mật khẩu
+    changePassword: (data) => api.post('/haiquan/change-password', data),
 };
 
 export default api;

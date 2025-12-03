@@ -14,7 +14,19 @@ const MainLayout = () => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed}>
+      <Sider 
+        collapsible 
+        collapsed={collapsed} 
+        onCollapse={setCollapsed}
+        style={{
+          overflow: 'auto',
+          height: '100vh',
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          bottom: 0,
+        }}
+      >
         {/* PHẦN LOGO VÀ TÊN ỨNG DỤNG */}
         <Link to="/">
           <div 
@@ -54,7 +66,7 @@ const MainLayout = () => {
         </Link>
         <Sidebar />
       </Sider>
-      <Layout>
+      <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'margin-left 0.2s' }}>
         <AppHeader />
         <Content style={{ margin: '16px', overflow: 'initial' }}>
           <div style={{ padding: 24, background: colorBgContainer, borderRadius: borderRadiusLG }}>

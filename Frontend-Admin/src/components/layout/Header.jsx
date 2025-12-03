@@ -12,13 +12,18 @@ const AppHeader = () => {
 
     const handleLogout = () => {
         localStorage.removeItem('adminAuthToken');
+        localStorage.removeItem('adminRefreshToken');
         localStorage.removeItem('adminUser');
         message.success('Đăng xuất thành công!');
         navigate('/login');
     };
 
+    const handleGoToProfile = () => {
+        navigate('/tai-khoan');
+    };
+
     const menuItems = [
-        { key: '1', label: 'Tài khoản', icon: <UserOutlined /> },
+        { key: '1', label: 'Tài khoản', icon: <UserOutlined />, onClick: handleGoToProfile },
         { key: '2', label: 'Đăng xuất', icon: <LogoutOutlined />, onClick: handleLogout },
     ];
 

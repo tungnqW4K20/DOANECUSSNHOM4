@@ -18,23 +18,23 @@ const TongQuan = () => {
       <Title level={3} style={{ marginBottom: 24 }}>Bảng điều khiển</Title>
       <Row gutter={[24, 24]}>
         <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic title="Tổng số Doanh nghiệp" value={112} prefix={<TeamOutlined />} />
+          <Card style={{ borderLeft: '4px solid #1890ff', background: '#e6f7ff' }}>
+            <Statistic title="Tổng số Doanh nghiệp" value={112} prefix={<TeamOutlined />} valueStyle={{ color: '#1890ff' }} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic title="Tài khoản chờ duyệt" value={5} prefix={<ClockCircleOutlined />} valueStyle={{ color: '#cf1322' }}/>
+          <Card style={{ borderLeft: '4px solid #faad14', background: '#fffbe6' }}>
+            <Statistic title="Tài khoản chờ duyệt" value={5} prefix={<ClockCircleOutlined />} valueStyle={{ color: '#faad14' }}/>
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic title="Tổng số Tờ khai" value={884} prefix={<ContainerOutlined />} />
+          <Card style={{ borderLeft: '4px solid #722ed1', background: '#f9f0ff' }}>
+            <Statistic title="Tổng số Tờ khai" value={884} prefix={<ContainerOutlined />} valueStyle={{ color: '#722ed1' }} />
           </Card>
         </Col>
          <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic title="Tờ khai đã thông quan" value={790} prefix={<IssuesCloseOutlined />} valueStyle={{ color: '#3f8600' }}/>
+          <Card style={{ borderLeft: '4px solid #52c41a', background: '#f6ffed' }}>
+            <Statistic title="Tờ khai đã thông quan" value={790} prefix={<IssuesCloseOutlined />} valueStyle={{ color: '#52c41a' }}/>
           </Card>
         </Col>
 
