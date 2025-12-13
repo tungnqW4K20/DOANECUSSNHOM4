@@ -12,5 +12,4 @@ router.post('/calculate', authenticateToken, authorizeRole('business'), thanhKho
 // Lưu báo cáo thanh khoản
 router.post('/save', authenticateToken, authorizeRole('business'), thanhKhoanController.saveBaoCao);
 
-
 module.exports = router;
