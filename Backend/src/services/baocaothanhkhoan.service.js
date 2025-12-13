@@ -310,4 +310,101 @@ const saveBaoCao = async ({ id_hd, tu_ngay, den_ngay, ket_luan_tong_the, data_sn
   return record;
 };
 
-module.exports = { getHopDongByDN, calculateBaoCao, saveBaoCao };
+
+const updateTrangThaiBaoCao = async (id_bc, trang_thai) => {
+  if (!id_bc) {
+    throw new Error('Thiếu id_bc');
+  }
+
+  if (!['TamKhoa', 'Huy'].includes(trang_thai)) {
+    throw new Error('Trạng thái không hợp lệ');
+  }
+
+  const baoCao = await BaoCaoThanhKhoan.findByPk(id_bc);
+  if (!baoCao) {
+    throw new Error('Không tìm thấy báo cáo thanh khoản');
+  }
+
+  baoCao.trang_thai = trang_thai;
+  await baoCao.save();
+
+  return baoCao;
+};
+
+
+const getThanhKhoanReports = async ({ page, limit, q, ket_luan, trang_thai }) => {
+  const offset = (page - 1) * limit;
+
+  // ===== WHERE cho BaoCaoThanhKhoan =====
+  const whereBC = {};
+  if (ket_luan) {
+    whereBC.ket_luan = ket_luan;
+  }
+  if (trang_thai) {
+    whereBC.trang_thai = trang_thai;
+  }
+
+  // ===== WHERE cho search =====
+  const whereSearch = q
+    ? {
+        [Op.or]: [
+          { '$hopdong.so_hd$': { [Op.like]: `%${q}%` } },
+          { '$hopdong.doanhNghiep.ten_dn$': { [Op.like]: `%${q}%` } }
+        ]
+      }
+    : {};
+
+  // ===== Query =====
+  const { rows, count } = await BaoCaoThanhKhoan.findAndCountAll({
+    where: {
+      ...whereBC,
+      ...whereSearch
+    },
+    attributes: [
+      'id_bc',
+      'thoi_gian_tao',
+      ['ket_luan', 'ket_luan'],
+      'trang_thai',
+      // 'data_snapshot'
+    ],
+    include: [
+      {
+        model: HopDong,
+        as: 'hopdong',
+        attributes: ['so_hd'],
+        include: [
+          {
+            model: DoanhNghiep,
+            as: 'doanhNghiep',
+            attributes: ['ten_dn']
+          }
+        ]
+      }
+    ],
+    order: [['thoi_gian_tao', 'DESC']],
+    offset,
+    limit
+  });
+
+  // ===== Format response =====
+  const data = rows.map((bc) => ({
+    id_bc: bc.id_bc,
+    so_hd: bc.hopdong?.so_hd,
+    ten_dn: bc.hopdong?.doanhNghiep?.ten_dn,
+    thoi_gian_tao: bc.thoi_gian_tao,
+    ket_luan: bc.ket_luan,
+    trang_thai: bc.trang_thai
+    // details: bc.data_snapshot  // nếu admin cần xem chi tiết
+  }));
+
+  return {
+    data,
+    pagination: {
+      total: count,
+      page,
+      limit
+    }
+  };
+};
+
+module.exports = { getHopDongByDN, calculateBaoCao, saveBaoCao, updateTrangThaiBaoCao, getThanhKhoanReports };

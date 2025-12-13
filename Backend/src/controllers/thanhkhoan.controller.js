@@ -41,4 +41,40 @@ const saveBaoCao = async (req, res) => {
   }
 };
 
-module.exports = { getHopDong, calculate, saveBaoCao };
+const updateStatus = async (req, res) => {
+  try {
+    const { id_bc } = req.params;
+    const { trang_thai } = req.body;
+
+    await thanhKhoanService.updateTrangThaiBaoCao(id_bc, trang_thai);
+
+    res.json({
+      message: 'Cập nhật trạng thái báo cáo thành công!'
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+const getThanhKhoanReports = async (req, res) => {
+  try {
+    const page = Number(req.query.page || 1);
+    const limit = Number(req.query.limit || 10);
+    const q = req.query.q || '';
+    const ket_luan = req.query.ket_luan;
+    const trang_thai = req.query.trang_thai;
+
+    const data = await thanhKhoanService.getThanhKhoanReports({
+      page,
+      limit,
+      q,
+      ket_luan,
+      trang_thai
+    });
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+module.exports = { getHopDong, calculate, saveBaoCao, updateStatus, getThanhKhoanReports };
