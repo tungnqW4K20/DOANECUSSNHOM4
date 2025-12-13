@@ -41,4 +41,7 @@ const saveBaoCao = async (req, res) => {
   }
 };
 
+
+
+
 module.exports = { getHopDong, calculate, saveBaoCao };

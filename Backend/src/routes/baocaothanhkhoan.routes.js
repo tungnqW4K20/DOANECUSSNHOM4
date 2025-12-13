@@ -26,5 +26,18 @@ router.post(
   authorizeRole('business'),
   thanhKhoanController.saveBaoCao
 );
+router.patch(
+  '/thanh-khoan-reports/:id_bc/status',
+  authenticateToken,
+  authorizeRole('business'),
+  thanhKhoanController.updateStatus
+);
+
+router.get(
+  '/thanh-khoan-reports',
+  authenticateToken,
+  authorizeRole('business'),
+  thanhKhoanController.getThanhKhoanReports
+);
 
 module.exports = router;
