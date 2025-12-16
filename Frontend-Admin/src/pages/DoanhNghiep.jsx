@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Tag, message, Row, Col, Typography, Card, Input, Dropdown, Drawer, Descriptions, Modal, Form, Select, Upload, Spin, Popconfirm, Statistic } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, EyeOutlined, MoreOutlined, UploadOutlined, ReloadOutlined } from '@ant-design/icons';
 import { InboxOutlined } from '@ant-design/icons';
 import 'dayjs';
-import { businessAdminAPI } from  '../services/api.service';
+import { businessAdminAPI } from '../services/api.service';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -22,32 +22,18 @@ const DoanhNghiep = () => {
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [uploadModalVisible, setUploadModalVisible] = useState(false);
   const [uploadForm] = Form.useForm();
+  const [rejectForm] = Form.useForm();
   const [selectedDNForAction, setSelectedDNForAction] = useState(null);
 
   // Load data from API
-<<<<<<< Updated upstream
-  const loadBusinesses = useCallback(async (params = {}) => {
-    try {
-      setLoading(true);
-      const searchParams = {
-        page: pagination.current,
-        limit: pagination.pageSize,
-        search: searchText,
-        trang_thai: statusFilter,
-        ...params
-      };
-
-      const response = await businessAdminAPI.getAll(searchParams);
-=======
   const loadBusinesses = async () => {
     try {
       setLoading(true);
       const response = await businessAdminAPI.getAll();
->>>>>>> Stashed changes
       const data = response.data;
-      
+
       let businesses = data.data || data || [];
-      
+
       // Lọc theo search text
       if (searchText) {
         businesses = businesses.filter(item =>
@@ -56,12 +42,12 @@ const DoanhNghiep = () => {
           item.email?.toLowerCase().includes(searchText.toLowerCase())
         );
       }
-      
+
       // Lọc theo status
       if (statusFilter) {
         businesses = businesses.filter(item => item.status?.toUpperCase() === statusFilter);
       }
-      
+
       setDataSource(businesses);
       setPagination(prev => ({
         ...prev,
@@ -73,45 +59,23 @@ const DoanhNghiep = () => {
     } finally {
       setLoading(false);
     }
-  }, [pagination.current, pagination.pageSize, searchText, statusFilter]);
-
-  useEffect(() => {
-    loadBusinesses();
-<<<<<<< Updated upstream
-  }, [loadBusinesses]);
-
-  // Handle table change (pagination, sorting, filtering)
-  const handleTableChange = (pagination) => {
-    setPagination(pagination);
-    loadBusinesses({ page: pagination.current, limit: pagination.pageSize });
-=======
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchText, statusFilter]);
+  };
 
   // Handle table change (pagination, sorting, filtering)
   const handleTableChange = (newPagination) => {
     setPagination(newPagination);
->>>>>>> Stashed changes
   };
 
   // Search handler
   const handleSearch = (value) => {
     setSearchText(value);
     setPagination(prev => ({ ...prev, current: 1 }));
-<<<<<<< Updated upstream
-    loadBusinesses({ search: value, page: 1 });
-=======
->>>>>>> Stashed changes
   };
 
   // Status filter handler
   const handleStatusFilter = (value) => {
     setStatusFilter(value);
     setPagination(prev => ({ ...prev, current: 1 }));
-<<<<<<< Updated upstream
-    loadBusinesses({ trang_thai: value, page: 1 });
-=======
->>>>>>> Stashed changes
   };
 
   // Refresh data
@@ -176,17 +140,17 @@ const DoanhNghiep = () => {
       }
 
       const response = await businessAdminAPI.uploadLicense(selectedDNForAction.id_dn, file);
-      
+
       // Cập nhật file_giay_phep cho doanh nghiệp trong state
       const fileUrl = response.data?.data?.imageUrl || response.data?.imageUrl;
       if (fileUrl) {
-        setDataSource(dataSource.map(item => 
-          item.id_dn === selectedDNForAction.id_dn 
+        setDataSource(dataSource.map(item =>
+          item.id_dn === selectedDNForAction.id_dn
             ? { ...item, file_giay_phep: fileUrl }
             : item
         ));
       }
-      
+
       message.success('Upload giấy phép kinh doanh thành công');
       setUploadModalVisible(false);
     } catch (error) {
@@ -364,22 +328,15 @@ const DoanhNghiep = () => {
             <Descriptions.Item label="Email">{selectedDN.email}</Descriptions.Item>
             <Descriptions.Item label="Số điện thoại">{selectedDN.sdt}</Descriptions.Item>
             <Descriptions.Item label="Địa chỉ">{selectedDN.dia_chi}</Descriptions.Item>
-<<<<<<< Updated upstream
-            <Descriptions.Item label="Trạng thái">{getStatusTag(selectedDN.trang_thai)}</Descriptions.Item>
-            <Descriptions.Item label="Ngày đăng ký">
-              {selectedDN.ngay_tao ? dayjs(selectedDN.ngay_tao).format('DD/MM/YYYY HH:mm') : '-'}
-            </Descriptions.Item>
-=======
             <Descriptions.Item label="Trạng thái">{getStatusTag(selectedDN.status)}</Descriptions.Item>
->>>>>>> Stashed changes
             <Descriptions.Item label="Giấy phép KD">
               {selectedDN.file_giay_phep ? (
-                <a 
-                  href={selectedDN.file_giay_phep.startsWith('http') 
-                    ? selectedDN.file_giay_phep 
+                <a
+                  href={selectedDN.file_giay_phep.startsWith('http')
+                    ? selectedDN.file_giay_phep
                     : `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}/uploads/${selectedDN.file_giay_phep}`
-                  } 
-                  target="_blank" 
+                  }
+                  target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: '#1890ff' }}
                 >
@@ -389,17 +346,19 @@ const DoanhNghiep = () => {
                 <span style={{ color: '#999' }}>Chưa upload</span>
               )}
             </Descriptions.Item>
-            {selectedDN.ly_do_tu_choi && (
-              <Descriptions.Item label="Lý do từ chối">
-                <span style={{ color: '#cf1322' }}>{selectedDN.ly_do_tu_choi}</span>
-              </Descriptions.Item>
-            )}
-          </Descriptions>
+            {
+              selectedDN.ly_do_tu_choi && (
+                <Descriptions.Item label="Lý do từ chối">
+                  <span style={{ color: '#cf1322' }}>{selectedDN.ly_do_tu_choi}</span>
+                </Descriptions.Item>
+              )
+            }
+          </Descriptions >
         )}
-      </Drawer>
+      </Drawer >
 
       {/* Reject Modal */}
-      <Modal
+      < Modal
         title="Từ chối doanh nghiệp"
         open={rejectModalVisible}
         onCancel={() => setRejectModalVisible(false)}
@@ -411,10 +370,10 @@ const DoanhNghiep = () => {
         <p style={{ color: '#ff4d4f', marginTop: 16 }}>
           ⚠️ Lưu ý: Backend hiện chưa hỗ trợ lưu lý do từ chối. Chức năng này sẽ được cập nhật sau.
         </p>
-      </Modal>
+      </Modal >
 
       {/* Upload Modal */}
-      <Modal
+      < Modal
         title="Upload Giấy phép kinh doanh"
         open={uploadModalVisible}
         onCancel={() => setUploadModalVisible(false)}
@@ -448,7 +407,7 @@ const DoanhNghiep = () => {
             </Dragger>
           </Form.Item>
         </Form>
-      </Modal>
+      </Modal >
     </>
   );
 };

@@ -15,13 +15,18 @@ api.interceptors.request.use((config) => {
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log('API Request:', config.method?.toUpperCase(), config.url, config.data);
     return config;
 });
 
 // Interceptor xử lý response
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        console.log('API Response:', response.status, response.config.url, response.data);
+        return response;
+    },
     (error) => {
+        console.error('API Error:', error.response?.status, error.config?.url, error.response?.data || error.message);
         if (error.response?.status === 401) {
             // Token hết hạn, redirect về login
             localStorage.removeItem('adminAuthToken');
@@ -78,26 +83,16 @@ export const businessAPI = {
 export const businessAdminAPI = {
     // Lấy danh sách doanh nghiệp
     getAll: () => api.get('/doanh-nghiep'),
-    
+
     // Cập nhật trạng thái doanh nghiệp (APPROVED, REJECTED, PENDING)
     updateStatus: (id_dn, status) => api.post('/doanh-nghiep/update-status', { id_dn, status }),
-    
+
     // Duyệt doanh nghiệp
-<<<<<<< Updated upstream
-    approve: (id) => api.post(`/doanh-nghiep/approve`, { id_dn: id }),
-    
-    // Từ chối doanh nghiệp
-    reject: (id, reason = '') => api.post(`/doanh-nghiep/reject`, {
-        id_dn: id,
-        ly_do_tu_choi: reason
-    }),
-=======
     approve: (id_dn) => api.post('/doanh-nghiep/update-status', { id_dn, status: 'APPROVED' }),
-    
+
     // Từ chối doanh nghiệp
     reject: (id_dn) => api.post('/doanh-nghiep/update-status', { id_dn, status: 'REJECTED' }),
->>>>>>> Stashed changes
-    
+
     // Upload giấy phép kinh doanh
     uploadLicense: (id, file) => {
         const formData = new FormData();
@@ -112,10 +107,10 @@ export const businessAdminAPI = {
 export const accountAPI = {
     // Lấy thông tin tài khoản
     getProfile: () => api.get('/haiquan/profile'),
-    
+
     // Cập nhật thông tin tài khoản
     updateProfile: (data) => api.put('/haiquan/profile', data),
-    
+
     // Đổi mật khẩu
     changePassword: (data) => api.post('/haiquan/change-password', data),
 };
