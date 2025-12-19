@@ -14,7 +14,7 @@ const MainLayout = () => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed}>
+      <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed} width={250}>
         {/* PHẦN LOGO VÀ TÊN ỨNG DỤNG */}
         <Link to="/">
           <div 

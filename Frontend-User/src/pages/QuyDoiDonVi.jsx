@@ -63,16 +63,16 @@ const QuyDoiTable = ({ type, dataSource, setDataSource, itemList }) => {
             <Table columns={columns} dataSource={dataSource} rowKey="id_qd" bordered />
             <Modal title={editingRecord ? 'Chỉnh sửa' : 'Thêm mới'} open={isModalVisible} onCancel={() => setIsModalVisible(false)} footer={null}>
                 <Form form={form} layout="vertical" onFinish={onFinish}>
-                    <Form.Item name={type === 'DN' ? 'id_mat_hang' : 'id_sp'} label={type === 'DN' ? 'Nguyên phụ liệu' : 'Sản phẩm'} rules={[{ required: true }]}>
+                    <Form.Item name={type === 'DN' ? 'id_mat_hang' : 'id_sp'} label={type === 'DN' ? 'Nguyên phụ liệu' : 'Sản phẩm'} rules={[{ required: true, message: "Không được để trống!" }]}>
                         <Select placeholder="Chọn một mục">{itemList.map(i => <Option key={i.id} value={i.id}>{i.name}</Option>)}</Select>
                     </Form.Item>
-                    <Form.Item name={type === 'DN' ? 'ten_dvt_dn' : 'ten_dvt_sp'} label="Tên đơn vị tính của Doanh nghiệp" rules={[{ required: true }]}>
+                    <Form.Item name={type === 'DN' ? 'ten_dvt_dn' : 'ten_dvt_sp'} label="Tên đơn vị tính của Doanh nghiệp" rules={[{ required: true, message: "Không được bỏ trống!" }]}>
                         <Input />
                     </Form.Item>
-                    <Form.Item name="id_dvt_hq" label="Đơn vị tính Hải quan chuẩn" rules={[{ required: true }]}>
+                    <Form.Item name="id_dvt_hq" label="Đơn vị tính Hải quan chuẩn" rules={[{ required: true, message: "Không được bỏ trống!" }]}>
                         <Select placeholder="Chọn ĐVT HQ">{dvtHqList.map(d => <Option key={d.id_dvt_hq} value={d.id_dvt_hq}>{d.ten_dvt}</Option>)}</Select>
                     </Form.Item>
-                    <Form.Item name="he_so" label="Hệ số quy đổi" rules={[{ required: true }]}>
+                    <Form.Item name="he_so" label="Hệ số quy đổi" rules={[{ required: true, message: "Không được bỏ trống!" }]}>
                         <InputNumber min={0.000001} style={{ width: '100%' }} />
                     </Form.Item>
                     <Form.Item>

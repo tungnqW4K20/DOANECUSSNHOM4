@@ -85,7 +85,7 @@ const NhapToKhaiXuat = () => {
         { title: '1. Thông tin Lô hàng', content: (
             <Form form={formLoHang} layout="vertical" name="form_lo_hang">
                 <Row gutter={24}>
-                    <Col span={24}><Form.Item label="Hợp đồng liên quan" name="id_hd" rules={[{ required: true }]}><Select placeholder="Chọn hợp đồng">{hopDongList.map(hd => <Option key={hd.id_hd} value={hd.id_hd}>{hd.so_hd}</Option>)}</Select></Form.Item></Col>
+                    <Col span={24}><Form.Item label="Hợp đồng liên quan" name="id_hd" rules={[{ required: true, message: "Vui lòng chọn hợp đồng!" }]}><Select placeholder="Chọn hợp đồng">{hopDongList.map(hd => <Option key={hd.id_hd} value={hd.id_hd}>{hd.so_hd}</Option>)}</Select></Form.Item></Col>
                     <Col span={12}><Form.Item label="Ngày đóng gói" name="ngay_dong_goi"><DatePicker style={{ width: '100%' }} format="YYYY-MM-DD"/></Form.Item></Col>
                     <Col span={12}><Form.Item label="Ngày xuất cảng" name="ngay_xuat_cang"><DatePicker style={{ width: '100%' }} format="YYYY-MM-DD"/></Form.Item></Col>
                     <Col span={12}><Form.Item label="Cảng xuất" name="cang_xuat"><Input /></Form.Item></Col>
@@ -98,9 +98,9 @@ const NhapToKhaiXuat = () => {
             <Form form={formHoaDonVanDon} layout="vertical" name="form_hd_vd">
                 <Title level={5}>Thông tin Hóa đơn xuất</Title>
                 <Row gutter={24}>
-                    <Col span={12}><Form.Item label="Số hóa đơn" name="so_hd" rules={[{ required: true }]}><Input /></Form.Item></Col>
-                    <Col span={12}><Form.Item label="Ngày hóa đơn" name="ngay_hd" rules={[{ required: true }]}><DatePicker style={{ width: '100%' }} format="YYYY-MM-DD"/></Form.Item></Col>
-                    <Col span={12}><Form.Item label="Tiền tệ" name="id_tt" rules={[{ required: true }]}><Select placeholder="Chọn tiền tệ">{tienTeList.map(tt => <Option key={tt.id_tt} value={tt.id_tt}>{tt.ma_tt}</Option>)}</Select></Form.Item></Col>
+                    <Col span={12}><Form.Item label="Số hóa đơn" name="so_hd" rules={[{ required: true, message: "Vui lòng nhập số hóa đơn!" }]}><Input /></Form.Item></Col>
+                    <Col span={12}><Form.Item label="Ngày hóa đơn" name="ngay_hd" rules={[{ required: true, message: "Vui lòng chọn ngày!" }]}><DatePicker style={{ width: '100%' }} format="YYYY-MM-DD"/></Form.Item></Col>
+                    <Col span={12}><Form.Item label="Tiền tệ" name="id_tt" rules={[{ required: true, message: "Vui lòng nhập tiền!" }]}><Select placeholder="Chọn tiền tệ">{tienTeList.map(tt => <Option key={tt.id_tt} value={tt.id_tt}>{tt.ma_tt}</Option>)}</Select></Form.Item></Col>
                     <Col span={12}><Form.Item label="Tổng trị giá hóa đơn" name="tong_tien"><InputNumber style={{ width: '100%' }} disabled value={tongTienHoaDon} formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/></Form.Item></Col>
                     <Col span={24}><Form.Item label="File scan hóa đơn" name="file_hoa_don"><Upload maxCount={1}><Button icon={<UploadOutlined />}>Tải lên</Button></Upload></Form.Item></Col>
                 </Row>
@@ -110,10 +110,10 @@ const NhapToKhaiXuat = () => {
                 
                 <Title level={5} style={{marginTop: 24}}>Thông tin Vận đơn xuất</Title>
                 <Row gutter={24}>
-                    <Col span={12}><Form.Item label="Số vận đơn" name="so_vd" rules={[{ required: true }]}><Input /></Form.Item></Col>
-                    <Col span={12}><Form.Item label="Ngày phát hành" name="ngay_phat_hanh" rules={[{ required: true }]}><DatePicker style={{ width: '100%' }} format="YYYY-MM-DD"/></Form.Item></Col>
-                    <Col span={12}><Form.Item label="Cảng xuất (trên vận đơn)" name="vd_cang_xuat"><Input /></Form.Item></Col>
-                    <Col span={12}><Form.Item label="Cảng nhập (trên vận đơn)" name="vd_cang_nhap"><Input /></Form.Item></Col>
+                    <Col span={12}><Form.Item label="Số vận đơn" name="so_vd" rules={[{ required: true, message: "Vui lòng nhập số vận đơn!" }]}><Input /></Form.Item></Col>
+                    <Col span={12}><Form.Item label="Ngày phát hành" name="ngay_phat_hanh" rules={[{ required: true, message: "Vui lòng chọn ngày phát hành!" }]}><DatePicker style={{ width: '100%' }} format="YYYY-MM-DD"/></Form.Item></Col>
+                    <Col span={12}><Form.Item label="Cảng xuất (trên vận đơn)" name="vd_cang_xuat" rules={[{ required: true, message: "Vui lòng nhập cảng xuất!" }]}><Input /></Form.Item></Col>
+                    <Col span={12}><Form.Item label="Cảng nhập (trên vận đơn)" name="vd_cang_nhap" rules={[{ required: true, message: "Vui lòng nhập cảng nhập!" }]}><Input /></Form.Item></Col>
                     <Col span={24}><Form.Item label="File scan vận đơn" name="file_van_don"><Upload maxCount={1}><Button icon={<UploadOutlined />}>Tải lên</Button></Upload></Form.Item></Col>
                 </Row>
             </Form>
@@ -121,8 +121,8 @@ const NhapToKhaiXuat = () => {
         { title: '3. Hoàn tất Tờ khai', content: (
              <Form form={formToKhai} layout="vertical" name="form_tk">
                  <Row gutter={24}>
-                    <Col span={12}><Form.Item label="Số tờ khai" name="so_tk" rules={[{ required: true }]}><Input /></Form.Item></Col>
-                    <Col span={12}><Form.Item label="Ngày tờ khai" name="ngay_tk" rules={[{ required: true }]}><DatePicker style={{ width: '100%' }} format="YYYY-MM-DD"/></Form.Item></Col>
+                    <Col span={12}><Form.Item label="Số tờ khai" name="so_tk" rules={[{ required: true, message: "Vui lòng nhập số tờ khai!" }]}><Input /></Form.Item></Col>
+                    <Col span={12}><Form.Item label="Ngày tờ khai" name="ngay_tk" rules={[{ required: true, message: "Vui lòng chọn ngày tờ khai!" }]}><DatePicker style={{ width: '100%' }} format="YYYY-MM-DD"/></Form.Item></Col>
                     <Col span={12}><Form.Item label="Tổng trị giá khai báo"><InputNumber style={{ width: '100%' }} disabled value={tongTienHoaDon} formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/></Form.Item></Col>
                     <Col span={12}><Form.Item label="Tiền tệ"><Input style={{ width: '100%' }} disabled value={tienTeList.find(t=> t.id_tt === formHoaDonVanDon.getFieldValue('id_tt'))?.ma_tt}/></Form.Item></Col>
                     <Col span={24}><Form.Item label="File scan tờ khai" name="file_to_khai"><Upload maxCount={1}><Button icon={<UploadOutlined />}>Tải lên</Button></Upload></Form.Item></Col>
