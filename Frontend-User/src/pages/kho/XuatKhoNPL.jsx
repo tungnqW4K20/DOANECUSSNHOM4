@@ -118,12 +118,12 @@ const onFinish = async (values) => {
         <div>
             <Title level={3}>Tạo Phiếu Xuất Kho NPL (cho Sản xuất)</Title>
             <Form form={form} layout="vertical" onFinish={onFinish}>
-                <Form.Item label="Kho xuất hàng" name="id_kho" rules={[{ required: true }]}>
+                <Form.Item label="Kho xuất hàng" name="id_kho" rules={[{ required: true, message: "Vui lòng chọn kho xuất hàng" }]}>
                     <Select placeholder="Chọn kho xuất">
                         {khoList.map(k => <Option key={k.id_kho} value={k.id_kho}>{k.ten_kho}</Option>)}
                     </Select>
                 </Form.Item>
-                <Form.Item label="Ngày xuất kho" name="ngay_xuat" rules={[{ required: true }]}>
+                <Form.Item label="Ngày xuất kho" name="ngay_xuat" rules={[{ required: true, message: "Vui lòng chọn ngày xuất kho" }]}>
                     <DatePicker style={{ width: '100%' }} />
                 </Form.Item>
                 <Form.Item label="File phiếu xuất (nếu có)" name="file_phieu">

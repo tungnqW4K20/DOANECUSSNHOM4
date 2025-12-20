@@ -311,7 +311,7 @@ const NhapToKhaiNhap = () => {
                     <Form form={formLoHang} layout="vertical" preserve={true}>
                         <Row gutter={24}>
                             <Col span={24}>
-                                <Form.Item label="Hợp đồng liên quan" name="id_hd" rules={[{ required: true }]}>
+                                <Form.Item label="Hợp đồng liên quan" name="id_hd" rules={[{ required: true, message: "Vui lòng chọn hợp đồng!" }]}>
                                     <Select placeholder="Chọn hợp đồng">
                                         {hopDongList.map((hd) => (
                                             <Option key={hd.id_hd} value={hd.id_hd}>
@@ -374,17 +374,17 @@ const NhapToKhaiNhap = () => {
                         <Row gutter={24}>
                             {/* ====== HÓA ĐƠN ====== */}
                             <Col span={12}>
-                                <Form.Item label="Số hóa đơn" name="so_hd" rules={[{ required: true }]}>
+                                <Form.Item label="Số hóa đơn" name="so_hd" rules={[{ required: true, message: "Vui lòng nhập số hóa đơn!" }]}>
                                     <Input />
                                 </Form.Item>
                             </Col>
                             <Col span={12}>
-                                <Form.Item label="Ngày hóa đơn" name="ngay_hd" rules={[{ required: true }]}>
+                                <Form.Item label="Ngày hóa đơn" name="ngay_hd" rules={[{ required: true, message: "Vui lòng chọn ngày" }]}>
                                     <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
                                 </Form.Item>
                             </Col>
                             <Col span={12}>
-                                <Form.Item label="Loại tiền tệ" name="id_tt" rules={[{ required: true }]}>
+                                <Form.Item label="Loại tiền tệ" name="id_tt" rules={[{ required: true, message: "Vui lòng chọn loại tiền!" }]}>
                                     <Select placeholder="Chọn tiền tệ">
                                         {tienTeList.map((tt) => (
                                             <Option key={tt.id_tt} value={tt.id_tt}>
@@ -446,22 +446,22 @@ const NhapToKhaiNhap = () => {
 
                             {/* ====== VẬN ĐƠN ====== */}
                             <Col span={12}>
-                                <Form.Item label="Số vận đơn" name="so_vd">
+                                <Form.Item label="Số vận đơn" name="so_vd" rules={[{ required: true, message: "Vui lòng nhập số vận đơn!" }]}>
                                     <Input placeholder="Nhập số vận đơn" />
                                 </Form.Item>
                             </Col>
                             <Col span={12}>
-                                <Form.Item label="Ngày phát hành" name="ngay_phat_hanh">
+                                <Form.Item label="Ngày phát hành" name="ngay_phat_hanh" rules={[{ required: true, message: "Vui lòng chọn ngày phát hành!" }]}>
                                     <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
                                 </Form.Item>
                             </Col>
                             <Col span={12}>
-                                <Form.Item label="Cảng xuất (trên vận đơn)" name="vd_cang_xuat">
+                                <Form.Item label="Cảng xuất (trên vận đơn)" name="vd_cang_xuat" rules={[{ required: true, message: "Vui lòng nhập cảng xuất" }]}>
                                     <Input placeholder="Nhập cảng xuất trên vận đơn" />
                                 </Form.Item>
                             </Col>
                             <Col span={12}>
-                                <Form.Item label="Cảng nhập (trên vận đơn)" name="vd_cang_nhap">
+                                <Form.Item label="Cảng nhập (trên vận đơn)" name="vd_cang_nhap" rules={[{ required: true, message: "Vui lòng nhập cảng nhập!" }]}>
                                     <Input placeholder="Nhập cảng nhập trên vận đơn" />
                                 </Form.Item>
                             </Col>
@@ -498,12 +498,12 @@ const NhapToKhaiNhap = () => {
                     <Form form={formToKhai} layout="vertical" preserve={true}>
                         <Row gutter={24}>
                             <Col span={12}>
-                                <Form.Item label="Số tờ khai" name="so_to_khai" rules={[{ required: true }]}>
+                                <Form.Item label="Số tờ khai" name="so_to_khai" rules={[{ required: true, message: "Vui lòng nhập số tờ khai" }]}>
                                     <Input />
                                 </Form.Item>
                             </Col>
                             <Col span={12}>
-                                <Form.Item label="Ngày đăng ký tờ khai" name="ngay_dk" rules={[{ required: true }]}>
+                                <Form.Item label="Ngày đăng ký tờ khai" name="ngay_dk" rules={[{ required: true, message: "Vui lòng chọn ngày đăng kí tờ khai" }]}>
                                     <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
                                 </Form.Item>
                             </Col>

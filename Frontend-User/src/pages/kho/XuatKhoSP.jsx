@@ -52,17 +52,17 @@ const XuatKhoSP = () => {
         <div>
             <Title level={3}>Tạo Phiếu Xuất Kho Sản Phẩm</Title>
             <Form form={form} layout="vertical" onFinish={onFinish}>
-                <Form.Item label="Hóa đơn xuất liên quan" name="id_hd_xuat" rules={[{ required: true }]}>
+                <Form.Item label="Hóa đơn xuất liên quan" name="id_hd_xuat" rules={[{ required: true, message: "Vui lòng chọn hóa đơn xuất liên quan!" }]}>
                     <Select placeholder="Tìm và chọn số hóa đơn xuất" onChange={handleHoaDonChange} showSearch>
                         {hoaDonXuatList.map(hd => <Option key={hd.id_hd_xuat} value={hd.id_hd_xuat}>{hd.so_hd}</Option>)}
                     </Select>
                 </Form.Item>
-                 <Form.Item label="Kho xuất hàng" name="id_kho" rules={[{ required: true }]}>
+                 <Form.Item label="Kho xuất hàng" name="id_kho" rules={[{ required: true, message: "Vui lòng chọn kho xuất hàng" }]}>
                     <Select placeholder="Chọn kho">
                         {khoList.map(k => <Option key={k.id_kho} value={k.id_kho}>{k.ten_kho}</Option>)}
                     </Select>
                 </Form.Item>
-                <Form.Item label="Ngày xuất kho" name="ngay_xuat" rules={[{ required: true }]}>
+                <Form.Item label="Ngày xuất kho" name="ngay_xuat" rules={[{ required: true, message: "Vui lòng chọn ngày xuất kho" }]}>
                     <DatePicker style={{ width: '100%' }} />
                 </Form.Item>
                  <Form.Item label="File phiếu xuất (nếu có)" name="file_phieu">
