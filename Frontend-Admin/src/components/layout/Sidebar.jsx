@@ -1,15 +1,80 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Menu } from 'antd';
-import { AreaChartOutlined, TeamOutlined, DollarCircleOutlined, HddOutlined, EyeOutlined } from '@ant-design/icons';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, Tooltip } from 'antd';
+import {
+  DashboardOutlined,
+  TeamOutlined,
+  DollarOutlined,
+  AppstoreOutlined,
+  SettingOutlined,
+  FileTextOutlined,
+} from '@ant-design/icons';
 
-const items = [
-  { key: '1', icon: <AreaChartOutlined />, label: <Link to="/">Thống kê</Link> },
-  { key: '2', icon: <TeamOutlined />, label: <Link to="/doanh-nghiep">Quản lý Doanh nghiệp</Link> },
-  { key: '3', icon: <DollarCircleOutlined />, label: <Link to="/tien-te">Tiền tệ</Link> },
-  { key: '4', icon: <HddOutlined />, label: <Link to="/don-vi-tinh-hq">Đơn vị tính HQ</Link> },
+const menuItems = [
+  {
+    key: '/',
+    icon: <DashboardOutlined />,
+    label: 'Tổng quan',
+    path: '/',
+  },
+  {
+    key: '/doanh-nghiep',
+    icon: <TeamOutlined />,
+    label: 'Doanh nghiệp',
+    path: '/doanh-nghiep',
+  },
+  {
+    key: '/tien-te',
+    icon: <DollarOutlined />,
+    label: 'Tiền tệ',
+    path: '/tien-te',
+  },
+  {
+    key: '/don-vi-tinh-hq',
+    icon: <AppstoreOutlined />,
+    label: 'Đơn vị tính HQ',
+    path: '/don-vi-tinh-hq',
+  },
 ];
 
-const Sidebar = () => <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline" items={items} />;
+const Sidebar = ({ collapsed }) => {
+  const location = useLocation();
+
+  // Get current selected key based on pathname
+  const getSelectedKey = () => {
+    const path = location.pathname;
+    const item = menuItems.find(item => item.path === path);
+    return item ? [item.key] : ['/'];
+  };
+
+  const items = menuItems.map((item) => ({
+    key: item.key,
+    icon: collapsed ? (
+      <Tooltip title={item.label} placement="right">
+        <span style={{ fontSize: '18px' }}>{item.icon}</span>
+      </Tooltip>
+    ) : (
+      <span style={{ fontSize: '16px' }}>{item.icon}</span>
+    ),
+    label: collapsed ? null : (
+      <Link to={item.path} style={{ color: 'inherit' }}>
+        <span className="sidebar-text-animate">{item.label}</span>
+      </Link>
+    ),
+    onClick: collapsed ? () => window.location.href = item.path : undefined,
+  }));
+
+  return (
+    <Menu
+      theme="dark"
+      mode="inline"
+      selectedKeys={getSelectedKey()}
+      items={items}
+      style={{
+        background: 'transparent',
+        border: 'none',
+      }}
+    />
+  );
+};
 
 export default Sidebar;

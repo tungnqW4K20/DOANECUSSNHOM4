@@ -7,7 +7,7 @@ const { authenticateToken, authorizeRole } = require('../middlewares/auth.middle
 const router = express.Router();
 
 // Thêm sản phẩm mới
-router.post("/", authenticateToken, authorizeRole("HaiQuan"), spController.create);
+router.post("/", authenticateToken, authorizeRole(["Admin", "business"]), spController.create);
 
 // Lấy danh sách sản phẩm
 router.get("/", spController.getAll);
@@ -16,9 +16,9 @@ router.get("/", spController.getAll);
 router.get("/:id_sp", spController.getById);
 
 // Cập nhật sản phẩm
-router.put("/:id_sp", authenticateToken, authorizeRole("HaiQuan"), spController.update);
+router.put("/:id_sp", authenticateToken, authorizeRole(["Admin", "business"]), spController.update);
 
 // Xóa sản phẩm
-router.delete("/:id_sp", authenticateToken, authorizeRole("HaiQuan"), spController.remove);
+router.delete("/:id_sp", authenticateToken, authorizeRole(["Admin", "business"]), spController.remove);
 
 module.exports = router;

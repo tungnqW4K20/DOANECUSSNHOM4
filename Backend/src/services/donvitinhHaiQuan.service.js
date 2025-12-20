@@ -14,10 +14,19 @@ const createDVT_HQ = async ({ ten_dvt, mo_ta }) => {
 };
 
 const getAllDVT_HQ = async () => {
-  return await DonViTinhHQ.findAll({
+  return await db.DonViTinhHQ.findAll({
     include: [
-      { model: db.QuyDoiDonViSP, as: 'quyDoiDonViSPs' },
-      { model: db.QuyDoiDonViDN, as: 'quyDoiDonVis' }
+      { 
+        model: db.QuyDoiDonViSP, 
+        as: 'quyDoiDonViSPs',
+        // Chỉ lấy những cột chắc chắn có dưới DB, bỏ 'id_dn' ra khỏi danh sách này
+        attributes: ['id_qd', 'id_sp', 'ten_dvt_sp', 'id_dvt_hq', 'he_so'] 
+      },
+      { 
+        model: db.QuyDoiDonViDN, 
+        as: 'quyDoiDonVis',
+        attributes: ['id_qd', 'id_mat_hang', 'ten_dvt_dn', 'id_dvt_hq', 'he_so']
+      }
     ]
   });
 };

@@ -16,7 +16,7 @@ const generateToken = (payload, userType) => {
     if (!payload || !payload.id || !payload.role) {
         throw new Error('Payload for JWT must contain id and role.');
     }
-    const expiresIn = userType === 'HaiQuan' ? DEFAULT_ADMIN_EXPIRES_IN : DEFAULT_CUSTOMER_EXPIRES_IN;
+    const expiresIn = userType === 'Admin' ? DEFAULT_ADMIN_EXPIRES_IN : DEFAULT_CUSTOMER_EXPIRES_IN;
     return jwt.sign(payload, JWT_SECRET, { expiresIn });
 };
 

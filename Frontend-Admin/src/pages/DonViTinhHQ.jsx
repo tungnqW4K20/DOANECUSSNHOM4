@@ -1,61 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Space, Popconfirm, message, Row, Col, Typography, Card, Spin } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useState, useEffect } from 'react';
+import { Table, Button, Modal, Form, Input, Space, Popconfirm, Row, Col, Typography, Card, Spin, Empty, Statistic } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, AppstoreOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import { unitAPI } from '../services/api.service';
+import { showCreateSuccess, showUpdateSuccess, showDeleteSuccess, showLoadError, showSaveError, showDeleteError } from '../utils/notification.jsx';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
+const { Search } = Input;
 
 const DonViTinhHQ = () => {
   const [form] = Form.useForm();
   const [dataSource, setDataSource] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
+  const [searchText, setSearchText] = useState('');
 
-  // Load dữ liệu từ Backend API
   const loadUnits = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Đang gọi API:', `${import.meta.env.VITE_API_BASE_URL}/don-vi-tinh-hai-quan`);
-      
-      // Kiểm tra admin token
-      const adminToken = localStorage.getItem('adminAuthToken');
-      console.log('🔑 Admin Token:', adminToken ? 'Có token' : 'Không có token');
-      
       const response = await unitAPI.getAll();
-      console.log('✅ API Response:', response.data);
-      
-      // Backend trả về: { success: true, data: [...] }
       const data = response.data?.data || [];
-      console.log('📊 Data to set:', data);
-      
       setDataSource(Array.isArray(data) ? data : []);
-      if (data.length > 0) {
-        message.success(`Đã tải ${data.length} đơn vị tính thành công`);
-      } else {
-        message.info('Chưa có đơn vị tính nào trong hệ thống');
-      }
+      setFilteredData(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('❌ API Error:', error);
-      console.error('❌ Error Response:', error.response?.data);
-      console.error('❌ Error Status:', error.response?.status);
-      
-      let errorMessage = 'Không thể tải danh sách đơn vị tính';
-      
+      console.error('Error loading units:', error);
       if (error.response?.status === 401) {
-        errorMessage = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
-      } else if (error.response?.status === 403) {
-        errorMessage = 'Bạn không có quyền truy cập chức năng này.';
-      } else if (error.response?.status === 500) {
-        errorMessage = 'Lỗi server. Vui lòng thử lại sau.';
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message.includes('Network Error')) {
-        errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+        showLoadError('Phiên đăng nhập đã hết hạn');
+      } else {
+        showLoadError('danh sách đơn vị tính');
       }
-      
-      message.error(errorMessage);
       setDataSource([]);
+      setFilteredData([]);
     } finally {
       setLoading(false);
     }
@@ -65,6 +41,16 @@ const DonViTinhHQ = () => {
     loadUnits();
   }, []);
 
+  const handleSearch = (value) => {
+    setSearchText(value);
+    const filtered = dataSource.filter(
+      (item) =>
+        item.ten_dvt?.toLowerCase().includes(value.toLowerCase()) ||
+        item.mo_ta?.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredData(filtered);
+  };
+
   const handleAdd = () => {
     setEditingRecord(null);
     form.resetFields();
@@ -73,10 +59,7 @@ const DonViTinhHQ = () => {
 
   const handleEdit = (record) => {
     setEditingRecord(record);
-    form.setFieldsValue({
-      ten_dvt: record.ten_dvt,
-      mo_ta: record.mo_ta
-    });
+    form.setFieldsValue({ ten_dvt: record.ten_dvt, mo_ta: record.mo_ta });
     setIsModalOpen(true);
   };
 
@@ -88,77 +71,90 @@ const DonViTinhHQ = () => {
 
   const handleDelete = async (id_dvt_hq) => {
     try {
-      console.log('🗑️ Đang xóa đơn vị tính:', id_dvt_hq);
-      
       await unitAPI.delete(id_dvt_hq);
-      message.success('Xóa đơn vị tính thành công!');
-      
-      // Reload data sau khi xóa
+      showDeleteSuccess('Đơn vị tính');
       loadUnits();
-    } catch (error) {
-      console.error('❌ Lỗi khi xóa đơn vị tính:', error);
-      console.error('❌ Error Response:', error.response?.data);
-      
-      const errorMessage = error.response?.data?.message || 
-                          error.message || 
-                          'Không thể xóa đơn vị tính';
-      message.error(errorMessage);
+    } catch {
+      showDeleteError('đơn vị tính');
     }
   };
 
   const onFinish = async (values) => {
     try {
-      console.log('💾 Đang lưu đơn vị tính:', values);
-      
       if (editingRecord) {
-        // Cập nhật đơn vị tính
         await unitAPI.update(editingRecord.id_dvt_hq, values);
-        message.success('Cập nhật đơn vị tính thành công!');
+        showUpdateSuccess(`Đơn vị tính "${values.ten_dvt}"`);
       } else {
-        // Thêm đơn vị tính mới
         await unitAPI.create(values);
-        message.success('Thêm đơn vị tính mới thành công!');
+        showCreateSuccess(`Đơn vị tính "${values.ten_dvt}"`);
       }
-      
       setIsModalOpen(false);
       form.resetFields();
       setEditingRecord(null);
-      
-      // Reload data sau khi thêm/sửa
       loadUnits();
-    } catch (error) {
-      console.error('❌ Lỗi khi lưu đơn vị tính:', error);
-      console.error('❌ Error Response:', error.response?.data);
-      
-      const errorMessage = error.response?.data?.message || 
-                          error.message || 
-                          (editingRecord ? 'Không thể cập nhật đơn vị tính' : 'Không thể thêm đơn vị tính');
-      message.error(errorMessage);
+    } catch {
+      showSaveError('đơn vị tính');
     }
   };
 
   const columns = [
-    { 
-      title: 'Tên Đơn vị tính (Mã)', 
-      dataIndex: 'ten_dvt', 
+    {
+      title: 'Tên Đơn vị tính',
+      dataIndex: 'ten_dvt',
       key: 'ten_dvt',
-      sorter: (a, b) => a.ten_dvt.localeCompare(b.ten_dvt)
-    },
-    { 
-      title: 'Mô tả', 
-      dataIndex: 'mo_ta', 
-      key: 'mo_ta' 
+      width: '25%',
+      render: (text) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontWeight: 700,
+              fontSize: '11px',
+            }}
+          >
+            {text?.substring(0, 3)}
+          </div>
+          <span style={{ fontWeight: 600, color: '#1e293b' }}>{text}</span>
+        </div>
+      ),
+      sorter: (a, b) => a.ten_dvt.localeCompare(b.ten_dvt),
     },
     {
-      title: 'Hành động', 
-      key: 'action', 
-      width: 180, 
-      align: 'center', 
+      title: 'Mô tả',
+      dataIndex: 'mo_ta',
+      key: 'mo_ta',
+      width: '55%',
+      ellipsis: true,
+      render: (text) => <span style={{ color: '#64748b' }}>{text || '—'}</span>,
+    },
+    {
+      title: 'Hành động',
+      key: 'action',
+      width: '20%',
+      align: 'center',
       render: (_, record) => (
-        <Space>
-          <Button icon={<EditOutlined />} onClick={() => handleEdit(record)}>Sửa</Button>
-          <Popconfirm title="Bạn có chắc muốn xóa?" onConfirm={() => handleDelete(record.id_dvt_hq)}>
-            <Button icon={<DeleteOutlined />} danger>Xóa</Button>
+        <Space size="small">
+          <Button type="primary" icon={<EditOutlined />} onClick={() => handleEdit(record)} size="small">
+            Sửa
+          </Button>
+          <Popconfirm
+            title="Xác nhận xóa"
+            description="Bạn có chắc muốn xóa đơn vị tính này?"
+            onConfirm={() => handleDelete(record.id_dvt_hq)}
+            okText="Xóa"
+            cancelText="Hủy"
+            okButtonProps={{ danger: true }}
+          >
+            <Button danger icon={<DeleteOutlined />} size="small">
+              Xóa
+            </Button>
           </Popconfirm>
         </Space>
       ),
@@ -166,58 +162,116 @@ const DonViTinhHQ = () => {
   ];
 
   return (
-    <>
-      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-        <Col>
-          <Title level={3} className="page-header-heading">Quản lý Đơn vị tính Hải quan</Title>
-        </Col>
-        <Col>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-            Thêm mới
-          </Button>
+    <div>
+      {/* Header */}
+      <div className="fade-in" style={{ marginBottom: '24px' }}>
+        <Row justify="space-between" align="middle">
+          <Col>
+            <Title level={3} className="page-header-heading" style={{ margin: 0 }}>
+              Quản lý Đơn vị tính Hải quan
+            </Title>
+            <Text style={{ color: '#64748b', marginTop: '8px', display: 'block' }}>
+              Quản lý danh sách đơn vị tính theo chuẩn Hải quan
+            </Text>
+          </Col>
+          <Col>
+            <Space>
+              <Button icon={<ReloadOutlined />} onClick={loadUnits}>
+                Làm mới
+              </Button>
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} size="large">
+                Thêm mới
+              </Button>
+            </Space>
+          </Col>
+        </Row>
+      </div>
+
+      {/* Stats */}
+      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+        <Col xs={24} sm={8}>
+          <Card className="stat-card stat-card-purple hover-lift fade-in-up stagger-1" style={{ background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)', border: 'none' }}>
+            <Statistic
+              title={<span style={{ color: '#64748b' }}>Tổng đơn vị tính</span>}
+              value={dataSource.length}
+              prefix={<AppstoreOutlined style={{ color: '#8b5cf6' }} />}
+              valueStyle={{ color: '#8b5cf6', fontWeight: 700 }}
+            />
+          </Card>
         </Col>
       </Row>
 
-      <Card bordered={false} className="content-card">
-        <Spin spinning={loading}>
-          <Table columns={columns} dataSource={dataSource} rowKey="id_dvt_hq" />
+      {/* Search & Table */}
+      <Card className="content-card gradient-card fade-in-up stagger-2">
+        <div style={{ marginBottom: '20px' }}>
+          <Search
+            placeholder="Tìm kiếm theo tên hoặc mô tả..."
+            allowClear
+            enterButton={<SearchOutlined />}
+            size="large"
+            onSearch={handleSearch}
+            onChange={(e) => handleSearch(e.target.value)}
+            style={{ maxWidth: 400 }}
+          />
+        </div>
+
+        <Spin spinning={loading} tip="Đang tải dữ liệu...">
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            rowKey="id_dvt_hq"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `Tổng ${total} đơn vị tính`,
+            }}
+            locale={{
+              emptyText: <Empty description={searchText ? 'Không tìm thấy kết quả' : 'Chưa có dữ liệu'} />,
+            }}
+
+          />
         </Spin>
       </Card>
-      
-      <Modal 
-        title={editingRecord ? 'Chỉnh sửa Đơn vị tính' : 'Thêm mới Đơn vị tính'} 
-        open={isModalOpen} 
-        onCancel={handleCancel} 
+
+      {/* Modal */}
+      <Modal
+        title={
+          <Space>
+            <AppstoreOutlined />
+            <span>{editingRecord ? 'Chỉnh sửa Đơn vị tính' : 'Thêm Đơn vị tính mới'}</span>
+          </Space>
+        }
+        open={isModalOpen}
+        onCancel={handleCancel}
         footer={null}
+        width={500}
         destroyOnClose
       >
-        <Form form={form} layout="vertical" onFinish={onFinish}>
-          <Form.Item 
-            name="ten_dvt" 
-            label="Tên ĐVT (Mã, VD: KGM)" 
+        <Form form={form} layout="vertical" onFinish={onFinish} style={{ marginTop: 24 }}>
+          <Form.Item
+            name="ten_dvt"
+            label="Tên đơn vị tính"
             rules={[
               { required: true, message: 'Vui lòng nhập tên đơn vị tính!' },
-              { max: 50, message: 'Tên đơn vị tính không được quá 50 ký tự!' }
+              { max: 50, message: 'Tên đơn vị tính không được quá 50 ký tự!' },
+              { pattern: /^[A-Z0-9]+$/, message: 'Chỉ sử dụng chữ in hoa và số (VD: KGM, M3)' },
             ]}
+            tooltip="Mã đơn vị tính theo chuẩn Hải quan (chữ in hoa và số)"
           >
-            <Input placeholder="Ví dụ: KGM, LIT, M3..." />
-          </Form.Item>
-          <Form.Item 
-            name="mo_ta" 
-            label="Mô tả"
-            rules={[
-              { max: 255, message: 'Mô tả không được quá 255 ký tự!' }
-            ]}
-          >
-            <Input.TextArea 
-              rows={3} 
-              placeholder="Mô tả chi tiết về đơn vị tính..."
-              showCount
-              maxLength={255}
+            <Input
+              placeholder="VD: KGM, LIT, M3, TNE"
+              maxLength={50}
+              style={{ textTransform: 'uppercase' }}
+              prefix={<AppstoreOutlined style={{ color: '#94a3b8' }} />}
             />
           </Form.Item>
-          <Form.Item>
-            <Space>
+
+          <Form.Item name="mo_ta" label="Mô tả" rules={[{ max: 255, message: 'Mô tả không được quá 255 ký tự!' }]}>
+            <Input.TextArea rows={3} placeholder="Mô tả chi tiết về đơn vị tính..." showCount maxLength={255} />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
               <Button onClick={handleCancel}>Hủy</Button>
               <Button type="primary" htmlType="submit">
                 {editingRecord ? 'Cập nhật' : 'Thêm mới'}
@@ -226,7 +280,7 @@ const DonViTinhHQ = () => {
           </Form.Item>
         </Form>
       </Modal>
-    </>
+    </div>
   );
 };
 

@@ -7,6 +7,7 @@ const { authenticateToken, authorizeRole } = require('../middlewares/auth.middle
 const router = express.Router();
 
 // 📌 Cập nhật tỷ giá tự động từ API (free)
-router.post('/updateFromAPI', authenticateToken, authorizeRole("HaiQuan"), tygiaController.updateFromAPI);
+// router.post('/updateFromAPI', authenticateToken, authorizeRole("Admin"), tygiaController.updateFromAPI);
+router.post('/updateFromAPI', authenticateToken, tygiaController.updateFromAPI);
 
 module.exports = router;

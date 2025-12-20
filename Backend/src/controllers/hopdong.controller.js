@@ -34,6 +34,21 @@ const getById = async (req, res) => {
   }
 };
 
+// [PUT] /api/hopdong/:id_hd
+// Mô tả: Cập nhật thông tin hợp đồng theo ID
+// Body (JSON):
+/*
+{
+  "so_hd": "HD0023",                 // (string) Số hiệu hợp đồng
+  "ngay_ky": "2025-01-15",          // (date) Ngày ký hợp đồng
+  "ngay_hieu_luc": "2025-01-20",    // (date) Ngày bắt đầu có hiệu lực
+  "ngay_het_han": "2025-12-31",     // (date) Ngày hết hạn hợp đồng
+  "gia_tri": 1200000,                // (number) Tổng giá trị hợp đồng
+  "id_tt": 1,                        // (int) Mã trạng thái hợp đồng (VD: 1 = Đang hiệu lực, 2 = Hết hạn)
+  "file_hop_dong": "uploads/hopdong/HD001.pdf" // (string) Đường dẫn file hợp đồng (upload)
+}
+*/
+
 const update = async (req, res) => {
   try {
     const { id_hd } = req.params;

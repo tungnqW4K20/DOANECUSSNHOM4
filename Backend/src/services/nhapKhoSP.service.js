@@ -4,15 +4,61 @@ const NhapKhoSP = db.NhapKhoSP;
 const NhapKhoSPChiTiet = db.NhapKhoSPChiTiet;
 const Kho = db.Kho;
 const SanPham = db.SanPham;
+const TonKhoSP = db.TonKhoSP;
 
-const createNhapSP = async ({ id_kho, ngay_nhap, file_phieu }) => {
+// const createNhapSP = async ({ id_kho, ngay_nhap, file_phieu }) => {
+//   if (!id_kho || !ngay_nhap) throw new Error('Thiếu dữ liệu bắt buộc (id_kho, ngay_nhap)');
+//   const kho = await Kho.findByPk(id_kho);
+//   if (!kho) throw new Error(`Không tìm thấy kho ID=${id_kho}`);
+//   const created = await NhapKhoSP.create({ id_kho, ngay_nhap, file_phieu });
+//   return created;
+// };
+const createNhapSP = async ({ id_kho, ngay_nhap, file_phieu, chi_tiets }) => {
   if (!id_kho || !ngay_nhap) throw new Error('Thiếu dữ liệu bắt buộc (id_kho, ngay_nhap)');
+  if (!Array.isArray(chi_tiets) || chi_tiets.length === 0)
+    throw new Error('Danh sách chi tiết nhập kho không hợp lệ');
+
   const kho = await Kho.findByPk(id_kho);
   if (!kho) throw new Error(`Không tìm thấy kho ID=${id_kho}`);
-  const created = await NhapKhoSP.create({ id_kho, ngay_nhap, file_phieu });
-  return created;
-};
 
+  const t = await db.sequelize.transaction();
+
+  try {
+    const phieu = await NhapKhoSP.create({ id_kho, ngay_nhap, file_phieu }, { transaction: t });
+
+    for (const ct of chi_tiets) {
+      const { id_sp, so_luong } = ct;
+      if (!id_sp || !so_luong) throw new Error('Thiếu id_sp hoặc so_luong');
+
+      const sp = await SanPham.findByPk(id_sp, { transaction: t });
+      if (!sp) throw new Error(`Không tìm thấy SP ID=${id_sp}`);
+
+      await NhapKhoSPChiTiet.create(
+        { id_nhap: phieu.id_nhap, id_sp, so_luong },
+        { transaction: t }
+      );
+
+      const tonKho = await TonKhoSP.findOne({ where: { id_kho, id_sp }, transaction: t });
+      if (tonKho) {
+        await tonKho.increment('so_luong_ton', { by: so_luong, transaction: t });
+      } else {
+        await TonKhoSP.create({ id_kho, id_sp, so_luong_ton: so_luong }, { transaction: t });
+      }
+    }
+
+    await t.commit();
+
+    return await NhapKhoSP.findByPk(phieu.id_nhap, {
+      include: [
+        { model: NhapKhoSPChiTiet, as: 'chiTiets' },
+        { model: Kho, as: 'kho' }
+      ]
+    });
+  } catch (err) {
+    if (!t.finished) await t.rollback();
+    throw err;
+  }
+};
 const getAllNhapSP = async () => {
   return await NhapKhoSP.findAll({
     include: [

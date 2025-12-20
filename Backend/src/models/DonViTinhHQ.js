@@ -7,6 +7,8 @@ module.exports = (sequelize, DataTypes) => {
       DonViTinhHQ.hasMany(models.NguyenPhuLieu, { foreignKey: 'id_dvt_hq', as: 'nguyenPhuLieus' });
       DonViTinhHQ.hasMany(models.QuyDoiDonViDN, { foreignKey: 'id_dvt_hq', as: 'quyDoiDonVis' });
       DonViTinhHQ.hasMany(models.QuyDoiDonViSP, { foreignKey: 'id_dvt_hq', as: 'quyDoiDonViSPs' });
+      DonViTinhHQ.hasMany(models.QuyDoiNPL, { foreignKey: 'id_dvt_hq', as: 'quyDoiNPLs' });
+
     }
   }
   

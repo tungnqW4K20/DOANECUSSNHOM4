@@ -6,11 +6,11 @@ const { authenticateToken, authorizeRole } = require('../middlewares/auth.middle
 
 const router = express.Router();
 
-router.post("/", authenticateToken, authorizeRole("HaiQuan"), dvtController.create);
+router.post("/", authenticateToken, authorizeRole("Admin"), dvtController.create);
 router.get("/", dvtController.getAll);
 router.get("/:id_dvt_hq", dvtController.getById);
-router.put("/:id_dvt_hq", authenticateToken, authorizeRole("HaiQuan"), dvtController.update);
-router.delete("/:id_dvt_hq", authenticateToken, authorizeRole("HaiQuan"), dvtController.remove);
+router.put("/:id_dvt_hq", authenticateToken, authorizeRole("Admin"), dvtController.update);
+router.delete("/:id_dvt_hq", authenticateToken, authorizeRole("Admin"), dvtController.remove);
 
 module.exports = router;
 

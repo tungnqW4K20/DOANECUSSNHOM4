@@ -8,8 +8,8 @@ const createKho = async ({ id_dn, ten_kho, dia_chi }) => {
   return await Kho.create({ id_dn, ten_kho, dia_chi });
 };
 
-const getAllKho = async () => {
-  return await Kho.findAll({ include: [{ model: DoanhNghiep, as: 'doanhNghiep' }] });
+const getAllKho = async (id_dn) => {
+  return await Kho.findAll({  where: { id_dn }, include: [{ model: DoanhNghiep, as: 'doanhNghiep' }] });
 };
 
 const getKhoById = async (id_kho) => {

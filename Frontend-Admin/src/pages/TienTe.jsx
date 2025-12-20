@@ -1,26 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Space, Popconfirm, message, Row, Col, Typography, Card, Spin } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useState, useEffect } from 'react';
+import { Table, Button, Modal, Form, Input, Space, Popconfirm, Row, Col, Typography, Card, Spin, Empty, Statistic } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, DollarOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import { currencyAPI } from '../services/api.service';
+import { showCreateSuccess, showUpdateSuccess, showDeleteSuccess, showLoadError, showSaveError, showDeleteError } from '../utils/notification.jsx';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
+const { Search } = Input;
 
 const TienTe = () => {
   const [form] = Form.useForm();
   const [dataSource, setDataSource] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
+  const [searchText, setSearchText] = useState('');
 
-  // Load dữ liệu từ API
   const loadCurrencies = async () => {
     try {
       setLoading(true);
       const response = await currencyAPI.getAll();
-      setDataSource(response.data?.data || response.data || []);
+      const data = response.data?.data || response.data || [];
+      setDataSource(data);
+      setFilteredData(data);
     } catch (error) {
-      console.error('Lỗi khi tải danh sách tiền tệ:', error);
-      message.error('Không thể tải danh sách tiền tệ');
+      console.error('Error loading currencies:', error);
+      showLoadError('danh sách tiền tệ');
     } finally {
       setLoading(false);
     }
@@ -30,17 +35,35 @@ const TienTe = () => {
     loadCurrencies();
   }, []);
 
-  const handleAdd = () => { setEditingRecord(null); form.resetFields(); setIsModalOpen(true); };
-  const handleEdit = (record) => { setEditingRecord(record); form.setFieldsValue(record); setIsModalOpen(true); };
+  const handleSearch = (value) => {
+    setSearchText(value);
+    const filtered = dataSource.filter(
+      (item) =>
+        item.ma_tt?.toLowerCase().includes(value.toLowerCase()) ||
+        item.ten_tt?.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredData(filtered);
+  };
+
+  const handleAdd = () => {
+    setEditingRecord(null);
+    form.resetFields();
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (record) => {
+    setEditingRecord(record);
+    form.setFieldsValue(record);
+    setIsModalOpen(true);
+  };
 
   const handleDelete = async (id_tt) => {
     try {
       await currencyAPI.delete(id_tt);
-      message.success('Xóa tiền tệ thành công!');
-      loadCurrencies(); // Reload data
+      showDeleteSuccess('Tiền tệ');
+      loadCurrencies();
     } catch (error) {
-      console.error('Lỗi khi xóa tiền tệ:', error);
-      message.error('Không thể xóa tiền tệ');
+      showDeleteError('tiền tệ');
     }
   };
 
@@ -48,28 +71,76 @@ const TienTe = () => {
     try {
       if (editingRecord) {
         await currencyAPI.update(editingRecord.id_tt, values);
-        message.success('Cập nhật tiền tệ thành công!');
+        showUpdateSuccess(`Tiền tệ "${values.ma_tt}"`);
       } else {
         await currencyAPI.create(values);
-        message.success('Thêm tiền tệ mới thành công!');
+        showCreateSuccess(`Tiền tệ "${values.ma_tt}"`);
       }
       setIsModalOpen(false);
-      loadCurrencies(); // Reload data
+      loadCurrencies();
     } catch (error) {
-      console.error('Lỗi khi lưu tiền tệ:', error);
-      message.error('Không thể lưu tiền tệ');
+      showSaveError('tiền tệ');
     }
   };
 
   const columns = [
-    { title: 'Mã tiền tệ', dataIndex: 'ma_tt', key: 'ma_tt' },
-    { title: 'Tên tiền tệ', dataIndex: 'ten_tt', key: 'ten_tt' },
     {
-      title: 'Hành động', key: 'action', width: 180, align: 'center', render: (_, record) => (
-        <Space>
-          <Button icon={<EditOutlined />} onClick={() => handleEdit(record)}>Sửa</Button>
-          <Popconfirm title="Bạn có chắc muốn xóa?" onConfirm={() => handleDelete(record.id_tt)}>
-            <Button icon={<DeleteOutlined />} danger>Xóa</Button>
+      title: 'Mã tiền tệ',
+      dataIndex: 'ma_tt',
+      key: 'ma_tt',
+      width: '25%',
+      render: (text) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontWeight: 700,
+              fontSize: '12px',
+            }}
+          >
+            {text?.substring(0, 2)}
+          </div>
+          <span style={{ fontWeight: 600, color: '#1e293b' }}>{text}</span>
+        </div>
+      ),
+      sorter: (a, b) => a.ma_tt.localeCompare(b.ma_tt),
+    },
+    {
+      title: 'Tên tiền tệ',
+      dataIndex: 'ten_tt',
+      key: 'ten_tt',
+      width: '55%',
+      render: (text) => <span style={{ color: '#475569' }}>{text}</span>,
+      sorter: (a, b) => a.ten_tt.localeCompare(b.ten_tt),
+    },
+    {
+      title: 'Hành động',
+      key: 'action',
+      width: '20%',
+      align: 'center',
+      render: (_, record) => (
+        <Space size="small">
+          <Button type="primary" icon={<EditOutlined />} onClick={() => handleEdit(record)} size="small">
+            Sửa
+          </Button>
+          <Popconfirm
+            title="Xác nhận xóa"
+            description="Bạn có chắc muốn xóa tiền tệ này?"
+            onConfirm={() => handleDelete(record.id_tt)}
+            okText="Xóa"
+            cancelText="Hủy"
+            okButtonProps={{ danger: true }}
+          >
+            <Button danger icon={<DeleteOutlined />} size="small">
+              Xóa
+            </Button>
           </Popconfirm>
         </Space>
       ),
@@ -77,35 +148,118 @@ const TienTe = () => {
   ];
 
   return (
-    <>
-      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-        <Col><Title level={3} className="page-header-heading">Quản lý Tiền tệ</Title></Col>
-        <Col><Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>Thêm mới</Button></Col>
+    <div>
+      {/* Header */}
+      <div className="fade-in" style={{ marginBottom: '24px' }}>
+        <Row justify="space-between" align="middle">
+          <Col>
+            <Title level={3} className="page-header-heading" style={{ margin: 0 }}>
+              Quản lý Tiền tệ
+            </Title>
+            <Text style={{ color: '#64748b', marginTop: '8px', display: 'block' }}>
+              Quản lý danh sách các loại tiền tệ trong hệ thống
+            </Text>
+          </Col>
+          <Col>
+            <Space>
+              <Button icon={<ReloadOutlined />} onClick={loadCurrencies}>
+                Làm mới
+              </Button>
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} size="large">
+                Thêm mới
+              </Button>
+            </Space>
+          </Col>
+        </Row>
+      </div>
+
+      {/* Stats */}
+      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+        <Col xs={24} sm={8}>
+          <Card className="stat-card stat-card-blue hover-lift fade-in-up stagger-1" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: 'none' }}>
+            <Statistic
+              title={<span style={{ color: '#64748b' }}>Tổng số tiền tệ</span>}
+              value={dataSource.length}
+              prefix={<DollarOutlined style={{ color: '#2563eb' }} />}
+              valueStyle={{ color: '#2563eb', fontWeight: 700 }}
+            />
+          </Card>
+        </Col>
       </Row>
 
-      <Card bordered={false} className="content-card">
-        <Spin spinning={loading}>
-          <Table columns={columns} dataSource={dataSource} rowKey="id_tt" />
+      {/* Search & Table */}
+      <Card className="content-card gradient-card fade-in-up stagger-2">
+        <div style={{ marginBottom: '20px' }}>
+          <Search
+            placeholder="Tìm kiếm theo mã hoặc tên tiền tệ..."
+            allowClear
+            enterButton={<SearchOutlined />}
+            size="large"
+            onSearch={handleSearch}
+            onChange={(e) => handleSearch(e.target.value)}
+            style={{ maxWidth: 400 }}
+          />
+        </div>
+
+        <Spin spinning={loading} tip="Đang tải dữ liệu...">
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            rowKey="id_tt"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `Tổng ${total} tiền tệ`,
+            }}
+            locale={{
+              emptyText: <Empty description={searchText ? 'Không tìm thấy kết quả' : 'Chưa có dữ liệu'} />,
+            }}
+
+          />
         </Spin>
       </Card>
-      
-      <Modal title={editingRecord ? 'Chỉnh sửa' : 'Thêm mới'} open={isModalOpen} onCancel={() => setIsModalOpen(false)} footer={null}>
-        <Form form={form} layout="vertical" onFinish={onFinish}>
-          <Form.Item name="ma_tt" label="Mã tiền tệ (VD: USD)" rules={[{ required: true }]}>
-            <Input />
+
+      {/* Modal */}
+      <Modal
+        title={
+          <Space>
+            <DollarOutlined />
+            <span>{editingRecord ? 'Chỉnh sửa tiền tệ' : 'Thêm tiền tệ mới'}</span>
+          </Space>
+        }
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        footer={null}
+        width={480}
+        destroyOnClose
+      >
+        <Form form={form} layout="vertical" onFinish={onFinish} style={{ marginTop: 24 }}>
+          <Form.Item
+            name="ma_tt"
+            label="Mã tiền tệ"
+            rules={[
+              { required: true, message: 'Vui lòng nhập mã tiền tệ!' },
+              { pattern: /^[A-Z]{3}$/, message: 'Mã tiền tệ phải là 3 chữ cái in hoa (VD: USD, VND)' },
+            ]}
+          >
+            <Input placeholder="VD: USD, VND, EUR" maxLength={3} style={{ textTransform: 'uppercase' }} prefix={<DollarOutlined style={{ color: '#94a3b8' }} />} />
           </Form.Item>
-          <Form.Item name="ten_tt" label="Tên đầy đủ" rules={[{ required: true }]}>
-            <Input />
+
+          <Form.Item name="ten_tt" label="Tên tiền tệ" rules={[{ required: true, message: 'Vui lòng nhập tên tiền tệ!' }]}>
+            <Input placeholder="VD: Đô la Mỹ, Việt Nam Đồng" />
           </Form.Item>
-          <Form.Item>
-            <Space>
+
+          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
               <Button onClick={() => setIsModalOpen(false)}>Hủy</Button>
-              <Button type="primary" htmlType="submit">Lưu</Button>
+              <Button type="primary" htmlType="submit">
+                {editingRecord ? 'Cập nhật' : 'Thêm mới'}
+              </Button>
             </Space>
           </Form.Item>
         </Form>
       </Modal>
-    </>
+    </div>
   );
 };
 
