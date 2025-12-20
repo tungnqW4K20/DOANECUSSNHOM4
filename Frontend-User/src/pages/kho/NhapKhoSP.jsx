@@ -14,6 +14,8 @@ import {
     Col,
     Card,
     Space,
+    Drawer, 
+    Descriptions,
 } from "antd";
 import {
     UploadOutlined,
@@ -41,6 +43,21 @@ const NhapKhoSP = () => {
     const [fileUrl, setFileUrl] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+
+    const [lichSuPhieu, setLichSuPhieu] = useState([]);
+    const [loadingLichSu, setLoadingLichSu] = useState(false);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [selectedPhieu, setSelectedPhieu] = useState(null);
+    const [editingRecord, setEditingRecord] = useState(null);
+
+    // const fetchLichSu = async () => {
+    //     setLoadingLichSu(true);
+    //     try {
+    //         // const data = await getNhapKhoSP();
+    //         setLichSuPhieu(mockLichSuNhapSP || []);
+    //     } catch (err) { message.error("Không tải được lịch sử phiếu nhập SP!"); }
+    //     finally { setLoadingLichSu(false); }
+    // };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -95,6 +112,41 @@ const NhapKhoSP = () => {
         } finally {
             setUploading(false);
         }
+    };
+
+    const showDrawer = (record) => {
+        setSelectedPhieu(record);
+        setIsDrawerOpen(true);
+    };
+
+    const handleEdit = (record) => {
+        setEditingRecord(record);
+        form.setFieldsValue({
+            id_kho: record.kho.id_kho,
+            ngay_nhap: dayjs(record.ngay_nhap),
+        });
+        setChiTietNhap(record.chiTietNhapKhoSPs.map(item => ({
+            key: item.id_ct,
+            id_sp: item.sanPham.id_sp,
+            so_luong: item.so_luong,
+        })));
+        window.scrollTo(0, 0); // Cuộn lên đầu trang để người dùng thấy form
+    };
+
+    const handleDelete = async (id_nhap) => {
+        try {
+            await deleteNhapKhoSP(id_nhap);
+            message.success(`Xóa phiếu nhập #${id_nhap} thành công!`);
+            fetchLichSu(); // Tải lại danh sách
+        } catch (error) {
+            message.error("Lỗi khi xóa phiếu nhập!");
+        }
+    };
+    
+    const cancelEdit = () => {
+        setEditingRecord(null);
+        form.resetFields();
+        setChiTietNhap([]);
     };
 
     /* submit */
@@ -199,21 +251,32 @@ const NhapKhoSP = () => {
         console.log("📦 Payload gửi backend:", payload);
 
         try {
-            setSubmitting(true);
+            // setSubmitting(true);
 
-            const res = await createNhapKhoSP(payload);
+            // const res = await createNhapKhoSP(payload);
 
-            if (!res?.success) {
-                message.error(res?.message || "Không tạo được phiếu nhập!");
-                return;
+            // if (!res?.success) {
+            //     message.error(res?.message || "Không tạo được phiếu nhập!");
+            //     return;
+            // }
+
+            // message.success("Tạo phiếu nhập kho thành công!");
+
+            // // Reset form
+            // form.resetFields();
+            // setChiTietNhap([]);
+            // setFileUrl(null);
+
+            if (editingRecord) {
+                // Chế độ Cập nhật
+                await updateNhapKhoSP(editingRecord.id_nhap, payload);
+            } else {
+                // Chế độ Tạo mới
+                await createNhapKhoSP(payload);
             }
-
-            message.success("Tạo phiếu nhập kho thành công!");
-
-            // Reset form
-            form.resetFields();
-            setChiTietNhap([]);
-            setFileUrl(null);
+            message.success(`${editingRecord ? 'Cập nhật' : 'Tạo'} phiếu nhập kho SP thành công!`);
+            cancelEdit(); // Reset form và trạng thái
+            fetchLichSu(); // Tải lại lịch sử
 
         } catch (err) {
             console.error(err);
@@ -262,52 +325,138 @@ const NhapKhoSP = () => {
         }
     ];
 
+    const lichSuColumns = [
+        { title: 'Số phiếu', dataIndex: 'so_phieu' },
+        { title: 'Ngày nhập', dataIndex: 'ngay_nhap', render: (text) => dayjs(text).format('DD/MM/YYYY') },
+        { title: 'Kho nhận', dataIndex: ['kho', 'ten_kho'] },
+        { title: 'Hành động', key: 'action', width: 220, align: 'center', render: (_, record) => (
+            <Space>
+                <Button size="small" icon={<EyeOutlined />} onClick={() => showDrawer(record)}>Xem</Button>
+                <Button size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>Sửa</Button>
+                <Popconfirm title="Bạn có chắc muốn xóa phiếu này?" onConfirm={() => handleDelete(record.id_nhap)}>
+                    <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
+                </Popconfirm>
+            </Space>
+        )},
+    ];
+    
+    const chiTietColumns = [
+        { title: 'Tên sản phẩm', dataIndex: ['sanPham', 'ten_sp'] },
+        { title: 'Số lượng nhập', dataIndex: 'so_luong', align: 'right' },
+    ];
+
     return (
-        <div>
-            <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-                <Col>
-                    <Title level={3}>Tạo Phiếu Nhập Kho Sản Phẩm (từ Sản xuất)</Title>
-                </Col>
-            </Row>
+    //     <div>
+    //         <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+    //             <Col>
+    //                 <Title level={3}>Tạo Phiếu Nhập Kho Sản Phẩm (từ Sản xuất)</Title>
+    //             </Col>
+    //         </Row>
 
+    //         <Card bordered={false}>
+    //             <Form form={form} layout="vertical" onFinish={onFinish}>
+    //                 <Form.Item label="Kho nhận hàng" name="id_kho" rules={[{ required: true, message: "Chọn kho!" }]}>
+    //                     <Select placeholder="Chọn kho">
+    //                         {(Array.isArray(khoList) ? khoList : []).map(k => (
+    //                             <Option key={k.id_kho} value={k.id_kho}>{k.ten_kho}</Option>
+    //                         ))}
+    //                     </Select>
+    //                 </Form.Item>
+
+    //                 <Form.Item label="Ngày nhập kho" name="ngay_nhap" rules={[{ required: true, message: "Chọn ngày!" }]}>
+    //                     <DatePicker style={{ width: "100%" }} />
+    //                 </Form.Item>
+
+    //                 <Form.Item label="File phiếu nhập (nếu có)">
+    //                     <Upload customRequest={handleUpload} maxCount={1} showUploadList={false}>
+    //                         <Button icon={<UploadOutlined />} loading={uploading}>Tải lên</Button>
+    //                     </Upload>
+    //                     {fileUrl && <div style={{ marginTop: 8 }}>
+    //                         <a href={fileUrl} target="_blank" rel="noopener noreferrer">Xem file đã tải lên</a>
+    //                     </div>}
+    //                 </Form.Item>
+
+    //                 <Title level={4}>Chi tiết Sản Phẩm Nhập Kho</Title>
+
+    //                 <Space style={{ marginBottom: 12 }}>
+    //                     <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddRow}>Thêm Sản phẩm</Button>
+    //                 </Space>
+
+    //                 <Table columns={columns} dataSource={chiTietNhap} pagination={false} rowKey="key" bordered />
+
+    //                 <Form.Item style={{ marginTop: 24 }}>
+    //                     <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={submitting}>Lưu Phiếu nhập</Button>
+    //                 </Form.Item>
+    //             </Form>
+    //         </Card>
+    //         <Card title="Lịch sử Phiếu Nhập kho SP" bordered={false}>
+    //             <Table columns={lichSuColumns} dataSource={lichSuPhieu} rowKey="id_nhap" loading={loadingLichSu} />
+    //         </Card>
+
+    //         <Drawer title={`Chi tiết Phiếu nhập: ${selectedPhieu?.so_phieu}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
+    //             {selectedPhieu && <>
+    //                 <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}><Descriptions.Item label="Ngày nhập">{dayjs(selectedPhieu.ngay_nhap).format('DD/MM/YYYY')}</Descriptions.Item><Descriptions.Item label="Kho nhận">{selectedPhieu.kho.ten_kho}</Descriptions.Item></Descriptions>
+    //                 <Title level={5}>Danh sách sản phẩm đã nhập</Title>
+    //                 <Table columns={chiTietColumns} dataSource={selectedPhieu.chiTietNhapKhoSPs} rowKey="id_ct" pagination={false} size="small" bordered />
+    //             </>}
+    //         </Drawer>
+    //     </div>
+
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <Card bordered={false}>
+                <Title level={3}>{editingRecord ? `Chỉnh sửa Phiếu Nhập kho SP #${editingRecord.so_phieu}` : 'Tạo Phiếu Nhập Kho Sản Phẩm (Thành phẩm)'}</Title>
                 <Form form={form} layout="vertical" onFinish={onFinish}>
-                    <Form.Item label="Kho nhận hàng" name="id_kho" rules={[{ required: true, message: "Chọn kho!" }]}>
-                        <Select placeholder="Chọn kho">
-                            {(Array.isArray(khoList) ? khoList : []).map(k => (
-                                <Option key={k.id_kho} value={k.id_kho}>{k.ten_kho}</Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-
-                    <Form.Item label="Ngày nhập kho" name="ngay_nhap" rules={[{ required: true, message: "Chọn ngày!" }]}>
-                        <DatePicker style={{ width: "100%" }} />
-                    </Form.Item>
-
+                    <Row gutter={24}>
+                        <Col span={12}>
+                            <Form.Item label="Kho nhận hàng" name="id_kho" rules={[{ required: true, message: "Chọn kho!" }]}>
+                                <Select placeholder="Chọn kho">{khoList.map(k => (<Option key={k.id_kho} value={k.id_kho}>{k.ten_kho}</Option>))}</Select>
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item label="Ngày nhập kho" name="ngay_nhap" rules={[{ required: true, message: "Chọn ngày!" }]}>
+                                <DatePicker style={{ width: "100%" }} />
+                            </Form.Item>
+                        </Col>
+                    </Row>
                     <Form.Item label="File phiếu nhập (nếu có)">
-                        <Upload customRequest={handleUpload} maxCount={1} showUploadList={false}>
+                        <Upload customRequest={handleUpload} maxCount={1} showUploadList={!!fileUrl}>
                             <Button icon={<UploadOutlined />} loading={uploading}>Tải lên</Button>
                         </Upload>
-                        {fileUrl && <div style={{ marginTop: 8 }}>
-                            <a href={fileUrl} target="_blank" rel="noopener noreferrer">Xem file đã tải lên</a>
-                        </div>}
                     </Form.Item>
-
                     <Title level={4}>Chi tiết Sản Phẩm Nhập Kho</Title>
-
-                    <Space style={{ marginBottom: 12 }}>
-                        <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddRow}>Thêm Sản phẩm</Button>
-                    </Space>
-
+                    <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddRow} style={{ marginBottom: 16 }}>Thêm Sản phẩm</Button>
                     <Table columns={columns} dataSource={chiTietNhap} pagination={false} rowKey="key" bordered />
-
                     <Form.Item style={{ marginTop: 24 }}>
-                        <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={submitting}>Lưu Phiếu nhập</Button>
+                        <Space>
+                            <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={submitting}>
+                                {editingRecord ? 'Cập nhật Phiếu nhập' : 'Lưu Phiếu nhập'}
+                            </Button>
+                            {editingRecord && (
+                                <Button icon={<CloseCircleOutlined />} onClick={cancelEdit}>Hủy sửa</Button>
+                            )}
+                        </Space>
                     </Form.Item>
                 </Form>
             </Card>
-        </div>
+
+            <Card title="Lịch sử Phiếu Nhập kho SP" bordered={false}>
+                <Table columns={lichSuColumns} dataSource={lichSuPhieu} rowKey="id_nhap" loading={loadingLichSu} />
+            </Card>
+
+            <Drawer title={`Chi tiết Phiếu nhập: ${selectedPhieu?.so_phieu}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
+                {selectedPhieu && <>
+                    <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
+                        <Descriptions.Item label="Ngày nhập">{dayjs(selectedPhieu.ngay_nhap).format('DD/MM/YYYY')}</Descriptions.Item>
+                        <Descriptions.Item label="Kho nhận">{selectedPhieu.kho.ten_kho}</Descriptions.Item>
+                    </Descriptions>
+                    <Title level={5}>Danh sách sản phẩm đã nhập</Title>
+                    <Table columns={chiTietColumns} dataSource={selectedPhieu.chiTietNhapKhoSPs} rowKey="id_ct" pagination={false} size="small" bordered />
+                </>}
+            </Drawer>
+        </Space>
     );
 };
 
 export default NhapKhoSP;
+
+
