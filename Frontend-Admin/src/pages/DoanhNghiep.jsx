@@ -9,7 +9,7 @@ import {
   SearchOutlined, TeamOutlined
 } from '@ant-design/icons';
 import { businessAdminAPI } from '../services/api.service';
-import { showApproveSuccess, showRejectSuccess, showUploadSuccess, showLoadError, showUploadError, showInfo } from '../utils/notification.jsx';
+import { showApproveSuccess, showRejectSuccess, showUploadSuccess, showLoadError, showUploadError, showInfo } from '../components/notification';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -22,7 +22,9 @@ const DoanhNghiep = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedDN, setSelectedDN] = useState(null);
   const [searchText, setSearchText] = useState('');
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
+  const [approveModalVisible, setApproveModalVisible] = useState(false);
   const [uploadModalVisible, setUploadModalVisible] = useState(false);
   const [uploadForm] = Form.useForm();
   const [selectedDNForAction, setSelectedDNForAction] = useState(null);
@@ -65,10 +67,16 @@ const DoanhNghiep = () => {
     setDrawerVisible(true);
   };
 
-  const handleApprove = async (id_dn) => {
+  const showApproveModal = (record) => {
+    setSelectedDNForAction(record);
+    setApproveModalVisible(true);
+  };
+
+  const handleApprove = async () => {
     try {
-      await businessAdminAPI.approve(id_dn);
-      showApproveSuccess('Doanh nghiệp');
+      await businessAdminAPI.approve(selectedDNForAction.id_dn);
+      showApproveSuccess(`Doanh nghiệp "${selectedDNForAction.ten_dn}"`);
+      setApproveModalVisible(false);
       loadBusinesses();
     } catch {
       showLoadError('Không thể duyệt doanh nghiệp');
@@ -122,11 +130,15 @@ const DoanhNghiep = () => {
   };
 
   const getStatusTag = (status) => {
-    switch (status) {
-      case 1: return <Tag color="success">Đã duyệt</Tag>;
-      case 2: return <Tag color="error">Đã từ chối</Tag>;
-      case 0: return <Tag color="warning">Chờ duyệt</Tag>;
-      default: return <Tag color="default">{status}</Tag>;
+    switch (status?.toUpperCase()) {
+      case 'APPROVED':
+        return <Tag color="success">Đã duyệt</Tag>;
+      case 'REJECTED':
+        return <Tag color="error">Đã từ chối</Tag>;
+      case 'PENDING':
+        return <Tag color="warning">Chờ duyệt</Tag>;
+      default:
+        return <Tag color="default">{status}</Tag>;
     }
   };
 
@@ -135,7 +147,7 @@ const DoanhNghiep = () => {
       title: 'Tên Doanh nghiệp',
       dataIndex: 'ten_dn',
       key: 'ten_dn',
-      width: '26%',
+      width: '30%',
       render: (text) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
@@ -155,14 +167,14 @@ const DoanhNghiep = () => {
       title: 'Mã số thuế',
       dataIndex: 'ma_so_thue',
       key: 'ma_so_thue',
-      width: '14%',
+      width: '12%',
       render: (text) => <span style={{ color: '#475569', fontFamily: 'monospace' }}>{text}</span>,
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
-      width: '22%',
+      width: '20%',
       ellipsis: true,
       render: (text) => <span style={{ color: '#64748b' }}>{text || '—'}</span>,
     },
@@ -170,34 +182,34 @@ const DoanhNghiep = () => {
       title: 'Số điện thoại',
       dataIndex: 'sdt',
       key: 'sdt',
-      width: '14%',
+      width: '12%',
       render: (text) => <span style={{ color: '#64748b' }}>{text || '—'}</span>,
     },
     {
       title: 'Trạng thái',
-      dataIndex: 'trang_thai',
-      key: 'trang_thai',
+      dataIndex: 'status',
+      key: 'status',
       width: '12%',
       render: getStatusTag,
       filters: [
-        { text: 'Chờ duyệt', value: 0 },
-        { text: 'Đã duyệt', value: 1 },
-        { text: 'Đã từ chối', value: 2 },
+        { text: 'Chờ duyệt', value: 'PENDING' },
+        { text: 'Đã duyệt', value: 'APPROVED' },
+        { text: 'Đã từ chối', value: 'REJECTED' },
       ],
-      onFilter: (value, record) => record.trang_thai === value,
+      onFilter: (value, record) => record.status?.toUpperCase() === value,
     },
     {
       title: 'Hành động',
       key: 'action',
-      width: '12%',
+      width: '14%',
       align: 'center',
       render: (_, record) => (
         <Space size="small">
           <Button icon={<EyeOutlined />} onClick={() => showDrawer(record)} size="small" />
           <Dropdown menu={{
             items: [
-              { key: 'approve', label: 'Duyệt', icon: <CheckCircleOutlined />, onClick: () => handleApprove(record.id_dn), disabled: record.trang_thai === 1 },
-              { key: 'reject', label: 'Từ chối', icon: <CloseCircleOutlined />, onClick: () => showRejectModal(record), disabled: record.trang_thai === 2 },
+              { key: 'approve', label: 'Duyệt', icon: <CheckCircleOutlined />, onClick: () => showApproveModal(record), disabled: record.status?.toUpperCase() === 'APPROVED' },
+              { key: 'reject', label: 'Từ chối', icon: <CloseCircleOutlined />, onClick: () => showRejectModal(record), disabled: record.status?.toUpperCase() === 'REJECTED' },
               { key: 'upload', label: 'Upload GPKD', icon: <UploadOutlined />, onClick: () => showUploadModal(record) }
             ]
           }}>
@@ -209,9 +221,9 @@ const DoanhNghiep = () => {
   ];
 
   const totalCount = dataSource.length;
-  const approvedCount = dataSource.filter(item => item.trang_thai === 1).length;
-  const pendingCount = dataSource.filter(item => item.trang_thai === 0).length;
-  const rejectedCount = dataSource.filter(item => item.trang_thai === 2).length;
+  const approvedCount = dataSource.filter(item => item.status?.toUpperCase() === 'APPROVED').length;
+  const pendingCount = dataSource.filter(item => item.status?.toUpperCase() === 'PENDING').length;
+  const rejectedCount = dataSource.filter(item => item.status?.toUpperCase() === 'REJECTED').length;
 
   return (
     <div>
@@ -227,7 +239,7 @@ const DoanhNghiep = () => {
             </Text>
           </Col>
           <Col>
-            <Button icon={<ReloadOutlined />} onClick={loadBusinesses}>
+            <Button icon={<ReloadOutlined />} onClick={() => window.location.reload()}>
               Làm mới
             </Button>
           </Col>
@@ -277,15 +289,18 @@ const DoanhNghiep = () => {
             columns={columns}
             dataSource={filteredData}
             rowKey="id_dn"
+            scroll={{ y: 'calc(100vh - 450px)' }}
             pagination={{
-              pageSize: 10,
+              ...pagination,
               showSizeChanger: true,
-              showTotal: (total) => `Tổng ${total} doanh nghiệp`,
+              pageSizeOptions: ['5', '10', '15', '50', '100', '1000', '10000'],
+              onChange: (page, pageSize) => {
+                setPagination({ current: page, pageSize });
+              },
             }}
             locale={{
               emptyText: <Empty description={searchText ? 'Không tìm thấy kết quả' : 'Chưa có dữ liệu'} />,
             }}
-
           />
         </Spin>
       </Card>
@@ -326,9 +341,53 @@ const DoanhNghiep = () => {
         )}
       </Drawer>
 
+      {/* Approve Modal */}
+      <Modal
+        title={
+          <Space>
+            <CheckCircleOutlined style={{ color: '#10b981' }} />
+            <span>Duyệt doanh nghiệp</span>
+          </Space>
+        }
+        open={approveModalVisible}
+        onCancel={() => setApproveModalVisible(false)}
+        onOk={handleApprove}
+        okText="Duyệt"
+        cancelText="Hủy"
+        okButtonProps={{ style: { background: '#10b981', borderColor: '#10b981' } }}
+      >
+        <div style={{ padding: '16px 0' }}>
+          <p style={{ fontSize: '15px', marginBottom: '12px' }}>
+            Bạn có chắc chắn muốn duyệt doanh nghiệp:
+          </p>
+          <div style={{
+            background: '#f0fdf4',
+            border: '1px solid #86efac',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '12px'
+          }}>
+            <div style={{ fontWeight: 600, color: '#166534', marginBottom: '4px' }}>
+              {selectedDNForAction?.ten_dn}
+            </div>
+            <div style={{ fontSize: '13px', color: '#15803d' }}>
+              MST: {selectedDNForAction?.ma_so_thue}
+            </div>
+          </div>
+          <p style={{ fontSize: '13px', color: '#64748b', marginBottom: 0 }}>
+            Sau khi duyệt, doanh nghiệp sẽ có thể truy cập hệ thống.
+          </p>
+        </div>
+      </Modal>
+
       {/* Reject Modal */}
       <Modal
-        title="Từ chối doanh nghiệp"
+        title={
+          <Space>
+            <CloseCircleOutlined style={{ color: '#ef4444' }} />
+            <span>Từ chối doanh nghiệp</span>
+          </Space>
+        }
         open={rejectModalVisible}
         onCancel={() => setRejectModalVisible(false)}
         onOk={handleReject}
@@ -336,7 +395,28 @@ const DoanhNghiep = () => {
         cancelText="Hủy"
         okButtonProps={{ danger: true }}
       >
-        <p>Bạn có chắc chắn muốn từ chối doanh nghiệp <strong>{selectedDNForAction?.ten_dn}</strong>?</p>
+        <div style={{ padding: '16px 0' }}>
+          <p style={{ fontSize: '15px', marginBottom: '12px' }}>
+            Bạn có chắc chắn muốn từ chối doanh nghiệp:
+          </p>
+          <div style={{
+            background: '#fef2f2',
+            border: '1px solid #fca5a5',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '12px'
+          }}>
+            <div style={{ fontWeight: 600, color: '#991b1b', marginBottom: '4px' }}>
+              {selectedDNForAction?.ten_dn}
+            </div>
+            <div style={{ fontSize: '13px', color: '#b91c1c' }}>
+              MST: {selectedDNForAction?.ma_so_thue}
+            </div>
+          </div>
+          <p style={{ fontSize: '13px', color: '#64748b', marginBottom: 0 }}>
+            Sau khi từ chối, doanh nghiệp sẽ không thể truy cập hệ thống.
+          </p>
+        </div>
       </Modal>
 
       {/* Upload Modal */}

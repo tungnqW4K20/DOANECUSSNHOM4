@@ -55,16 +55,17 @@ const MainLayout = () => {
         width={260}
         collapsedWidth={isMobile ? 0 : 80}
         style={{
-          overflow: 'auto',
+          overflow: collapsed ? 'hidden' : 'auto',
           height: '100vh',
           position: 'fixed',
-          left: isMobile && collapsed ? -260 : 0,
+          left: 0,
           top: 0,
           bottom: 0,
           background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
           boxShadow: '4px 0 20px rgba(0, 0, 0, 0.15)',
           zIndex: 100,
-          transition: 'left 0.3s ease-out',
+          transform: isMobile && collapsed ? 'translateX(-100%)' : 'translateX(0)',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
         className="custom-sider"
       >
@@ -80,7 +81,7 @@ const MainLayout = () => {
               cursor: 'pointer',
               borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
               background: 'rgba(0, 0, 0, 0.1)',
-              transition: 'all 0.3s ease',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           >
             <div
@@ -93,7 +94,8 @@ const MainLayout = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
-                transition: 'transform 0.3s ease',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                flexShrink: 0,
               }}
               className="hover-scale"
             >
@@ -104,33 +106,41 @@ const MainLayout = () => {
                   height: 28,
                   width: 28,
                   objectFit: 'contain',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               />
             </div>
-            {!collapsed && (
-              <div style={{ marginLeft: 14, overflow: 'hidden' }}>
-                <Title
-                  level={4}
-                  style={{
-                    color: 'white',
-                    margin: 0,
-                    whiteSpace: 'nowrap',
-                    fontWeight: 700,
-                    letterSpacing: '0.5px',
-                  }}
-                >
-                  SXXK Admin
-                </Title>
-                <span style={{ 
-                  color: 'rgba(255, 255, 255, 0.6)', 
-                  fontSize: '11px',
-                  letterSpacing: '1px',
-                  textTransform: 'uppercase',
-                }}>
-                  Hệ thống quản lý
-                </span>
-              </div>
-            )}
+            <div 
+              style={{ 
+                marginLeft: collapsed ? 0 : 14,
+                overflow: 'hidden',
+                opacity: collapsed ? 0 : 1,
+                width: collapsed ? 0 : 'auto',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                visibility: collapsed ? 'hidden' : 'visible',
+              }}
+            >
+              <Title
+                level={4}
+                style={{
+                  color: 'white',
+                  margin: 0,
+                  whiteSpace: 'nowrap',
+                  fontWeight: 700,
+                  letterSpacing: '0.5px',
+                }}
+              >
+                SXXK Admin
+              </Title>
+              <span style={{ 
+                color: 'rgba(255, 255, 255, 0.6)', 
+                fontSize: '11px',
+                letterSpacing: '1px',
+                textTransform: 'uppercase',
+              }}>
+                Hệ thống quản lý
+              </span>
+            </div>
           </div>
         </Link>
 
@@ -140,27 +150,29 @@ const MainLayout = () => {
         </div>
 
         {/* Footer in Sidebar */}
-        {!collapsed && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              padding: '16px 24px',
-              borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-              background: 'rgba(0, 0, 0, 0.1)',
-            }}
-          >
-            <div style={{ 
-              color: 'rgba(255, 255, 255, 0.5)', 
-              fontSize: '11px',
-              textAlign: 'center',
-            }}>
-              © 2025 SXXK System
-            </div>
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: '16px 24px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            background: 'rgba(0, 0, 0, 0.1)',
+            opacity: collapsed ? 0 : 1,
+            transform: collapsed ? 'translateY(20px)' : 'translateY(0)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            pointerEvents: collapsed ? 'none' : 'auto',
+          }}
+        >
+          <div style={{ 
+            color: 'rgba(255, 255, 255, 0.5)', 
+            fontSize: '11px',
+            textAlign: 'center',
+          }}>
+            © 2025 SXXK System
           </div>
-        )}
+        </div>
       </Sider>
 
       {/* Main Layout */}

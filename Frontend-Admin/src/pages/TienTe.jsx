@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Space, Popconfirm, Row, Col, Typography, Card, Spin, Empty, Statistic } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, DollarOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Input, Space, Row, Col, Typography, Card, Spin, Empty, Statistic } from 'antd';
+import { PlusOutlined, EditOutlined, DollarOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import { currencyAPI } from '../services/api.service';
-import { showCreateSuccess, showUpdateSuccess, showDeleteSuccess, showLoadError, showSaveError, showDeleteError } from '../utils/notification.jsx';
+import { showCreateSuccess, showUpdateSuccess, showLoadError, showSaveError } from '../components/notification';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -15,6 +15,7 @@ const TienTe = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [searchText, setSearchText] = useState('');
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
 
   const loadCurrencies = async () => {
     try {
@@ -57,15 +58,16 @@ const TienTe = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id_tt) => {
-    try {
-      await currencyAPI.delete(id_tt);
-      showDeleteSuccess('Tiền tệ');
-      loadCurrencies();
-    } catch (error) {
-      showDeleteError('tiền tệ');
-    }
-  };
+  // Backend chưa hỗ trợ xóa tiền tệ
+  // const handleDelete = async (id_tt) => {
+  //   try {
+  //     await currencyAPI.delete(id_tt);
+  //     showDeleteSuccess('Tiền tệ');
+  //     loadCurrencies();
+  //   } catch (error) {
+  //     showDeleteError('tiền tệ');
+  //   }
+  // };
 
   const onFinish = async (values) => {
     try {
@@ -130,18 +132,7 @@ const TienTe = () => {
           <Button type="primary" icon={<EditOutlined />} onClick={() => handleEdit(record)} size="small">
             Sửa
           </Button>
-          <Popconfirm
-            title="Xác nhận xóa"
-            description="Bạn có chắc muốn xóa tiền tệ này?"
-            onConfirm={() => handleDelete(record.id_tt)}
-            okText="Xóa"
-            cancelText="Hủy"
-            okButtonProps={{ danger: true }}
-          >
-            <Button danger icon={<DeleteOutlined />} size="small">
-              Xóa
-            </Button>
-          </Popconfirm>
+          {/* Backend chưa hỗ trợ xóa tiền tệ */}
         </Space>
       ),
     },
@@ -162,7 +153,7 @@ const TienTe = () => {
           </Col>
           <Col>
             <Space>
-              <Button icon={<ReloadOutlined />} onClick={loadCurrencies}>
+              <Button icon={<ReloadOutlined />} onClick={() => window.location.reload()}>
                 Làm mới
               </Button>
               <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} size="large">
@@ -206,15 +197,18 @@ const TienTe = () => {
             columns={columns}
             dataSource={filteredData}
             rowKey="id_tt"
+            scroll={{ y: 'calc(100vh - 450px)' }}
             pagination={{
-              pageSize: 10,
+              ...pagination,
               showSizeChanger: true,
-              showTotal: (total) => `Tổng ${total} tiền tệ`,
+              pageSizeOptions: ['5', '10', '15', '50', '100', '1000', '10000'],
+              onChange: (page, pageSize) => {
+                setPagination({ current: page, pageSize });
+              },
             }}
             locale={{
               emptyText: <Empty description={searchText ? 'Không tìm thấy kết quả' : 'Chưa có dữ liệu'} />,
             }}
-
           />
         </Spin>
       </Card>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Input, Space, Popconfirm, Row, Col, Typography, Card, Spin, Empty, Statistic } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, AppstoreOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import { unitAPI } from '../services/api.service';
-import { showCreateSuccess, showUpdateSuccess, showDeleteSuccess, showLoadError, showSaveError, showDeleteError } from '../utils/notification.jsx';
+import { showCreateSuccess, showUpdateSuccess, showDeleteSuccess, showLoadError, showSaveError, showDeleteError } from '../components/notification';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -15,6 +15,7 @@ const DonViTinhHQ = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [searchText, setSearchText] = useState('');
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
 
   const loadUnits = async () => {
     try {
@@ -69,10 +70,10 @@ const DonViTinhHQ = () => {
     setEditingRecord(null);
   };
 
-  const handleDelete = async (id_dvt_hq) => {
+  const handleDelete = async (record) => {
     try {
-      await unitAPI.delete(id_dvt_hq);
-      showDeleteSuccess('Đơn vị tính');
+      await unitAPI.delete(record.id_dvt_hq);
+      showDeleteSuccess(`Đơn vị tính "${record.ten_dvt}"`);
       loadUnits();
     } catch {
       showDeleteError('đơn vị tính');
@@ -83,16 +84,19 @@ const DonViTinhHQ = () => {
     try {
       if (editingRecord) {
         await unitAPI.update(editingRecord.id_dvt_hq, values);
+        console.log('Update success, calling notification...');
         showUpdateSuccess(`Đơn vị tính "${values.ten_dvt}"`);
       } else {
         await unitAPI.create(values);
+        console.log('Create success, calling notification...');
         showCreateSuccess(`Đơn vị tính "${values.ten_dvt}"`);
       }
       setIsModalOpen(false);
       form.resetFields();
       setEditingRecord(null);
       loadUnits();
-    } catch {
+    } catch (error) {
+      console.error('Error:', error);
       showSaveError('đơn vị tính');
     }
   };
@@ -147,7 +151,7 @@ const DonViTinhHQ = () => {
           <Popconfirm
             title="Xác nhận xóa"
             description="Bạn có chắc muốn xóa đơn vị tính này?"
-            onConfirm={() => handleDelete(record.id_dvt_hq)}
+            onConfirm={() => handleDelete(record)}
             okText="Xóa"
             cancelText="Hủy"
             okButtonProps={{ danger: true }}
@@ -176,7 +180,7 @@ const DonViTinhHQ = () => {
           </Col>
           <Col>
             <Space>
-              <Button icon={<ReloadOutlined />} onClick={loadUnits}>
+              <Button icon={<ReloadOutlined />} onClick={() => window.location.reload()}>
                 Làm mới
               </Button>
               <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} size="large">
@@ -220,15 +224,18 @@ const DonViTinhHQ = () => {
             columns={columns}
             dataSource={filteredData}
             rowKey="id_dvt_hq"
+            scroll={{ y: 'calc(100vh - 450px)' }}
             pagination={{
-              pageSize: 10,
+              ...pagination,
               showSizeChanger: true,
-              showTotal: (total) => `Tổng ${total} đơn vị tính`,
+              pageSizeOptions: ['5', '10', '15', '50', '100', '1000', '10000'],
+              onChange: (page, pageSize) => {
+                setPagination({ current: page, pageSize });
+              },
             }}
             locale={{
               emptyText: <Empty description={searchText ? 'Không tìm thấy kết quả' : 'Chưa có dữ liệu'} />,
             }}
-
           />
         </Spin>
       </Card>
@@ -254,14 +261,12 @@ const DonViTinhHQ = () => {
             rules={[
               { required: true, message: 'Vui lòng nhập tên đơn vị tính!' },
               { max: 50, message: 'Tên đơn vị tính không được quá 50 ký tự!' },
-              { pattern: /^[A-Z0-9]+$/, message: 'Chỉ sử dụng chữ in hoa và số (VD: KGM, M3)' },
             ]}
-            tooltip="Mã đơn vị tính theo chuẩn Hải quan (chữ in hoa và số)"
+            tooltip="Tên đơn vị tính (có thể chứa chữ, số, khoảng trắng và ký tự đặc biệt)"
           >
             <Input
-              placeholder="VD: KGM, LIT, M3, TNE"
+              placeholder="VD: Kilogram, Lít, Mét khối, Tấn"
               maxLength={50}
-              style={{ textTransform: 'uppercase' }}
               prefix={<AppstoreOutlined style={{ color: '#94a3b8' }} />}
             />
           </Form.Item>

@@ -681,6 +681,36 @@ body {
   margin: 4px 8px !important;
   border-radius: var(--radius-md) !important;
   transition: all var(--transition-base) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Center icon when collapsed */
+.ant-layout-sider-collapsed .ant-menu-item {
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 4px 12px !important;
+}
+
+.ant-layout-sider-collapsed .ant-menu-item .ant-menu-item-icon {
+  margin: 0 !important;
+}
+
+.ant-menu-dark .ant-menu-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  background: rgba(255, 255, 255, 0.1);
+  transition: width var(--transition-base);
+}
+
+.ant-menu-dark .ant-menu-item:hover::before {
+  width: 100%;
 }
 
 .ant-menu-dark .ant-menu-item:hover {
@@ -688,9 +718,19 @@ body {
   transform: translateX(4px);
 }
 
+/* Don't transform when collapsed */
+.ant-layout-sider-collapsed .ant-menu-item:hover {
+  transform: scale(1.05) !important;
+}
+
 .ant-menu-dark .ant-menu-item-selected {
   background: var(--gradient-primary) !important;
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+  transform: translateX(4px);
+}
+
+.ant-layout-sider-collapsed .ant-menu-item-selected {
+  transform: scale(1.05) !important;
 }
 
 .ant-menu-dark .ant-menu-item-selected::after {
@@ -699,11 +739,15 @@ body {
 
 /* Menu icon animation */
 .ant-menu-item .anticon {
-  transition: transform var(--transition-base);
+  transition: all var(--transition-base);
 }
 
 .ant-menu-item:hover .anticon {
-  transform: scale(1.2);
+  transform: scale(1.2) rotate(5deg);
+}
+
+.ant-menu-item-selected .anticon {
+  transform: scale(1.1);
 }
 
 /* Sidebar text animation */
@@ -711,6 +755,49 @@ body {
   display: inline-block;
   animation: fadeInLeft 0.3s ease-out;
   opacity: 1;
+  transition: all var(--transition-base);
+}
+
+/* Sidebar collapse animation */
+.custom-sider {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.custom-sider .ant-layout-sider-children {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hide scrollbar when collapsed */
+.custom-sider.ant-layout-sider-collapsed {
+  overflow: hidden !important;
+}
+
+.custom-sider.ant-layout-sider-collapsed::-webkit-scrollbar {
+  display: none;
+}
+
+.custom-sider.ant-layout-sider-collapsed {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Sidebar trigger button */
+.ant-layout-sider-trigger {
+  background: rgba(0, 0, 0, 0.2) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all var(--transition-base) !important;
+}
+
+.ant-layout-sider-trigger:hover {
+  background: rgba(0, 0, 0, 0.3) !important;
+}
+
+.ant-layout-sider-trigger .anticon {
+  transition: transform var(--transition-base);
+}
+
+.ant-layout-sider-trigger:hover .anticon {
+  transform: scale(1.2);
 }
 
 @keyframes fadeInLeft {

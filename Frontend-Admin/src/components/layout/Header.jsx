@@ -1,14 +1,14 @@
-import { Layout, Avatar, Dropdown, Space, Typography, message, Badge, Button, Tooltip } from 'antd';
+import { Layout, Avatar, Dropdown, Typography, message, Button, Tooltip } from 'antd';
 import {
   UserOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  BellOutlined,
   SettingOutlined,
   QuestionCircleOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import NotificationCenter from '../notification/NotificationCenter';
 
 const { Header } = Layout;
 const { Text } = Typography;
@@ -137,21 +137,8 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
           />
         </Tooltip>
 
-        {/* Notification Button */}
-        <Tooltip title="Thông báo">
-          <Badge count={3} size="small" offset={[-2, 2]}>
-            <Button
-              type="text"
-              icon={<BellOutlined style={{ fontSize: '18px' }} />}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: '10px',
-                color: '#64748b',
-              }}
-            />
-          </Badge>
-        </Tooltip>
+        {/* Notification Center */}
+        <NotificationCenter />
 
         {/* Divider */}
         <div
