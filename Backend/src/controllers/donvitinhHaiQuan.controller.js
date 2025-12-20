@@ -20,7 +20,15 @@ const getAll = async (req, res) => {
     const result = await dvtHQService.getAllDVT_HQ();
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    // In lỗi ra terminal (màn hình đen lúc chạy node)
+    console.error("DEBUG LOG:", error); 
+
+    // Trả chi tiết lỗi về Postman để bạn đọc được
+    res.status(500).json({ 
+      success: false, 
+      message: error.message, // Lỗi gì nó sẽ hiện ở đây
+      detail: "Kiểm tra Terminal để xem chi tiết hơn" 
+    });
   }
 };
 
