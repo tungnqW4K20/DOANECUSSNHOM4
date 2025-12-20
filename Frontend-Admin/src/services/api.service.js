@@ -15,22 +15,23 @@ api.interceptors.request.use((config) => {
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log('API Request:', config.method?.toUpperCase(), config.url, config.data);
     return config;
 });
 
 // Interceptor xử lý response
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        console.log('API Response:', response.status, response.config.url, response.data);
+        return response;
+    },
     (error) => {
+        console.error('API Error:', error.response?.status, error.config?.url, error.response?.data || error.message);
         if (error.response?.status === 401) {
-            // Token hết hạn, redirect về login (chỉ khi không phải đang ở trang login)
-            const currentPath = window.location.pathname;
-            if (currentPath !== '/login') {
-                localStorage.removeItem('adminAuthToken');
-                localStorage.removeItem('adminRefreshToken');
-                localStorage.removeItem('adminUser');
-                window.location.href = '/login';
-            }
+            // Token hết hạn, redirect về login
+            localStorage.removeItem('adminAuthToken');
+            localStorage.removeItem('adminUser');
+            window.location.href = '/login';
         }
         return Promise.reject(error);
     }
@@ -59,16 +60,10 @@ export const customsDeclarationAPI = {
     // Tờ khai nhập
     getImportDeclarations: () => api.get('/to-khai-nhap'),
     getImportDeclarationById: (id) => api.get(`/to-khai-nhap/${id}`),
-    createImportDeclaration: (data) => api.post('/to-khai-nhap', data),
-    updateImportDeclaration: (id, data) => api.put(`/to-khai-nhap/${id}`, data),
-    deleteImportDeclaration: (id) => api.delete(`/to-khai-nhap/${id}`),
 
     // Tờ khai xuất
     getExportDeclarations: () => api.get('/to-khai-xuat'),
     getExportDeclarationById: (id) => api.get(`/to-khai-xuat/${id}`),
-    createExportDeclaration: (data) => api.post('/to-khai-xuat', data),
-    updateExportDeclaration: (id, data) => api.put(`/to-khai-xuat/${id}`, data),
-    deleteExportDeclaration: (id) => api.delete(`/to-khai-xuat/${id}`),
 };
 
 // API cho báo cáo thanh khoản hợp đồng
@@ -86,36 +81,38 @@ export const businessAPI = {
 
 // API cho quản lý doanh nghiệp (Admin)
 export const businessAdminAPI = {
-    // Lấy danh sách doanh nghiệp với phân trang và filter
-    getAll: (params = {}) => api.get('/doanh-nghiep', { params }),
-    
-    // Lấy chi tiết doanh nghiệp
-    getById: (id) => api.get(`/doanh-nghiep/${id}`),
-    
+    // Lấy danh sách doanh nghiệp
+    getAll: () => api.get('/doanh-nghiep'),
+
+    // Cập nhật trạng thái doanh nghiệp (APPROVED, REJECTED, PENDING)
+    updateStatus: (id_dn, status) => api.post('/doanh-nghiep/update-status', { id_dn, status }),
+
     // Duyệt doanh nghiệp
-    approve: (id) => api.post(`/doanh-nghiep/approve`, { idDoanhNghiep: id }),
-    
+    approve: (id_dn) => api.post('/doanh-nghiep/update-status', { id_dn, status: 'APPROVED' }),
+
     // Từ chối doanh nghiệp
-    reject: (id, reason = '') => api.post(`/doanh-nghiep/reject`, {
-        idDoanhNghiep: id,
-        ly_do_tu_choi: reason
-    }),
-    
+    reject: (id_dn) => api.post('/doanh-nghiep/update-status', { id_dn, status: 'REJECTED' }),
+
     // Upload giấy phép kinh doanh
     uploadLicense: (id, file) => {
         const formData = new FormData();
-        formData.append('file', file);
-        formData.append('id_dn', id);
-        return api.post('/upload/file-giay-to', formData, {
+        formData.append('fileUpload', file);
+        return api.post('/uploads/file-giay-to', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
     },
-    
-    // Cập nhật thông tin doanh nghiệp
-    update: (id, data) => api.put(`/doanh-nghiep/${id}`, data),
-    
-    // Xóa doanh nghiệp (soft delete)
-    delete: (id) => api.delete(`/doanh-nghiep/${id}`),
+};
+
+// API cho tài khoản Hải quan
+export const accountAPI = {
+    // Lấy thông tin tài khoản
+    getProfile: () => api.get('/haiquan/profile'),
+
+    // Cập nhật thông tin tài khoản
+    updateProfile: (data) => api.put('/haiquan/profile', data),
+
+    // Đổi mật khẩu
+    changePassword: (data) => api.post('/haiquan/change-password', data),
 };
 
 export default api;
