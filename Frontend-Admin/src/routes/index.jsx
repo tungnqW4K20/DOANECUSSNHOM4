@@ -12,6 +12,7 @@ import DoanhNghiep from '../pages/DoanhNghiep';
 import TienTe from '../pages/TienTe';
 import DonViTinhHQ from '../pages/DonViTinhHQ';
 import TaiKhoan from '../pages/TaiKhoan';
+import CaiDat from '../pages/CaiDat';
 
 
 const router = createBrowserRouter([
@@ -33,6 +34,7 @@ const router = createBrowserRouter([
       { path: 'tien-te', element: <TienTe /> },
       { path: 'don-vi-tinh-hq', element: <DonViTinhHQ /> },
       { path: 'tai-khoan', element: <TaiKhoan /> },
+      { path: 'cai-dat', element: <CaiDat /> },
     ],
   },
   { path: '*', element: <Navigate to="/" replace /> },

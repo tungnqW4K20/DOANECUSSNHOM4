@@ -58,6 +58,7 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
       key: 'settings',
       label: 'Cài đặt',
       icon: <SettingOutlined />,
+      onClick: () => navigate('/cai-dat'),
     },
     { type: 'divider' },
     {
