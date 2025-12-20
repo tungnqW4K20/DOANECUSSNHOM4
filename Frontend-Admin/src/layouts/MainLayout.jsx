@@ -1,67 +1,227 @@
-import React, { useState } from 'react';
-import { Outlet, Link } from 'react-router-dom'; 
-import { Layout, theme, Typography } from 'antd'; 
+import { useState, useEffect } from 'react';
+import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Layout, Typography } from 'antd';
 import Sidebar from '../components/layout/Sidebar';
 import AppHeader from '../components/layout/Header';
-import logo from '../assets/logo.png'; 
+import logo from '../assets/logo.png';
 
 const { Content, Footer, Sider } = Layout;
 const { Title } = Typography;
 
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
+  const [isMobile, setIsMobile] = useState(false);
+  const location = useLocation();
+
+  // Check for mobile screen
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth < 768) {
+        setCollapsed(true);
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed} width={250}>
-        {/* PHẦN LOGO VÀ TÊN ỨNG DỤNG */}
+      {/* Mobile Overlay */}
+      {isMobile && !collapsed && (
+        <div
+          onClick={() => setCollapsed(true)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 99,
+            animation: 'fadeIn 0.3s ease-out',
+          }}
+        />
+      )}
+
+      {/* Sidebar */}
+      <Sider
+        collapsible
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        trigger={null}
+        width={260}
+        collapsedWidth={isMobile ? 0 : 80}
+        style={{
+          overflow: collapsed ? 'hidden' : 'auto',
+          height: '100vh',
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
+          boxShadow: '4px 0 20px rgba(0, 0, 0, 0.15)',
+          zIndex: 100,
+          transform: isMobile && collapsed ? 'translateX(-100%)' : 'translateX(0)',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+        className="custom-sider"
+      >
+        {/* Logo Section */}
         <Link to="/">
-          <div 
+          <div
             style={{
-              height: 64, // Chiều cao bằng Header
+              height: 72,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0 20px',
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              padding: collapsed ? '0' : '0 24px',
               cursor: 'pointer',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+              background: 'rgba(0, 0, 0, 0.1)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           >
-            <img 
-              src={logo} 
-              alt="Logo" 
+            <div
               style={{
-                height: 35,
-                width: 35,
-                marginRight: collapsed ? 0 : 12, // Ẩn margin khi collapsed
-                transition: 'margin-right 0.3s',
-              }} 
-            />
-            {!collapsed && (
-              <Title 
-                level={4} 
-                style={{ 
-                  color: 'white', 
-                  margin: 0, 
-                  whiteSpace: 'nowrap', // Không xuống dòng
-                  overflow: 'hidden', // Ẩn chữ thừa
+                width: 42,
+                height: 42,
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                flexShrink: 0,
+              }}
+              className="hover-scale"
+            >
+              <img
+                src={logo}
+                alt="Logo"
+                style={{
+                  height: 28,
+                  width: 28,
+                  objectFit: 'contain',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                }}
+              />
+            </div>
+            <div 
+              style={{ 
+                marginLeft: collapsed ? 0 : 14,
+                overflow: 'hidden',
+                opacity: collapsed ? 0 : 1,
+                width: collapsed ? 0 : 'auto',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                visibility: collapsed ? 'hidden' : 'visible',
+              }}
+            >
+              <Title
+                level={4}
+                style={{
+                  color: 'white',
+                  margin: 0,
+                  whiteSpace: 'nowrap',
+                  fontWeight: 700,
+                  letterSpacing: '0.5px',
                 }}
               >
-                SXXK
+                SXXK Admin
               </Title>
-            )}
+              <span style={{ 
+                color: 'rgba(255, 255, 255, 0.6)', 
+                fontSize: '11px',
+                letterSpacing: '1px',
+                textTransform: 'uppercase',
+              }}>
+                Hệ thống quản lý
+              </span>
+            </div>
           </div>
         </Link>
-        <Sidebar />
+
+        {/* Menu */}
+        <div style={{ padding: '16px 0' }}>
+          <Sidebar collapsed={collapsed} />
+        </div>
+
+        {/* Footer in Sidebar */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: '16px 24px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            background: 'rgba(0, 0, 0, 0.1)',
+            opacity: collapsed ? 0 : 1,
+            transform: collapsed ? 'translateY(20px)' : 'translateY(0)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            pointerEvents: collapsed ? 'none' : 'auto',
+          }}
+        >
+          <div style={{ 
+            color: 'rgba(255, 255, 255, 0.5)', 
+            fontSize: '11px',
+            textAlign: 'center',
+          }}>
+            © 2025 SXXK System
+          </div>
+        </div>
       </Sider>
-      <Layout>
-        <AppHeader />
-        <Content style={{ margin: '16px', overflow: 'initial' }}>
-          <div style={{ padding: 24, background: colorBgContainer, borderRadius: borderRadiusLG }}>
+
+      {/* Main Layout */}
+      <Layout
+        style={{
+          marginLeft: isMobile ? 0 : (collapsed ? 80 : 260),
+          transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          minHeight: '100vh',
+          background: '#f1f5f9',
+        }}
+      >
+        {/* Header */}
+        <AppHeader collapsed={collapsed} setCollapsed={setCollapsed} />
+
+        {/* Content */}
+        <Content
+          style={{
+            margin: '24px',
+            minHeight: 'calc(100vh - 64px - 70px - 48px)',
+          }}
+        >
+          <div
+            key={location.pathname}
+            className="fade-in"
+            style={{
+              padding: 24,
+              background: 'white',
+              borderRadius: '16px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+              minHeight: '100%',
+            }}
+          >
             <Outlet />
           </div>
         </Content>
-        <Footer style={{ textAlign: 'center' }}>SXXK Admin ©2025</Footer>
+
+        {/* Footer */}
+        <Footer
+          style={{
+            textAlign: 'center',
+            background: 'transparent',
+            color: '#64748b',
+            padding: '16px 24px',
+            fontSize: '13px',
+          }}
+        >
+          <span style={{ fontWeight: 500 }}>SXXK Admin</span> ©{new Date().getFullYear()} - 
+          Hệ thống Quản lý Xuất Nhập Khẩu
+        </Footer>
       </Layout>
     </Layout>
   );
