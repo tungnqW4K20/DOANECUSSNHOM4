@@ -12,6 +12,8 @@ import {
     Row,
     Col,
     Card,
+    Drawer,
+    Space,
 } from "antd";
 import { UploadOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -35,6 +37,24 @@ const NhapKhoNPL = () => {
     const [fileUrl, setFileUrl] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+
+    const [lichSuPhieu, setLichSuPhieu] = useState([]);
+    const [loadingLichSu, setLoadingLichSu] = useState(false);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [selectedPhieu, setSelectedPhieu] = useState(null);
+    const [editingRecord, setEditingRecord] = useState(null);
+
+    // const fetchLichSu = async () => {
+    //     setLoadingLichSu(true);
+    //     try {
+    //         // const data = await getNhapKhoNPL();
+    //         setLichSuPhieu(mockLichSuNhapNPL || []);
+    //     } catch (err) {
+    //         message.error("Không tải được lịch sử phiếu nhập!");
+    //     } finally {
+    //         setLoadingLichSu(false);
+    //     }
+    // };
 
     /* ============================================================
        🟢 LẤY DỮ LIỆU BAN ĐẦU
@@ -113,6 +133,35 @@ const NhapKhoNPL = () => {
         }
     };
 
+    const handleEdit = (record) => {
+        setEditingRecord(record);
+        form.setFieldsValue({
+            id_hd_nhap: record.hoaDonNhap.id_hd_nhap,
+            id_kho: record.kho.id_kho,
+            ngay_nhap: dayjs(record.ngay_nhap),
+        });
+        setChiTietNhap(record.chiTietNhapKhoNPLs.map(item => ({
+            key: item.id_ct,
+            id_npl: item.nguyenPhuLieu.id_npl,
+            ten_npl: item.nguyenPhuLieu.ten_npl,
+            so_luong_hd: item.so_luong, // Giả sử SL hóa đơn bằng SL nhập
+            so_luong_nhap: item.so_luong,
+        })));
+        window.scrollTo(0, 0); // Cuộn lên đầu trang
+    };
+
+    const handleDelete = (id_nhap) => {
+        // Logic gọi API xóa
+        message.success(`Xóa phiếu nhập #${id_nhap} thành công!`);
+        fetchLichSu();
+    };
+
+    const cancelEdit = () => {
+        setEditingRecord(null);
+        form.resetFields();
+        setChiTietNhap([]);
+    };
+
     /* ============================================================
        🟢 SUBMIT FORM — TẠO PHIẾU NHẬP KHO
     ============================================================ */
@@ -179,6 +228,8 @@ const NhapKhoNPL = () => {
         }
     };
 
+    const showDrawer = (record) => { setSelectedPhieu(record); setIsDrawerOpen(true); };
+
     /* ============================================================
        🟢 CỘT BẢNG CHI TIẾT
     ============================================================ */
@@ -203,15 +254,33 @@ const NhapKhoNPL = () => {
         },
     ];
 
-    return (
-        <div>
-            <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-                <Col>
-                    <Title level={3}>Tạo Phiếu Nhập Kho Nguyên Phụ Liệu</Title>
-                </Col>
-            </Row>
+    const lichSuColumns = [
+        { title: 'Số phiếu', dataIndex: 'so_phieu' },
+        { title: 'Ngày nhập', dataIndex: 'ngay_nhap', render: (text) => dayjs(text).format('DD/MM/YYYY') },
+        { title: 'Kho nhận', dataIndex: ['kho', 'ten_kho'] },
+        { title: 'Hóa đơn liên quan', dataIndex: ['hoaDonNhap', 'so_hd'] },
+        { title: 'Hành động', key: 'action', render: (_, record) => (
+            <Space>
+                <Button size="small" icon={<EyeOutlined />} onClick={() => showDrawer(record)}>Xem</Button>
+                <Button size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>Sửa</Button>
+                <Popconfirm title="Bạn có chắc muốn xóa phiếu này?" onConfirm={() => handleDelete(record.id_nhap)}>
+                    <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
+                </Popconfirm>
+            </Space>
+        )},
+    ];
+    
+    const chiTietColumns = [
+        { title: 'Tên Nguyên phụ liệu', dataIndex: ['nguyenPhuLieu', 'ten_npl'] },
+        { title: 'Số lượng nhập', dataIndex: 'so_luong', align: 'right' },
+    ];
 
+    return (
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <Card bordered={false}>
+                <Title level={3} style={{ marginBottom: 24 }}>
+                    {editingRecord ? `Chỉnh sửa Phiếu Nhập kho NPL #${editingRecord.so_phieu}` : 'Tạo Phiếu Nhập Kho Nguyên Phụ Liệu'}
+                </Title>
                 <Form form={form} layout="vertical" onFinish={onFinish}>
                     {/* Hóa đơn nhập */}
                     <Form.Item
@@ -288,19 +357,219 @@ const NhapKhoNPL = () => {
                     />
 
                     <Form.Item style={{ marginTop: 24 }}>
-                        <Button
-                            type="primary"
-                            htmlType="submit"
-                            icon={<CheckCircleOutlined />}
-                            loading={submitting}
-                        >
-                            Xác nhận Nhập kho
-                        </Button>
+                        <Space>
+                            <Button type="primary" htmlType="submit" icon={<CheckCircleOutlined />} loading={submitting}>
+                                {editingRecord ? 'Cập nhật Phiếu nhập' : 'Xác nhận Nhập kho'}
+                            </Button>
+                            {editingRecord && (
+                                <Button icon={<CloseCircleOutlined />} onClick={cancelEdit}>Hủy sửa</Button>
+                            )}
+                        </Space>
                     </Form.Item>
                 </Form>
             </Card>
-        </div>
+            <Card title="Lịch sử Phiếu Nhập kho NPL" bordered={false}>
+                <Table columns={lichSuColumns} dataSource={lichSuPhieu} rowKey="id_nhap" loading={loadingLichSu} />
+            </Card>
+
+            <Drawer title={`Chi tiết Phiếu nhập: ${selectedPhieu?.so_phieu}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
+                {selectedPhieu && <>
+                    <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
+                        <Descriptions.Item label="Ngày nhập">{dayjs(selectedPhieu.ngay_nhap).format('DD/MM/YYYY')}</Descriptions.Item>
+                        <Descriptions.Item label="Kho nhận">{selectedPhieu.kho.ten_kho}</Descriptions.Item>
+                        <Descriptions.Item label="Hóa đơn">{selectedPhieu.hoaDonNhap.so_hd}</Descriptions.Item>
+                    </Descriptions>
+                    <Title level={5}>Danh sách NPL đã nhập</Title>
+                    <Table columns={chiTietColumns} dataSource={selectedPhieu.chiTietNhapKhoNPLs} rowKey="id_ct" pagination={false} size="small" bordered />
+                </>}
+            </Drawer>
+        </Space>
     );
 };
 
 export default NhapKhoNPL;
+
+// import React, { useState, useEffect } from 'react';
+// import { Form, Select, DatePicker, Button, Table, InputNumber, Upload, message, Typography, Row, Col, Card, Space, Drawer, Descriptions } from 'antd';
+// import { UploadOutlined, CheckCircleOutlined, EyeOutlined } from '@ant-design/icons';
+// import dayjs from 'dayjs';
+// // Giả lập các service API
+// // import { uploadSingleFile } from '../../services/upload.service';
+// // import { getAllHoaDonNhap, getHoaDonNhapById } from '../../services/hoadonnhap.service';
+// // import { getAllKho } from '../../services/kho.service';
+// // import { createNhapKhoNPL, getNhapKhoNPL } from '../../services/nhapkhonpl.service';
+
+// const { Option } = Select;
+// const { Title, Text } = Typography;
+
+// // --- Dữ liệu giả lập cho services ---
+// const mockHoaDonNhapList = [
+//     { id_hd_nhap: 1, so_hd: 'INV-2025-001', ngay_hd: '2025-10-20' },
+//     { id_hd_nhap: 2, so_hd: 'INV-2025-002', ngay_hd: '2025-10-22' },
+// ];
+// const mockHoaDonNhapDetail = {
+//     chiTiets: [
+//         { nguyenPhuLieu: { id_npl: 1, ten_npl: 'Vải Cotton 100%' }, so_luong: 1000 },
+//         { nguyenPhuLieu: { id_npl: 2, ten_npl: 'Chỉ may Polyester' }, so_luong: 50 },
+//     ]
+// };
+// const mockKhoList = [{ id_kho: 1, ten_kho: 'Kho Nguyên liệu A' }, { id_kho: 2, ten_kho: 'Kho Nguyên liệu B' }];
+// const mockLichSuNhapNPL = [
+//     { id_nhap: 1, so_phieu: 'PNKNPL-001', ngay_nhap: '2025-10-21', kho: { ten_kho: 'Kho Nguyên liệu A'}, hoaDonNhap: { so_hd: 'INV-2025-001' }, chiTietNhapKhoNPLs: [{ id_ct: 1, nguyenPhuLieu: { ten_npl: 'Vải Cotton 100%'}, so_luong: 1000 }] },
+// ];
+// // ------------------------------------
+
+// const NhapKhoNPL = () => {
+//     const [form] = Form.useForm();
+//     const [hoaDonNhapList, setHoaDonNhapList] = useState([]);
+//     const [chiTietNhap, setChiTietNhap] = useState([]);
+//     const [khoList, setKhoList] = useState([]);
+//     const [fileUrl, setFileUrl] = useState(null);
+//     const [uploading, setUploading] = useState(false);
+//     const [submitting, setSubmitting] = useState(false);
+
+//     const [lichSuPhieu, setLichSuPhieu] = useState([]);
+//     const [loadingLichSu, setLoadingLichSu] = useState(false);
+//     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+//     const [selectedPhieu, setSelectedPhieu] = useState(null);
+
+//     const fetchLichSu = async () => {
+//         setLoadingLichSu(true);
+//         try {
+//             // const data = await getNhapKhoNPL();
+//             setLichSuPhieu(mockLichSuNhapNPL || []);
+//         } catch (err) {
+//             message.error("Không tải được lịch sử phiếu nhập!");
+//         } finally {
+//             setLoadingLichSu(false);
+//         }
+//     };
+
+//     useEffect(() => {
+//         const fetchData = async () => {
+//             try {
+//                 // const [resHDN, resKho] = await Promise.all([ getAllHoaDonNhap(), getAllKho() ]);
+//                 setHoaDonNhapList(mockHoaDonNhapList || []);
+//                 setKhoList(mockKhoList || []);
+//             } catch (err) { message.error("Không thể tải dữ liệu ban đầu!"); }
+//         };
+//         fetchData();
+//         fetchLichSu();
+//     }, []);
+
+//     const handleHoaDonChange = async (id_hd_nhap) => {
+//         try {
+//             // const res = await getHoaDonNhapById(id_hd_nhap);
+//             const res = mockHoaDonNhapDetail;
+//             const chiTiet = (res?.chiTiets || []).map((item, index) => ({
+//                 key: index + 1,
+//                 id_npl: item.nguyenPhuLieu.id_npl,
+//                 ten_npl: item.nguyenPhuLieu.ten_npl,
+//                 so_luong_hd: item.so_luong,
+//                 so_luong_nhap: item.so_luong,
+//             }));
+//             setChiTietNhap(chiTiet);
+//         } catch (err) {
+//             message.error("Không thể tải chi tiết hóa đơn!");
+//         }
+//     };
+
+//     const handleSoLuongChange = (key, value) => {
+//         setChiTietNhap((prev) => prev.map((item) => (item.key === key ? { ...item, so_luong_nhap: value } : item)));
+//     };
+
+//     const handleUpload = ({ file, onSuccess, onError }) => { /* Giữ nguyên logic upload */ };
+
+//     const onFinish = async (values) => {
+//         if (!chiTietNhap.length) {
+//             message.warning("Vui lòng chọn hóa đơn và nhập chi tiết NPL!");
+//             return;
+//         }
+//         setSubmitting(true);
+//         try {
+//             // const resPhieu = await createNhapKhoNPL(payload);
+//             message.success("Tạo phiếu nhập thành công!");
+//             form.resetFields();
+//             setChiTietNhap([]);
+//             setFileUrl(null);
+//             fetchLichSu();
+//         } catch (err) {
+//             message.error("Lỗi khi tạo phiếu nhập kho!");
+//         } finally {
+//             setSubmitting(false);
+//         }
+//     };
+
+//     const showDrawer = (record) => {
+//         setSelectedPhieu(record);
+//         setIsDrawerOpen(true);
+//     };
+
+//     const columns = [
+//         { title: "Tên Nguyên phụ liệu", dataIndex: "ten_npl" },
+//         { title: "Số lượng theo HĐ", dataIndex: "so_luong_hd" },
+//         { title: "Số lượng thực nhập", dataIndex: "so_luong_nhap", render: (text, record) => <InputNumber min={0} value={text} onChange={(val) => handleSoLuongChange(record.key, val)} /> },
+//     ];
+
+//     const lichSuColumns = [
+//         { title: 'Số phiếu', dataIndex: 'so_phieu' },
+//         { title: 'Ngày nhập', dataIndex: 'ngay_nhap', render: (text) => dayjs(text).format('DD/MM/YYYY') },
+//         { title: 'Kho nhận', dataIndex: ['kho', 'ten_kho'] },
+//         { title: 'Hóa đơn liên quan', dataIndex: ['hoaDonNhap', 'so_hd'] },
+//         { title: 'Hành động', key: 'action', render: (_, record) => <Button icon={<EyeOutlined />} onClick={() => showDrawer(record)}>Xem</Button> },
+//     ];
+    
+//     const chiTietColumns = [
+//         { title: 'Tên Nguyên phụ liệu', dataIndex: ['nguyenPhuLieu', 'ten_npl'] },
+//         { title: 'Số lượng nhập', dataIndex: 'so_luong', align: 'right' },
+//     ];
+
+//     return (
+//         <Space direction="vertical" size="large" style={{ width: '100%' }}>
+//             <Card bordered={false}>
+//                 <Title level={3} style={{ marginBottom: 24 }}>Tạo Phiếu Nhập Kho Nguyên Phụ Liệu</Title>
+//                 <Form form={form} layout="vertical" onFinish={onFinish}>
+//                     <Row gutter={24}>
+//                         <Col span={8}>
+//                             <Form.Item label="Hóa đơn nhập liên quan" name="id_hd_nhap" rules={[{ required: true, message: "Chọn hóa đơn!" }]}>
+//                                 <Select placeholder="Tìm và chọn số hóa đơn nhập" onChange={handleHoaDonChange} showSearch>
+//                                     {hoaDonNhapList.map((hd) => <Option key={hd.id_hd_nhap} value={hd.id_hd_nhap}>{`${hd.so_hd} - ${hd.ngay_hd}`}</Option>)}
+//                                 </Select>
+//                             </Form.Item>
+//                         </Col>
+//                         <Col span={8}>
+//                             <Form.Item label="Kho nhận hàng" name="id_kho" rules={[{ required: true, message: "Chọn kho!" }]}>
+//                                 <Select placeholder="Chọn kho">{khoList.map((k) => <Option key={k.id_kho} value={k.id_kho}>{k.ten_kho}</Option>)}</Select>
+//                             </Form.Item>
+//                         </Col>
+//                         <Col span={8}>
+//                              <Form.Item label="Ngày nhập kho" name="ngay_nhap" rules={[{ required: true, message: "Chọn ngày!" }]}><DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" /></Form.Item>
+//                         </Col>
+//                     </Row>
+//                     <Form.Item label="File phiếu nhập (nếu có)"> {/* ... Giữ nguyên logic Upload ... */} </Form.Item>
+//                     <Title level={4}>Chi tiết Nguyên Phụ Liệu Nhập Kho</Title>
+//                     <Table columns={columns} dataSource={chiTietNhap} pagination={false} rowKey="key" bordered />
+//                     <Form.Item style={{ marginTop: 24 }}><Button type="primary" htmlType="submit" icon={<CheckCircleOutlined />} loading={submitting}>Xác nhận Nhập kho</Button></Form.Item>
+//                 </Form>
+//             </Card>
+
+//             <Card title="Lịch sử Phiếu Nhập kho NPL" bordered={false}>
+//                 <Table columns={lichSuColumns} dataSource={lichSuPhieu} rowKey="id_nhap" loading={loadingLichSu} />
+//             </Card>
+
+//             <Drawer title={`Chi tiết Phiếu nhập: ${selectedPhieu?.so_phieu}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
+//                 {selectedPhieu && <>
+//                     <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
+//                         <Descriptions.Item label="Ngày nhập">{dayjs(selectedPhieu.ngay_nhap).format('DD/MM/YYYY')}</Descriptions.Item>
+//                         <Descriptions.Item label="Kho nhận">{selectedPhieu.kho.ten_kho}</Descriptions.Item>
+//                         <Descriptions.Item label="Hóa đơn">{selectedPhieu.hoaDonNhap.so_hd}</Descriptions.Item>
+//                     </Descriptions>
+//                     <Title level={5}>Danh sách NPL đã nhập</Title>
+//                     <Table columns={chiTietColumns} dataSource={selectedPhieu.chiTietNhapKhoNPLs} rowKey="id_ct" pagination={false} size="small" bordered />
+//                 </>}
+//             </Drawer>
+//         </Space>
+//     );
+// };
+
+// export default NhapKhoNPL;
