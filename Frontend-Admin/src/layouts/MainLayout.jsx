@@ -55,7 +55,8 @@ const MainLayout = () => {
         width={260}
         collapsedWidth={isMobile ? 0 : 80}
         style={{
-          overflow: collapsed ? 'hidden' : 'auto',
+          overflowY: collapsed ? 'hidden' : 'auto',
+          overflowX: 'hidden',
           height: '100vh',
           position: 'fixed',
           left: 0,
@@ -181,7 +182,7 @@ const MainLayout = () => {
           marginLeft: isMobile ? 0 : (collapsed ? 80 : 260),
           transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           minHeight: '100vh',
-          background: '#f1f5f9',
+          background: 'var(--bg-color)',
         }}
       >
         {/* Header */}
@@ -199,10 +200,11 @@ const MainLayout = () => {
             className="fade-in"
             style={{
               padding: 24,
-              background: 'white',
+              background: 'var(--bg-card)',
               borderRadius: '16px',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+              boxShadow: 'var(--shadow-sm)',
               minHeight: '100%',
+              color: 'var(--text-primary)',
             }}
           >
             <Outlet />
@@ -214,7 +216,7 @@ const MainLayout = () => {
           style={{
             textAlign: 'center',
             background: 'transparent',
-            color: '#64748b',
+            color: 'var(--text-secondary)',
             padding: '16px 24px',
             fontSize: '13px',
           }}

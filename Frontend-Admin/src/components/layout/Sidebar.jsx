@@ -1,36 +1,34 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, Tooltip } from 'antd';
 import {
-  DashboardOutlined,
-  TeamOutlined,
-  DollarOutlined,
-  AppstoreOutlined,
-  SettingOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+  LayoutDashboard,
+  Building2,
+  DollarSign,
+  Package,
+} from 'lucide-react';
 
 const menuItems = [
   {
     key: '/',
-    icon: <DashboardOutlined />,
+    icon: <LayoutDashboard size={18} />,
     label: 'Tổng quan',
     path: '/',
   },
   {
     key: '/doanh-nghiep',
-    icon: <TeamOutlined />,
+    icon: <Building2 size={18} />,
     label: 'Doanh nghiệp',
     path: '/doanh-nghiep',
   },
   {
     key: '/tien-te',
-    icon: <DollarOutlined />,
+    icon: <DollarSign size={18} />,
     label: 'Tiền tệ',
     path: '/tien-te',
   },
   {
     key: '/don-vi-tinh-hq',
-    icon: <AppstoreOutlined />,
+    icon: <Package size={18} />,
     label: 'Đơn vị tính HQ',
     path: '/don-vi-tinh-hq',
   },
@@ -39,7 +37,6 @@ const menuItems = [
 const Sidebar = ({ collapsed }) => {
   const location = useLocation();
 
-  // Get current selected key based on pathname
   const getSelectedKey = () => {
     const path = location.pathname;
     const item = menuItems.find(item => item.path === path);
@@ -50,10 +47,14 @@ const Sidebar = ({ collapsed }) => {
     key: item.key,
     icon: collapsed ? (
       <Tooltip title={item.label} placement="right">
-        <span style={{ fontSize: '18px' }}>{item.icon}</span>
+        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {item.icon}
+        </span>
       </Tooltip>
     ) : (
-      <span style={{ fontSize: '16px' }}>{item.icon}</span>
+      <span style={{ display: 'flex', alignItems: 'center' }}>
+        {item.icon}
+      </span>
     ),
     label: collapsed ? null : (
       <Link to={item.path} style={{ color: 'inherit' }}>

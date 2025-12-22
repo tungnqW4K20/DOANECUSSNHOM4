@@ -5,7 +5,7 @@ import {
 } from "antd";
 import {
     PlusOutlined, EditOutlined, DeleteOutlined, FolderOpenOutlined,
-    UploadOutlined, EyeOutlined
+    UploadOutlined, EyeOutlined, SearchOutlined
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { getAllHopDong, createHopDong, updateHopDong, deleteHopDong } from "../services/hopdong.service";
@@ -415,19 +415,19 @@ const HopDong = () => {
 
     return (
         <>
-            <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-                <Col>
-                    <Title level={3}>Quản lý Hợp đồng</Title>
-                </Col>
-                <Col>
-                    <Space>
-                        <Search placeholder="Tìm kiếm hợp đồng..." />
-                        <Button type="primary" icon={<PlusOutlined />} onClick={() => handleOpenCrudModal("hopDong")}>
-                            Thêm mới
-                        </Button>
-                    </Space>
-                </Col>
-            </Row>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 16 }}>
+                <h2 className="page-header-heading" style={{ margin: 0 }}>Quản lý Hợp đồng</h2>
+                <div style={{ display: 'flex', gap: 12, flex: 1, justifyContent: 'flex-end' }}>
+                    <Input
+                        placeholder="Tìm kiếm hợp đồng..."
+                        prefix={<SearchOutlined />}
+                        style={{ width: 300 }}
+                    />
+                    <Button type="primary" icon={<PlusOutlined />} onClick={() => handleOpenCrudModal("hopDong")}>
+                        Thêm mới
+                    </Button>
+                </div>
+            </div>
 
             <Card bordered={false}>
                 <Table columns={mainColumns} dataSource={dataSource} rowKey="so_hd" loading={loading} />

@@ -166,18 +166,20 @@ const SanPham = () => {
   ============================================================ */
   return (
     <div>
-      <h2>Quản lý Sản phẩm</h2>
-      <Space style={{ marginBottom: 16 }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-          Thêm mới
-        </Button>
-        <Input
-          placeholder="Tìm kiếm sản phẩm..."
-          prefix={<SearchOutlined />}
-          onChange={handleSearch}
-          style={{ width: 300 }}
-        />
-      </Space>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 16 }}>
+                <h2 className="page-header-heading" style={{ margin: 0 }}>Quản lý Sản phẩm</h2>
+                <div style={{ display: 'flex', gap: 12, flex: 1, justifyContent: 'flex-end' }}>
+                    <Input
+                        placeholder="Tìm kiếm sản phẩm..."
+                        prefix={<SearchOutlined />}
+                        onChange={handleSearch}
+                        style={{ width: 300 }}
+                    />
+                    <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                        Thêm mới
+                    </Button>
+                </div>
+            </div>
 
       <Spin spinning={loading}>
         <Table columns={columns} dataSource={filteredData} rowKey="id_sp" />

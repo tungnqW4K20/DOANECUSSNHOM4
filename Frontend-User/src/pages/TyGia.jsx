@@ -108,17 +108,18 @@ const TyGia = () => {
   ============================================================ */
   return (
     <div>
-      <h2>Quản lý Tỷ giá</h2>
-
-      <Space style={{ marginBottom: 16 }}>
-        <Button
-          icon={<SyncOutlined />}
-          loading={loading}
-          onClick={() => handleUpdateFromAPI()}
-        >
-          Cập nhật lại từ API
-        </Button>
-      </Space>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 16 }}>
+        <h2 className="page-header-heading" style={{ margin: 0 }}>Quản lý Tỷ giá</h2>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <Button
+            icon={<SyncOutlined />}
+            loading={loading}
+            onClick={() => handleUpdateFromAPI()}
+          >
+            Cập nhật lại từ API
+          </Button>
+        </div>
+      </div>
 
       <Table
         columns={columns}

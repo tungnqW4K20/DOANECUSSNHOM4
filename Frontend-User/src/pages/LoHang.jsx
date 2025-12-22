@@ -4,7 +4,7 @@ import {
   message, Row, Col, Typography, Card, Upload, Tooltip
 } from "antd";
 import {
-  PlusOutlined, EditOutlined, DeleteOutlined, FileOutlined, UploadOutlined, EyeOutlined
+  PlusOutlined, EditOutlined, DeleteOutlined, FileOutlined, UploadOutlined, EyeOutlined, SearchOutlined
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -192,19 +192,19 @@ const LoHang = () => {
 
   return (
     <>
-      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-        <Col>
-          <Title level={3}>Quản lý Lô hàng</Title>
-        </Col>
-        <Col>
-          <Space>
-            <Search placeholder="Tìm theo số lô hàng, cảng..." style={{ width: 300 }} />
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-              Thêm mới
-            </Button>
-          </Space>
-        </Col>
-      </Row>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 16 }}>
+        <h2 className="page-header-heading" style={{ margin: 0 }}>Quản lý Lô hàng</h2>
+        <div style={{ display: 'flex', gap: 12, flex: 1, justifyContent: 'flex-end' }}>
+          <Input
+            placeholder="Tìm theo số lô hàng, cảng..."
+            prefix={<SearchOutlined />}
+            style={{ width: 300 }}
+          />
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+            Thêm mới
+          </Button>
+        </div>
+      </div>
 
       <Card bordered={false}>
         <Table columns={columns} dataSource={dataSource} rowKey="id_lh" loading={loading} />
