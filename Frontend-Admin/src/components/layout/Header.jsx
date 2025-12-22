@@ -1,20 +1,24 @@
 import { Layout, Avatar, Dropdown, Typography, message, Button, Tooltip } from 'antd';
-import {
-  UserOutlined,
-  LogoutOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  SettingOutlined,
-  QuestionCircleOutlined,
-} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../../contexts/ThemeContext';
 import NotificationCenter from '../notification/NotificationCenter';
+import {
+  User,
+  LogOut,
+  PanelLeftOpen,
+  PanelLeftClose,
+  Settings,
+  HelpCircle,
+  Sun,
+  Moon,
+} from 'lucide-react';
 
 const { Header } = Layout;
 const { Text } = Typography;
 
 const AppHeader = ({ collapsed, setCollapsed }) => {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const adminUser = JSON.parse(localStorage.getItem('adminUser') || '{}');
 
   const handleLogout = () => {
@@ -23,7 +27,7 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
     localStorage.removeItem('adminUser');
     message.success({
       content: 'Đăng xuất thành công!',
-      icon: <LogoutOutlined style={{ color: '#52c41a' }} />,
+      icon: <LogOut size={16} style={{ color: '#52c41a' }} />,
     });
     navigate('/login');
   };
@@ -51,20 +55,20 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
     {
       key: 'account',
       label: 'Tài khoản',
-      icon: <UserOutlined />,
+      icon: <User size={16} />,
       onClick: handleGoToProfile,
     },
     {
       key: 'settings',
       label: 'Cài đặt',
-      icon: <SettingOutlined />,
+      icon: <Settings size={16} />,
       onClick: () => navigate('/cai-dat'),
     },
     { type: 'divider' },
     {
       key: 'logout',
       label: 'Đăng xuất',
-      icon: <LogoutOutlined />,
+      icon: <LogOut size={16} />,
       onClick: handleLogout,
       danger: true,
     },
@@ -74,15 +78,16 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
     <Header
       style={{
         padding: '0 24px',
-        background: 'white',
+        background: 'var(--header-bg)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        boxShadow: '0 1px 4px rgba(0, 0, 0, 0.05)',
+        boxShadow: 'var(--shadow-sm)',
         position: 'sticky',
         top: 0,
         zIndex: 99,
         height: 64,
+        borderBottom: '1px solid var(--border-color)',
       }}
     >
       {/* Left Section */}
@@ -90,7 +95,7 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
         {/* Toggle Button */}
         <Button
           type="text"
-          icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+          icon={collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
           onClick={() => setCollapsed(!collapsed)}
           style={{
             fontSize: '18px',
@@ -124,16 +129,37 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
 
       {/* Right Section */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {/* Help Button */}
-        <Tooltip title="Trợ giúp">
+        {/* Theme Toggle */}
+        <Tooltip title={theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}>
           <Button
             type="text"
-            icon={<QuestionCircleOutlined style={{ fontSize: '18px' }} />}
+            icon={theme === 'dark' ? <Sun size={18} style={{ color: '#fbbf24' }} /> : <Moon size={18} />}
+            onClick={toggleTheme}
             style={{
               width: 40,
               height: 40,
               borderRadius: '10px',
-              color: '#64748b',
+              color: theme === 'dark' ? '#fbbf24' : '#64748b',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          />
+        </Tooltip>
+
+        {/* Help Button */}
+        <Tooltip title="Trợ giúp">
+          <Button
+            type="text"
+            icon={<HelpCircle size={18} />}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: '10px',
+              color: 'var(--text-secondary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           />
         </Tooltip>
@@ -146,7 +172,7 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
           style={{
             width: 1,
             height: 24,
-            background: '#e2e8f0',
+            background: 'var(--border-color)',
             margin: '0 8px',
           }}
         />
@@ -171,7 +197,7 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
             }}
             className="hover-lift"
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#f1f5f9';
+              e.currentTarget.style.background = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#f1f5f9';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent';
@@ -183,7 +209,7 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
                 background: 'linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%)',
                 boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
               }}
-              icon={<UserOutlined />}
+              icon={<User size={20} />}
             />
           </div>
         </Dropdown>

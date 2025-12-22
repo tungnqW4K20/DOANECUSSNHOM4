@@ -250,25 +250,21 @@ const DinhMuc = () => {
     // ===================== RENDER =====================
     return (
         <>
-            <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-                <Col>
-                    <Title level={3}>Quản lý Định mức Sản phẩm</Title>
-                </Col>
-                <Col>
-                    <Space>
-                        <Button icon={<ReloadOutlined />} onClick={fetchAll}>
-                            Tải lại
-                        </Button>
-                        <Button
-                            type="primary"
-                            icon={<PlusOutlined />}
-                            onClick={() => handleOpenModal()}
-                        >
-                            Khai báo Định mức
-                        </Button>
-                    </Space>
-                </Col>
-            </Row>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 16 }}>
+                <h2 className="page-header-heading" style={{ margin: 0 }}>Quản lý Định mức Sản phẩm</h2>
+                <div style={{ display: 'flex', gap: 12 }}>
+                    <Button icon={<ReloadOutlined />} onClick={fetchAll}>
+                        Tải lại
+                    </Button>
+                    <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        onClick={() => handleOpenModal()}
+                    >
+                        Khai báo Định mức
+                    </Button>
+                </div>
+            </div>
 
             <Card bordered={false}>
                 <Spin spinning={loading}>

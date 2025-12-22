@@ -1,0 +1,671 @@
+/* ========================================
+   🌙 DARK MODE ENHANCEMENTS
+   ======================================== */
+
+/* Dark mode specific styles */
+[data-theme="dark"] {
+  /* UNIVERSAL TEXT COLOR OVERRIDE - Apply to everything */
+  color: #f8fafc !important;
+
+  /* FORCE all text elements to be light */
+  div, span, p, a, label, input, textarea, select,
+  h1, h2, h3, h4, h5, h6,
+  td, th, li, button {
+    color: #f8fafc !important;
+  }
+
+  /* Ant Design components text override - EXCEPT Tags */
+  .ant-table,
+  .ant-table *:not(.ant-tag):not(.ant-tag *),
+  .ant-card,
+  .ant-card *:not(.ant-tag):not(.ant-tag *),
+  .ant-form,
+  .ant-form *:not(.ant-tag):not(.ant-tag *),
+  .ant-input,
+  .ant-select,
+  .ant-descriptions,
+  .ant-descriptions *:not(.ant-tag):not(.ant-tag *) {
+    color: #f8fafc !important;
+  }
+
+  /* Override specific elements that need different colors */
+  .ant-btn-primary,
+  .ant-btn-primary * {
+    color: white !important;
+  }
+
+  /* Tags keep their original colors */
+  .ant-tag {
+    color: inherit !important;
+  }
+
+  .ant-tag-success {
+    background: #10b981 !important;
+    color: white !important;
+    border-color: #10b981 !important;
+  }
+
+  .ant-tag-error {
+    background: #ef4444 !important;
+    color: white !important;
+    border-color: #ef4444 !important;
+  }
+
+  .ant-tag-warning {
+    background: #f59e0b !important;
+    color: white !important;
+    border-color: #f59e0b !important;
+  }
+
+  .ant-tag-processing {
+    background: #3b82f6 !important;
+    color: white !important;
+    border-color: #3b82f6 !important;
+  }
+
+  .ant-tag-default {
+    background: #64748b !important;
+    color: white !important;
+    border-color: #64748b !important;
+  }
+
+  /* Icons keep their specific colors */
+  .anticon[style*="color"] {
+    color: inherit !important;
+  }
+
+  /* Stat card icons and values keep their colors */
+  .ant-statistic-content-prefix,
+  .ant-statistic-content-value {
+    color: inherit !important;
+  }
+
+  /* Links */
+  a {
+    color: #60a5fa !important;
+  }
+
+  a:hover {
+    color: #93c5fd !important;
+  }
+
+  /* Stat cards in dark mode - màu sáng hơn, dễ nhìn hơn */
+  .stat-card-blue {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;
+  }
+  
+  .stat-card-green {
+    background: linear-gradient(135deg, #065f46 0%, #10b981 100%) !important;
+  }
+  
+  .stat-card-orange {
+    background: linear-gradient(135deg, #92400e 0%, #f59e0b 100%) !important;
+  }
+  
+  .stat-card-purple {
+    background: linear-gradient(135deg, #5b21b6 0%, #8b5cf6 100%) !important;
+  }
+
+  /* Table in dark mode - màu nền xen kẽ dễ nhìn hơn */
+  .ant-table-tbody > tr:nth-child(even) {
+    background: #141b2b !important;
+  }
+
+  .ant-table-tbody > tr:nth-child(odd) {
+    background: #1a2332 !important;
+  }
+
+  /* Table header text màu sáng hơn */
+  .ant-table-thead > tr > th {
+    color: #f8fafc !important;
+    font-weight: 600 !important;
+  }
+
+  /* Table body text màu sáng hơn - EXCEPT Tags */
+  .ant-table-tbody > tr > td:not(.ant-tag) {
+    color: #f1f5f9 !important;
+  }
+
+  .ant-table-tbody > tr > td *:not(.ant-tag):not(.ant-tag *) {
+    color: #f1f5f9 !important;
+  }
+
+  /* Table hover state - EXCEPT Tags */
+  .ant-table-tbody > tr:hover > td:not(.ant-tag) {
+    color: #ffffff !important;
+  }
+
+  .ant-table-tbody > tr:hover > td *:not(.ant-tag):not(.ant-tag *) {
+    color: #ffffff !important;
+  }
+
+  /* Empty state in dark mode */
+  .empty-state {
+    color: #e2e8f0 !important;
+  }
+
+  .empty-state-icon {
+    color: #64748b !important;
+  }
+
+  /* All span elements */
+  span {
+    color: inherit !important;
+  }
+
+  /* All text in cards */
+  .ant-card-body,
+  .ant-card-body * {
+    color: #f8fafc !important;
+  }
+
+  /* Statistic values */
+  .ant-statistic-content-value,
+  .ant-statistic-content-value * {
+    color: inherit !important;
+  }
+
+  /* Typography */
+  .ant-typography,
+  h1, h2, h3, h4, h5, h6,
+  p, div, span, label {
+    color: #f8fafc !important;
+  }
+
+  /* Text component */
+  .ant-typography-secondary {
+    color: #e2e8f0 !important;
+  }
+
+  /* Scrollbar in dark mode */
+  ::-webkit-scrollbar-track {
+    background: #1a2332;
+  }
+
+  /* Search input in dark mode */
+  .ant-input-search {
+    background: var(--input-bg);
+    color: #f8fafc;
+  }
+
+  .ant-input {
+    color: #f8fafc !important;
+  }
+
+  .ant-input::placeholder {
+    color: #94a3b8 !important;
+  }
+
+  /* Dropdown in dark mode */
+  .ant-dropdown-menu {
+    background: var(--bg-card);
+  }
+
+  .ant-dropdown-menu-item {
+    color: #f8fafc;
+  }
+
+  .ant-dropdown-menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Select dropdown in dark mode */
+  .ant-select-dropdown {
+    background: var(--bg-card);
+  }
+
+  .ant-select-item {
+    color: #f8fafc;
+  }
+
+  .ant-select-item-option-selected {
+    background: rgba(37, 99, 235, 0.3);
+    color: #60a5fa;
+    font-weight: 600;
+  }
+
+  .ant-select-item-option-active {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .ant-select-selection-item {
+    color: #f8fafc !important;
+  }
+
+  /* Pagination in dark mode */
+  .ant-pagination-item {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+  }
+
+  .ant-pagination-item a {
+    color: #f8fafc;
+  }
+
+  .ant-pagination-item:hover {
+    border-color: var(--primary-color);
+  }
+
+  .ant-pagination-item:hover a {
+    color: #60a5fa;
+  }
+
+  /* Descriptions in dark mode */
+  .ant-descriptions-item-label {
+    color: #e2e8f0;
+    font-weight: 500;
+  }
+
+  .ant-descriptions-item-content {
+    color: #f8fafc;
+  }
+
+  /* Divider in dark mode */
+  .ant-divider {
+    border-color: var(--border-color);
+  }
+
+  /* Radio button in dark mode */
+  .ant-radio-button-wrapper {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+    color: #f8fafc;
+  }
+
+  .ant-radio-button-wrapper:hover {
+    color: var(--primary-color);
+  }
+
+  .ant-radio-button-wrapper-checked {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+  }
+
+  /* Checkbox in dark mode */
+  .ant-checkbox-wrapper {
+    color: #f8fafc;
+  }
+
+  /* Switch in dark mode */
+  .ant-switch {
+    background: #475569;
+  }
+
+  .ant-switch-checked {
+    background: var(--primary-color);
+  }
+
+  /* Tooltip in dark mode */
+  .ant-tooltip-inner {
+    background: #1e293b;
+    color: var(--text-primary);
+  }
+
+  .ant-tooltip-arrow-content {
+    background: #1e293b;
+  }
+
+  /* Message in dark mode */
+  .ant-message-notice-content {
+    background: var(--bg-card);
+    color: #f8fafc;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Notification in dark mode */
+  .ant-notification-notice {
+    background: var(--bg-card);
+    color: #f8fafc;
+  }
+
+  .ant-notification-notice-message {
+    color: #f8fafc;
+    font-weight: 600;
+  }
+
+  .ant-notification-notice-description {
+    color: #e2e8f0;
+  }
+
+  /* Popconfirm in dark mode */
+  .ant-popover-inner {
+    background: var(--bg-card);
+  }
+
+  .ant-popover-message-title {
+    color: #f8fafc;
+  }
+
+  .ant-popover-buttons {
+    border-top-color: var(--border-color);
+  }
+
+  /* Form label in dark mode */
+  .ant-form-item-label > label {
+    color: #f8fafc;
+    font-weight: 500;
+  }
+
+  /* Statistic in dark mode */
+  .ant-statistic-title {
+    color: #e2e8f0;
+  }
+
+  .ant-statistic-content {
+    color: #f8fafc;
+  }
+
+  .ant-statistic-content-value {
+    color: #f8fafc !important;
+  }
+
+  /* Progress in dark mode */
+  .ant-progress-text {
+    color: #f8fafc;
+  }
+
+  /* Badge in dark mode */
+  .ant-badge-count {
+    background: var(--error-color);
+  }
+
+  /* Avatar in dark mode - keep gradient */
+  .ant-avatar {
+    /* Keep original gradient */
+  }
+
+  /* Breadcrumb in dark mode */
+  .ant-breadcrumb a {
+    color: #e2e8f0;
+  }
+
+  .ant-breadcrumb a:hover {
+    color: var(--primary-color);
+  }
+
+  .ant-breadcrumb-separator {
+    color: #94a3b8;
+  }
+
+  /* Steps in dark mode */
+  .ant-steps-item-title {
+    color: #f8fafc;
+  }
+
+  .ant-steps-item-description {
+    color: #e2e8f0;
+  }
+
+  /* Timeline in dark mode */
+  .ant-timeline-item-content {
+    color: #f8fafc;
+  }
+
+  /* Collapse in dark mode */
+  .ant-collapse {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+  }
+
+  .ant-collapse-header {
+    color: #f8fafc;
+  }
+
+  .ant-collapse-content {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+    color: #f8fafc;
+  }
+
+  /* Tabs in dark mode */
+  .ant-tabs-tab {
+    color: #94a3b8;
+  }
+
+  .ant-tabs-tab-active {
+    color: var(--primary-color);
+  }
+
+  .ant-tabs-tab:hover {
+    color: #e2e8f0;
+  }
+
+  .ant-tabs-ink-bar {
+    background: var(--primary-color);
+  }
+
+  /* Alert in dark mode */
+  .ant-alert {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+  }
+
+  .ant-alert-message {
+    color: #f8fafc;
+  }
+
+  .ant-alert-description {
+    color: #e2e8f0;
+  }
+
+  /* Result in dark mode */
+  .ant-result-title {
+    color: #f8fafc;
+  }
+
+  .ant-result-subtitle {
+    color: #e2e8f0;
+  }
+
+  /* Skeleton in dark mode */
+  .ant-skeleton-content .ant-skeleton-title,
+  .ant-skeleton-content .ant-skeleton-paragraph > li {
+    background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+  }
+
+  /* Spin in dark mode */
+  .ant-spin-text {
+    color: #f8fafc;
+  }
+
+  /* Upload in dark mode */
+  .ant-upload {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+  }
+
+  .ant-upload-drag {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+  }
+
+  .ant-upload-drag:hover {
+    border-color: var(--primary-color);
+  }
+
+  .ant-upload-text {
+    color: #f8fafc;
+  }
+
+  .ant-upload-hint {
+    color: #e2e8f0;
+  }
+
+  /* Transfer in dark mode */
+  .ant-transfer-list {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+  }
+
+  .ant-transfer-list-header {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+    color: #f8fafc;
+  }
+
+  .ant-transfer-list-content-item {
+    color: #f8fafc;
+  }
+
+  /* Tree in dark mode */
+  .ant-tree {
+    background: var(--bg-card);
+    color: #f8fafc;
+  }
+
+  .ant-tree-node-content-wrapper {
+    color: #f8fafc;
+  }
+
+  .ant-tree-node-content-wrapper:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Calendar in dark mode */
+  .ant-picker-calendar {
+    background: var(--bg-card);
+  }
+
+  .ant-picker-calendar-header {
+    border-color: var(--border-color);
+  }
+
+  .ant-picker-cell {
+    color: #f8fafc;
+  }
+
+  /* DatePicker dropdown in dark mode */
+  .ant-picker-dropdown {
+    background: var(--bg-card);
+  }
+
+  .ant-picker-panel {
+    background: var(--bg-card);
+  }
+
+  .ant-picker-header {
+    color: #f8fafc;
+    border-color: var(--border-color);
+  }
+
+  .ant-picker-header-view button {
+    color: #f8fafc;
+  }
+
+  .ant-picker-content th {
+    color: #e2e8f0;
+  }
+
+  .ant-picker-cell-in-view {
+    color: #f8fafc;
+  }
+
+  .ant-picker-cell:hover:not(.ant-picker-cell-selected):not(.ant-picker-cell-range-start):not(.ant-picker-cell-range-end) .ant-picker-cell-inner {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Image preview in dark mode */
+  .ant-image-preview-img {
+    background: var(--bg-card);
+  }
+
+  /* Modal in dark mode */
+  .ant-modal-content {
+    background: var(--bg-card);
+    color: #f8fafc;
+  }
+
+  .ant-modal-header {
+    background: var(--primary-color);
+    border-color: var(--border-color);
+  }
+
+  .ant-modal-title {
+    color: white;
+  }
+
+  .ant-modal-body {
+    color: #f8fafc;
+  }
+
+  .ant-modal-footer {
+    border-color: var(--border-color);
+  }
+
+  /* Drawer in dark mode */
+  .ant-drawer-content {
+    background: var(--bg-card);
+    color: #f8fafc;
+  }
+
+  .ant-drawer-header {
+    background: var(--primary-color);
+    border-color: var(--border-color);
+  }
+
+  .ant-drawer-title {
+    color: white;
+  }
+
+  .ant-drawer-body {
+    color: #f8fafc;
+  }
+
+  /* Tag in dark mode */
+  .ant-tag {
+    color: #f8fafc;
+  }
+
+  /* Button text in dark mode */
+  .ant-btn-default {
+    color: #f8fafc;
+    border-color: var(--border-color);
+  }
+
+  .ant-btn-default:hover {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+
+  /* Card title in dark mode */
+  .ant-card-head-title {
+    color: #f8fafc;
+  }
+
+  .ant-card-extra {
+    color: #e2e8f0;
+  }
+
+  /* Typography in dark mode */
+  h1, h2, h3, h4, h5, h6 {
+    color: #f8fafc !important;
+  }
+
+  p {
+    color: #e2e8f0;
+  }
+
+  span {
+    color: inherit;
+  }
+
+  /* Link in dark mode */
+  a {
+    color: #60a5fa;
+  }
+
+  a:hover {
+    color: #93c5fd;
+  }
+}
+
+/* Smooth theme transition */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Prevent transition on page load */
+.no-transition * {
+  transition: none !important;
+}

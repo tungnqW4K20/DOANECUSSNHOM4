@@ -47,13 +47,20 @@
   --info-color: #0ea5e9;
   --info-light: #e0f2fe;
   
-  /* Neutral Colors */
+  /* Neutral Colors - Light Mode (default) */
   --text-primary: #1e293b;
   --text-secondary: #64748b;
   --text-disabled: #94a3b8;
   --border-color: #e2e8f0;
   --bg-color: #f1f5f9;
   --bg-white: #ffffff;
+  --bg-card: #ffffff;
+  --header-bg: #ffffff;
+  --sidebar-bg: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  --table-header-bg: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  --table-row-hover: #eff6ff;
+  --input-bg: #ffffff;
+  --shadow-color: rgba(0, 0, 0, 0.1);
   
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -83,6 +90,29 @@
   --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bounce: 500ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Dark Mode Variables */
+[data-theme="dark"] {
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-disabled: #cbd5e1;
+  --border-color: #475569;
+  --bg-color: #0a0f1e;
+  --bg-white: #1a2332;
+  --bg-card: #1a2332;
+  --header-bg: #1a2332;
+  --sidebar-bg: linear-gradient(180deg, #0a0f1e 0%, #1a2332 50%, #2d3748 100%);
+  --table-header-bg: #1a2332;
+  --table-row-hover: #2d3748;
+  --input-bg: #2d3748;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  
+  /* Dark mode shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5);
 }
 
 /* ========================================
@@ -225,12 +255,13 @@ body {
    🎨 CARD STYLES
    ======================================== */
 .content-card {
-  background: var(--bg-white);
+  background: var(--bg-card);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   transition: all var(--transition-base);
   overflow: hidden;
   border: 1px solid var(--border-color);
+  color: var(--text-primary);
 }
 
 .content-card:hover {
@@ -415,9 +446,9 @@ body {
 }
 
 .ant-table-thead > tr > th {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  background: var(--table-header-bg) !important;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
   border-bottom: 2px solid var(--primary-color) !important;
   padding: 16px !important;
   transition: background var(--transition-base);
@@ -437,7 +468,7 @@ body {
 }
 
 .ant-table-tbody > tr:hover > td {
-  background: var(--primary-light) !important;
+  background: var(--table-row-hover) !important;
 }
 
 .ant-table-tbody > tr:nth-child(even) {
@@ -1090,3 +1121,89 @@ body {
 .status-dot-warning { background: var(--warning-color); }
 .status-dot-error { background: var(--error-color); }
 .status-dot-info { background: var(--info-color); }
+
+/* ========================================
+   📋 ADDITIONAL MENU ENHANCEMENTS - SUBMENU
+   ======================================== */
+
+/* Submenu Title Styles */
+.ant-menu-dark .ant-menu-submenu-title {
+  margin: 4px 8px !important;
+  border-radius: var(--radius-md) !important;
+  transition: all var(--transition-base) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Center submenu icon when collapsed */
+.ant-layout-sider-collapsed .ant-menu-submenu-title {
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 4px 12px !important;
+}
+
+.ant-layout-sider-collapsed .ant-menu-submenu-title .ant-menu-item-icon {
+  margin: 0 !important;
+}
+
+/* Hover effect background for submenu */
+.ant-menu-dark .ant-menu-submenu-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  background: rgba(255, 255, 255, 0.1);
+  transition: width var(--transition-base);
+}
+
+.ant-menu-dark .ant-menu-submenu-title:hover::before {
+  width: 100%;
+}
+
+/* Hover state for submenu */
+.ant-menu-dark .ant-menu-submenu-title:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: translateX(4px);
+}
+
+/* Don't transform submenu when collapsed */
+.ant-layout-sider-collapsed .ant-menu-submenu-title:hover {
+  transform: scale(1.05) !important;
+}
+
+/* Submenu selected state */
+.ant-menu-dark .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  color: #60a5fa !important;
+}
+
+/* Submenu icon animation */
+.ant-menu-submenu-title .anticon {
+  transition: all var(--transition-base);
+}
+
+.ant-menu-submenu-title:hover .anticon {
+  transform: scale(1.2) rotate(5deg);
+}
+
+/* Submenu arrow animation */
+.ant-menu-submenu-title .ant-menu-submenu-arrow {
+  transition: transform var(--transition-base);
+}
+
+.ant-menu-submenu-open > .ant-menu-submenu-title .ant-menu-submenu-arrow {
+  transform: rotate(180deg);
+}
+
+/* Submenu items */
+.ant-menu-dark .ant-menu-sub .ant-menu-item {
+  margin: 2px 8px !important;
+  padding-left: 48px !important;
+}
+
+.ant-menu-dark .ant-menu-sub .ant-menu-item:hover {
+  transform: translateX(8px);
+}

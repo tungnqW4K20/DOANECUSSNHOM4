@@ -18,13 +18,15 @@ import {
   HardDrive,
   Trash2,
 } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 const CaiDat = () => {
+  const { theme, setTheme } = useTheme();
+  
   const [settings, setSettings] = useState({
-    theme: localStorage.getItem('theme') || 'light',
     language: localStorage.getItem('language') || 'vi',
     notifications: localStorage.getItem('notifications') !== 'false',
     autoSave: localStorage.getItem('autoSave') !== 'false',
@@ -34,31 +36,16 @@ const CaiDat = () => {
     pageSize: localStorage.getItem('defaultPageSize') || '10',
   });
 
-  useEffect(() => {
-    // Apply theme
-    const root = document.documentElement;
-    if (settings.theme === 'dark') {
-      root.style.setProperty('--bg-color', '#0f172a');
-      root.style.setProperty('--bg-white', '#1e293b');
-      root.style.setProperty('--text-primary', '#f1f5f9');
-      root.style.setProperty('--text-secondary', '#94a3b8');
-      root.style.setProperty('--border-color', '#334155');
-      document.body.style.background = '#0f172a';
-    } else {
-      root.style.setProperty('--bg-color', '#f1f5f9');
-      root.style.setProperty('--bg-white', '#ffffff');
-      root.style.setProperty('--text-primary', '#1e293b');
-      root.style.setProperty('--text-secondary', '#64748b');
-      root.style.setProperty('--border-color', '#e2e8f0');
-      document.body.style.background = '#f1f5f9';
-    }
-  }, [settings.theme]);
-
   const handleSettingChange = (key, value) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
     localStorage.setItem(key, value);
     message.success('Đã lưu cài đặt');
+  };
+
+  const handleThemeChange = (value) => {
+    setTheme(value);
+    message.success(`Đã chuyển sang chế độ ${value === 'dark' ? 'tối' : 'sáng'}`);
   };
 
   const handleSaveAll = () => {
@@ -73,7 +60,6 @@ const CaiDat = () => {
 
   const handleResetDefaults = () => {
     const defaults = {
-      theme: 'light',
       language: 'vi',
       notifications: true,
       autoSave: true,
@@ -83,6 +69,7 @@ const CaiDat = () => {
       pageSize: '10',
     };
     setSettings(defaults);
+    setTheme('light');
     Object.keys(defaults).forEach(key => {
       localStorage.setItem(key, defaults[key]);
     });
@@ -119,8 +106,8 @@ const CaiDat = () => {
                 <Text strong>Chế độ hiển thị</Text>
               </div>
               <Radio.Group
-                value={settings.theme}
-                onChange={(e) => handleSettingChange('theme', e.target.value)}
+                value={theme}
+                onChange={(e) => handleThemeChange(e.target.value)}
                 style={{ width: '100%' }}
                 buttonStyle="solid"
               >

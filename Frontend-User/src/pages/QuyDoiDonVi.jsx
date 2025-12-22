@@ -90,7 +90,7 @@ const QuyDoiDonVi = () => {
 
     return (
         <div>
-            <h2>Quản lý Quy đổi Đơn vị tính</h2>
+            <h2 className="page-header-heading" style={{ marginBottom: 16 }}>Quản lý Quy đổi Đơn vị tính</h2>
             <Tabs defaultActiveKey="1">
                 <TabPane tab="Quy đổi Đơn vị Nguyên phụ liệu" key="1">
                     <QuyDoiTable type="DN" dataSource={dataDN} setDataSource={setDataDN} itemList={nplList} />

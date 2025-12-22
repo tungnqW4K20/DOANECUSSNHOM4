@@ -189,23 +189,24 @@ const NguyenPhuLieu = () => {
   ============================================================ */
   return (
     <div>
-      <h2>Quản lý Nguyên Phụ Liệu</h2>
-
-      <Space style={{ marginBottom: 16 }}>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleAdd}
-        >
-          Thêm mới
-        </Button>
-        <Input
-          placeholder="Tìm kiếm theo tên..."
-          prefix={<SearchOutlined />}
-          style={{ width: 300 }}
-          onChange={(e) => setSearchText(e.target.value)}
-        />
-      </Space>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 16 }}>
+        <h2 className="page-header-heading" style={{ margin: 0 }}>Quản lý Nguyên Phụ Liệu</h2>
+        <div style={{ display: 'flex', gap: 12, flex: 1, justifyContent: 'flex-end' }}>
+          <Input
+            placeholder="Tìm kiếm theo tên..."
+            prefix={<SearchOutlined />}
+            style={{ width: 300 }}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleAdd}
+          >
+            Thêm mới
+          </Button>
+        </div>
+      </div>
 
       <Spin spinning={loading}>
         <Table
