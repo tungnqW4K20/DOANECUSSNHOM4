@@ -18,7 +18,9 @@ import HopDong from '../pages/HopDong';
 import LoHang from '../pages/LoHang';
 import NguyenPhuLieu from '../pages/NguyenPhuLieu';
 import TyGia from '../pages/TyGia';
-import ToKhai from '../pages/ToKhai';
+// import ToKhai from '../pages/ToKhai';
+import QuanLyToKhaiNhap from '../pages/QuanLyToKhaiNhap';
+import QuanLyToKhaiXuat from '../pages/QuanLyToKhaiXuat';
 import NhapToKhaiNhap from '../pages/NhapToKhaiNhap';
 import NhapToKhaiXuat from '../pages/NhapToKhaiXuat';
 import Kho from '../pages/Kho';
@@ -48,7 +50,9 @@ const router = createBrowserRouter([
       { path: 'san-pham', element: <SanPham /> },
       { path: 'nguyen-phu-lieu', element: <NguyenPhuLieu /> },
       { path: 'dinh-muc', element: <DinhMuc /> },
-      { path: 'to-khai', element: <ToKhai /> },
+      // { path: 'to-khai', element: <ToKhai /> },
+      { path: 'quan-ly-to-khai-nhap', element: <QuanLyToKhaiNhap /> },
+      { path: 'quan-ly-to-khai-xuat', element: <QuanLyToKhaiXuat /> },
       { path: 'to-khai-nhap', element: <NhapToKhaiNhap /> },
       { path: 'to-khai-xuat', element: <NhapToKhaiXuat /> },
       { path: 'kho', element: <Kho /> },

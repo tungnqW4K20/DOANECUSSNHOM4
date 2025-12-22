@@ -31,9 +31,11 @@ const items = [
   ]),
 
   getItem('Tờ khai Hải quan', 'sub2', <ContainerOutlined />, [
-    getItem(<Link to="/to-khai">Quản lý Tờ khai</Link>, 'tk_quan_ly'),
+    // getItem(<Link to="/to-khai">Quản lý Tờ khai</Link>, 'tk_quan_ly'),
     getItem(<Link to="/to-khai-nhap">Nhập Tờ khai nhập</Link>, '6'),
     getItem(<Link to="/to-khai-xuat">Nhập Tờ khai xuất</Link>, '7'),
+    getItem(<Link to="/quan-ly-to-khai-nhap">Quản lý Tờ khai nhập</Link>, 'tk_ql_nhap'),
+    getItem(<Link to="/quan-ly-to-khai-xuat">Quản lý Tờ khai xuất</Link>, 'tk_ql_xuat'),
   ]),
 
   getItem('Quản lý Kho', 'sub3', <ShoppingCartOutlined />, [
