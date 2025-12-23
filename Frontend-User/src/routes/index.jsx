@@ -8,29 +8,42 @@ import AuthLayout from '../layouts/AuthLayout';
 import ProtectedRoute from './ProtectedRoute';
 
 // Auth Pages
-import Login from '../pages/Login';
-import Register from '../pages/Register';
+import Login from '../pages/auth/Login';
+import Register from '../pages/auth/Register';
 
-// Main Pages
-import TongQuan from '../pages/TongQuan';
-import SanPham from '../pages/SanPham';
-import HopDong from '../pages/HopDong';
-import LoHang from '../pages/LoHang';
-import NguyenPhuLieu from '../pages/NguyenPhuLieu';
-import TyGia from '../pages/TyGia';
-// import ToKhai from '../pages/ToKhai';
-import QuanLyToKhaiNhap from '../pages/QuanLyToKhaiNhap';
-import QuanLyToKhaiXuat from '../pages/QuanLyToKhaiXuat';
-import NhapToKhaiNhap from '../pages/NhapToKhaiNhap';
-import NhapToKhaiXuat from '../pages/NhapToKhaiXuat';
-import Kho from '../pages/Kho';
+// Dashboard Pages
+import TongQuan from '../pages/dashboard/TongQuan';
+
+// Danh Muc Pages
+import SanPham from '../pages/danhmuc/SanPham';
+import NguyenPhuLieu from '../pages/danhmuc/NguyenPhuLieu';
+import DinhMuc from '../pages/danhmuc/DinhMuc';
+import QuyDoiDonVi from '../pages/danhmuc/QuyDoiDonVi';
+import TyGia from '../pages/danhmuc/TyGia';
+
+// Hop Dong Pages
+import HopDong from '../pages/hopdong/HopDong';
+import LoHang from '../pages/hopdong/LoHang';
+
+// To Khai Pages
+// import ToKhai from '../pages/tokhai/ToKhai';
+import QuanLyToKhaiNhap from '../pages/tokhai/QuanLyToKhaiNhap';
+import QuanLyToKhaiXuat from '../pages/tokhai/QuanLyToKhaiXuat';
+import NhapToKhaiNhap from '../pages/tokhai/NhapToKhaiNhap';
+import NhapToKhaiXuat from '../pages/tokhai/NhapToKhaiXuat';
+
+// Kho Pages
+import Kho from '../pages/kho/Kho';
 import NhapKhoNPL from '../pages/kho/NhapKhoNPL';
 import XuatKhoNPL from '../pages/kho/XuatKhoNPL';
 import NhapKhoSP from '../pages/kho/NhapKhoSP';
 import XuatKhoSP from '../pages/kho/XuatKhoSP';
-import DinhMuc from '../pages/DinhMuc';
-import QuyDoiDonVi from '../pages/QuyDoiDonVi';
-import ThanhKhoan from '../pages/ThanhKhoan';
+
+// Thanh Toan Pages
+import ThanhKhoan from '../pages/thanhtoan/ThanhKhoan';
+
+// User Pages
+import Profile from '../pages/user/Profile';
 
 const router = createBrowserRouter([
   {
@@ -63,6 +76,7 @@ const router = createBrowserRouter([
       { path: 'thanh-khoan', element: <ThanhKhoan /> },
       { path: 'ty-gia', element: <TyGia /> },
       { path: 'quy-doi-don-vi', element: <QuyDoiDonVi /> },
+      { path: 'profile', element: <Profile /> },
     ],
   },
   {

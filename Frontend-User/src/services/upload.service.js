@@ -1,21 +1,12 @@
-import axios from "axios";
+import { createApiInstance } from "./apiConfig";
 
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/uploads`;
 
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        "Content-Type": "multipart/form-data",
-    },
-});
+// Create API instance with multipart/form-data header
+const api = createApiInstance(API_BASE_URL);
 
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+// Override content-type for file uploads
+api.defaults.headers["Content-Type"] = "multipart/form-data";
 
 /**
  * Upload 1 file (ảnh, pdf, docx, xlsx, v.v.)

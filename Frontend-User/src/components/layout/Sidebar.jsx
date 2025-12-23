@@ -69,10 +69,16 @@ const menuItems = [
     label: 'Tờ khai Hải quan',
     children: [
       {
-        key: '/to-khai',
+        key: '/quan-ly-to-khai-nhap',
         icon: <FileText size={16} />,
-        label: 'Quản lý Tờ khai',
-        path: '/to-khai',
+        label: 'Quản lý Tờ khai nhập',
+        path: '/quan-ly-to-khai-nhap',
+      },
+      {
+        key: '/quan-ly-to-khai-xuat',
+        icon: <FileText size={16} />,
+        label: 'Quản lý Tờ khai xuất',
+        path: '/quan-ly-to-khai-xuat',
       },
       {
         key: '/to-khai-nhap',

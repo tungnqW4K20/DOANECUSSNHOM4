@@ -7,7 +7,6 @@ import {
     Table,
     InputNumber,
     Upload,
-    message,
     Typography,
     Popconfirm,
     Row,
@@ -22,13 +21,31 @@ import {
     SaveOutlined,
     PlusOutlined,
     DeleteOutlined,
+    EyeOutlined,
+    EditOutlined,
+    CloseCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 import { uploadSingleFile } from "../../services/upload.service";
 import { getAllKho } from "../../services/kho.service";
 import { getAllSanPham } from "../../services/sanpham.service";
-import { createNhapKhoSP, addChiTietNhapKhoSP } from "../../services/nhapkhosp.service";
+import { 
+    getAllNhapKhoSP,
+    createNhapKhoSP, 
+    updateNhapKhoSP,
+    deleteNhapKhoSP 
+} from "../../services/nhapkhosp.service";
+import {
+    showCreateSuccess,
+    showUpdateSuccess,
+    showDeleteSuccess,
+    showLoadError,
+    showSaveError,
+    showUploadSuccess,
+    showUploadError,
+    showError,
+} from "../../components/notification";
 
 const { Option } = Select;
 const { Title } = Typography;
@@ -50,16 +67,22 @@ const NhapKhoSP = () => {
     const [selectedPhieu, setSelectedPhieu] = useState(null);
     const [editingRecord, setEditingRecord] = useState(null);
 
-    // const fetchLichSu = async () => {
-    //     setLoadingLichSu(true);
-    //     try {
-    //         // const data = await getNhapKhoSP();
-    //         setLichSuPhieu(mockLichSuNhapSP || []);
-    //     } catch (err) { message.error("Không tải được lịch sử phiếu nhập SP!"); }
-    //     finally { setLoadingLichSu(false); }
-    // };
+    const fetchLichSu = async () => {
+        setLoadingLichSu(true);
+        try {
+            const response = await getAllNhapKhoSP();
+            const data = response?.data || response || [];
+            setLichSuPhieu(data);
+        } catch {
+            showLoadError('lịch sử phiếu nhập SP');
+        } finally {
+            setLoadingLichSu(false);
+        }
+    };
 
     useEffect(() => {
+        fetchLichSu();
+        
         const fetchData = async () => {
             try {
                 const [resKho, resSP] = await Promise.all([getAllKho(), getAllSanPham()]);
@@ -70,9 +93,8 @@ const NhapKhoSP = () => {
 
                 setKhoList(khoArr);
                 setSpList(spArr);
-            } catch (err) {
-                console.error(err);
-                message.error("Không thể tải danh sách kho hoặc sản phẩm!");
+            } catch {
+                showLoadError('danh sách kho hoặc sản phẩm');
             }
         };
 
@@ -99,15 +121,14 @@ const NhapKhoSP = () => {
             const res = await uploadSingleFile(file);
             if (res?.data?.imageUrl) {
                 setFileUrl(res.data.imageUrl);
-                message.success("Tải file thành công!");
+                showUploadSuccess(file.name);
                 if (onSuccess) onSuccess(res.data, file);
             } else {
-                message.error("Không nhận được URL file!");
+                showUploadError();
                 if (onError) onError(new Error("Không có URL file"));
             }
         } catch (err) {
-            console.error(err);
-            message.error("Lỗi khi tải file!");
+            showUploadError();
             if (onError) onError(err);
         } finally {
             setUploading(false);
@@ -136,10 +157,10 @@ const NhapKhoSP = () => {
     const handleDelete = async (id_nhap) => {
         try {
             await deleteNhapKhoSP(id_nhap);
-            message.success(`Xóa phiếu nhập #${id_nhap} thành công!`);
+            showDeleteSuccess('Phiếu nhập SP');
             fetchLichSu(); // Tải lại danh sách
-        } catch (error) {
-            message.error("Lỗi khi xóa phiếu nhập!");
+        } catch {
+            showSaveError('phiếu nhập SP');
         }
     };
     
@@ -147,94 +168,23 @@ const NhapKhoSP = () => {
         setEditingRecord(null);
         form.resetFields();
         setChiTietNhap([]);
+        setFileUrl(null);
     };
 
-    /* submit */
-    // const onFinish = async (values) => {
-    //     if (!chiTietNhap.length) {
-    //         message.error("Vui lòng thêm ít nhất một sản phẩm!");
-    //         return;
-    //     }
-
-    //     // validate each row has product selected and quantity >0
-    //     for (const row of chiTietNhap) {
-    //         if (!row.id_sp) {
-    //             message.error("Vui lòng chọn sản phẩm cho tất cả dòng!");
-    //             return;
-    //         }
-    //         if (!row.so_luong || Number(row.so_luong) <= 0) {
-    //             message.error("Số lượng phải lớn hơn 0 cho tất cả dòng!");
-    //             return;
-    //         }
-    //     }
-
-    //     const payloadPhieu = {
-    //         id_kho: values.id_kho,
-    //         ngay_nhap: values.ngay_nhap ? dayjs(values.ngay_nhap).format("YYYY-MM-DD") : null,
-    //         file_phieu: fileUrl || null, // backend: nếu không có cột, bạn có thể bỏ (but backend nhapkho-sp có file_phieu)
-    //     };
-
-    //     try {
-    //         setSubmitting(true);
-
-    //         // 1) tạo phiếu nhập
-    //         const resPhieu = await createNhapKhoSP(payloadPhieu);
-    //         // resPhieu could be { success, data } or data object
-    //         const success = resPhieu?.success ?? true;
-    //         const data = resPhieu?.data || resPhieu;
-    //         const id_nhap = data?.id_nhap || data?.id || data?.idNhap || null;
-
-    //         if (!success || !id_nhap) {
-    //             console.error("createNhapKhoSP response:", resPhieu);
-    //             message.error(resPhieu?.message || "Không tạo được phiếu nhập!");
-    //             return;
-    //         }
-
-    //         // 2) thêm chi tiết (gửi id_nhap trong body để backend chấp nhận)
-    //         const promises = chiTietNhap.map(row =>
-    //             addChiTietNhapKhoSP(id_nhap, {
-    //                 id_nhap: id_nhap,
-    //                 id_sp: row.id_sp,
-    //                 so_luong: row.so_luong,
-    //             })
-    //         );
-
-    //         const results = await Promise.all(promises);
-    //         const allSuccess = results.every(r => r?.success ?? true);
-
-    //         if (allSuccess) {
-    //             message.success("Tạo phiếu nhập và chi tiết thành công!");
-    //             form.resetFields();
-    //             setChiTietNhap([]);
-    //             setFileUrl(null);
-    //         } else {
-    //             console.warn("Một số chi tiết trả lỗi:", results);
-    //             message.warning("Phiếu nhập tạo thành công nhưng có chi tiết bị lỗi. Kiểm tra console.");
-    //         }
-    //     } catch (err) {
-    //         console.error(err);
-    //         message.error(err?.message || "Lỗi khi tạo phiếu nhập!");
-    //     } finally {
-    //         setSubmitting(false);
-    //     }
-    // };
     const onFinish = async (values) => {
-        console.log("⭕ FORM VALUES:", values);
-        console.log("⭕ CHI TIẾT SẢN PHẨM:", chiTietNhap);
-
         if (!chiTietNhap.length) {
-            message.error("Vui lòng thêm ít nhất một sản phẩm!");
+            showError("Vui lòng thêm ít nhất một sản phẩm!", "Không có sản phẩm nào được chọn");
             return;
         }
 
         // Validate chi tiết
         for (const item of chiTietNhap) {
             if (!item.id_sp) {
-                message.error("Vui lòng chọn sản phẩm cho tất cả dòng!");
+                showError("Vui lòng chọn sản phẩm cho tất cả dòng!", "Có dòng chưa chọn sản phẩm");
                 return;
             }
             if (!item.so_luong || item.so_luong <= 0) {
-                message.error("Số lượng phải lớn hơn 0!");
+                showError("Số lượng phải lớn hơn 0!", "Kiểm tra lại số lượng nhập");
                 return;
             }
         }
@@ -245,47 +195,35 @@ const NhapKhoSP = () => {
                 ? dayjs(values.ngay_nhap).format("YYYY-MM-DD")
                 : null,
             file_phieu: fileUrl || null,
-            chi_tiets: chiTietNhap
+            chi_tiets: chiTietNhap.map(item => ({
+                id_sp: item.id_sp,
+                so_luong: item.so_luong
+            }))
         };
 
-        console.log("📦 Payload gửi backend:", payload);
-
         try {
-            // setSubmitting(true);
-
-            // const res = await createNhapKhoSP(payload);
-
-            // if (!res?.success) {
-            //     message.error(res?.message || "Không tạo được phiếu nhập!");
-            //     return;
-            // }
-
-            // message.success("Tạo phiếu nhập kho thành công!");
-
-            // // Reset form
-            // form.resetFields();
-            // setChiTietNhap([]);
-            // setFileUrl(null);
+            setSubmitting(true);
 
             if (editingRecord) {
                 // Chế độ Cập nhật
                 await updateNhapKhoSP(editingRecord.id_nhap, payload);
+                showUpdateSuccess('Phiếu nhập SP');
             } else {
                 // Chế độ Tạo mới
                 await createNhapKhoSP(payload);
+                showCreateSuccess('Phiếu nhập SP');
             }
-            message.success(`${editingRecord ? 'Cập nhật' : 'Tạo'} phiếu nhập kho SP thành công!`);
+            
             cancelEdit(); // Reset form và trạng thái
             fetchLichSu(); // Tải lại lịch sử
 
-        } catch (err) {
-            console.error(err);
-            message.error("Lỗi khi tạo phiếu nhập!");
+        } catch {
+            showSaveError('phiếu nhập SP');
         } finally {
             setSubmitting(false);
         }
     };
-    /* columns */
+
     const columns = [
         {
             title: "Sản phẩm",
@@ -326,7 +264,7 @@ const NhapKhoSP = () => {
     ];
 
     const lichSuColumns = [
-        { title: 'Số phiếu', dataIndex: 'so_phieu' },
+        { title: 'Số phiếu', dataIndex: 'so_phieu', render: (text, record) => text || `PNKSP-${record.id_nhap}` },
         { title: 'Ngày nhập', dataIndex: 'ngay_nhap', render: (text) => dayjs(text).format('DD/MM/YYYY') },
         { title: 'Kho nhận', dataIndex: ['kho', 'ten_kho'] },
         { title: 'Hành động', key: 'action', width: 220, align: 'center', render: (_, record) => (
@@ -346,63 +284,7 @@ const NhapKhoSP = () => {
     ];
 
     return (
-    //     <div>
-    //         <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-    //             <Col>
-    //                 <Title level={3}>Tạo Phiếu Nhập Kho Sản Phẩm (từ Sản xuất)</Title>
-    //             </Col>
-    //         </Row>
-
-    //         <Card bordered={false}>
-    //             <Form form={form} layout="vertical" onFinish={onFinish}>
-    //                 <Form.Item label="Kho nhận hàng" name="id_kho" rules={[{ required: true, message: "Chọn kho!" }]}>
-    //                     <Select placeholder="Chọn kho">
-    //                         {(Array.isArray(khoList) ? khoList : []).map(k => (
-    //                             <Option key={k.id_kho} value={k.id_kho}>{k.ten_kho}</Option>
-    //                         ))}
-    //                     </Select>
-    //                 </Form.Item>
-
-    //                 <Form.Item label="Ngày nhập kho" name="ngay_nhap" rules={[{ required: true, message: "Chọn ngày!" }]}>
-    //                     <DatePicker style={{ width: "100%" }} />
-    //                 </Form.Item>
-
-    //                 <Form.Item label="File phiếu nhập (nếu có)">
-    //                     <Upload customRequest={handleUpload} maxCount={1} showUploadList={false}>
-    //                         <Button icon={<UploadOutlined />} loading={uploading}>Tải lên</Button>
-    //                     </Upload>
-    //                     {fileUrl && <div style={{ marginTop: 8 }}>
-    //                         <a href={fileUrl} target="_blank" rel="noopener noreferrer">Xem file đã tải lên</a>
-    //                     </div>}
-    //                 </Form.Item>
-
-    //                 <Title level={4}>Chi tiết Sản Phẩm Nhập Kho</Title>
-
-    //                 <Space style={{ marginBottom: 12 }}>
-    //                     <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddRow}>Thêm Sản phẩm</Button>
-    //                 </Space>
-
-    //                 <Table columns={columns} dataSource={chiTietNhap} pagination={false} rowKey="key" bordered />
-
-    //                 <Form.Item style={{ marginTop: 24 }}>
-    //                     <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={submitting}>Lưu Phiếu nhập</Button>
-    //                 </Form.Item>
-    //             </Form>
-    //         </Card>
-    //         <Card title="Lịch sử Phiếu Nhập kho SP" bordered={false}>
-    //             <Table columns={lichSuColumns} dataSource={lichSuPhieu} rowKey="id_nhap" loading={loadingLichSu} />
-    //         </Card>
-
-    //         <Drawer title={`Chi tiết Phiếu nhập: ${selectedPhieu?.so_phieu}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
-    //             {selectedPhieu && <>
-    //                 <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}><Descriptions.Item label="Ngày nhập">{dayjs(selectedPhieu.ngay_nhap).format('DD/MM/YYYY')}</Descriptions.Item><Descriptions.Item label="Kho nhận">{selectedPhieu.kho.ten_kho}</Descriptions.Item></Descriptions>
-    //                 <Title level={5}>Danh sách sản phẩm đã nhập</Title>
-    //                 <Table columns={chiTietColumns} dataSource={selectedPhieu.chiTietNhapKhoSPs} rowKey="id_ct" pagination={false} size="small" bordered />
-    //             </>}
-    //         </Drawer>
-    //     </div>
-
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <Card bordered={false}>
                 <Title level={3}>{editingRecord ? `Chỉnh sửa Phiếu Nhập kho SP #${editingRecord.so_phieu}` : 'Tạo Phiếu Nhập Kho Sản Phẩm (Thành phẩm)'}</Title>
                 <Form form={form} layout="vertical" onFinish={onFinish}>

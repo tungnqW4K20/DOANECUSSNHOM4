@@ -1,7 +1,9 @@
-import { Layout, Avatar, Dropdown, Typography, message, Button, Tooltip } from 'antd';
+import { Layout, Avatar, Dropdown, Typography, Button, Tooltip } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { logout } from '../../services/auth.service';
+import NotificationCenter from '../notification/NotificationCenter';
+import { showInfo } from '../notification';
 import {
   User,
   LogOut,
@@ -23,11 +25,14 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
 
   const handleLogout = () => {
     logout();
-    message.success({
-      content: 'Đăng xuất thành công!',
-      icon: <LogOut size={16} style={{ color: '#52c41a' }} />,
-    });
+    showInfo('Đã đăng xuất', 'Hẹn gặp lại bạn');
     navigate('/login');
+  };
+
+  const handleMenuClick = ({ key }) => {
+    if (key === 'account') {
+      navigate('/profile');
+    }
   };
 
   const userMenuItems = [
@@ -50,6 +55,7 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
       key: 'account',
       label: 'Thông tin tài khoản',
       icon: <User size={16} />,
+      onClick: () => navigate('/profile'),
     },
     {
       key: 'settings',
@@ -156,6 +162,9 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
           />
         </Tooltip>
 
+        {/* Notification Center */}
+        <NotificationCenter />
+
         {/* Divider */}
         <div
           style={{
@@ -168,7 +177,7 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
 
         {/* User Dropdown */}
         <Dropdown
-          menu={{ items: userMenuItems }}
+          menu={{ items: userMenuItems, onClick: handleMenuClick }}
           trigger={['click']}
           placement="bottomRight"
           overlayStyle={{ minWidth: 200 }}

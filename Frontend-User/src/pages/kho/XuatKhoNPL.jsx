@@ -1,179 +1,42 @@
-// // import React, { useState } from 'react';
-// // import { Form, Select, DatePicker, Button, Table, InputNumber, Upload, message, Typography, Space, Popconfirm } from 'antd';
-// // import { UploadOutlined, SaveOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-// // import { createXuatKhoNPL } from '../../services/xuatkhonpl.service';
-
-// // const { Option } = Select;
-// // const { Title } = Typography;
-
-// // // Dữ liệu giả lập
-// // const nplList = [{ id_npl: 1, ten_npl: 'Vải Cotton 100%' }, { id_npl: 2, ten_npl: 'Chỉ may Polyester' }];
-// // const khoList = [{ id_kho: 1, ten_kho: 'Kho nguyên liệu A' }, { id_kho: 2, ten_kho: 'Kho nguyên liệu B' }];
-
-// // const XuatKhoNPL = () => {
-// //     const [form] = Form.useForm();
-// //     const [chiTietXuat, setChiTietXuat] = useState([]);
-
-// //     const handleAddRow = () => {
-// //         const newRow = { key: Date.now(), id_npl: null, so_luong: 1 };
-// //         setChiTietXuat([...chiTietXuat, newRow]);
-// //     };
-
-// //     const handleRemoveRow = (key) => {
-// //         setChiTietXuat(chiTietXuat.filter(item => item.key !== key));
-// //     };
-
-// //     const handleRowChange = (key, field, value) => {
-// //         const newData = [...chiTietXuat];
-// //         const index = newData.findIndex(item => key === item.key);
-// //         if (index > -1) {
-// //             newData[index][field] = value;
-// //             setChiTietXuat(newData);
-// //         }
-// //     };
-
-// // const onFinish = async (values) => {
-// //     if (!chiTietXuat.length) {
-// //         message.error("Không có nguyên phụ liệu nào để xuất!");
-// //         return;
-// //     }
-
-// //     // Kiểm tra số lượng hợp lệ
-// //     for (const item of chiTietXuat) {
-// //         if (!item.id_npl) {
-// //             message.error("Vui lòng chọn nguyên phụ liệu cho tất cả dòng!");
-// //             return;
-// //         }
-// //         if (!item.so_luong || item.so_luong <= 0) {
-// //             message.error("Số lượng xuất phải lớn hơn 0!");
-// //             return;
-// //         }
-// //     }
-
-// //     // Build payload đúng chuẩn API createXuatNPL
-// //     const payload = {
-// //         id_kho: values.id_kho,
-// //         ngay_xuat: values.ngay_xuat.format("YYYY-MM-DD"),
-// //         file_phieu: values?.file_phieu || null,
-// //         chi_tiets: chiTietXuat.map(item => ({
-// //             id_npl: item.id_npl,     // ← dùng đúng id_npl
-// //             so_luong: item.so_luong  // ← dùng đúng so_luong
-// //         }))
-// //     };
-
-// //     console.log("📦 Payload gửi backend:", payload);
-
-// //     try {
-// //         const res = await createXuatKhoNPL(payload);
-
-// //         message.success("Tạo phiếu xuất NPL thành công!");
-
-// //         form.resetFields();
-// //         setChiTietXuat([]);
-// //     } catch (err) {
-// //         console.error(err);
-// //         message.error(err?.message || "Lỗi khi tạo phiếu xuất NPL!");
-// //     }
-// // };
-
-// //     const columns = [
-// //        {
-// //     title: 'Nguyên phụ liệu',
-// //     dataIndex: 'id_npl',
-// //     render: (_, record) => (
-// //         <Select
-// //             style={{ width: '100%' }}
-// //             placeholder="Chọn NPL"
-// //             onChange={(val) => handleRowChange(record.key, 'id_npl', val)}
-// //         >
-// //             {nplList.map(npl =>
-// //                 <Option key={npl.id_npl} value={npl.id_npl}>
-// //                     {npl.ten_npl}
-// //                 </Option>
-// //             )}
-// //         </Select>
-// //     )
-// // },
-// // {
-// //     title: 'Số lượng xuất',
-// //     dataIndex: 'so_luong',
-// //     render: (_, record) => (
-// //         <InputNumber
-// //             min={1}
-// //             style={{ width: '100%' }}
-// //             defaultValue={1}
-// //             onChange={(val) => handleRowChange(record.key, 'so_luong', val)}
-// //         />
-// //     )
-// // },
-// //         {
-// //             title: 'Hành động', render: (_, record) =>
-// //                 <Popconfirm title="Chắc chắn xóa?" onConfirm={() => handleRemoveRow(record.key)}>
-// //                     <Button icon={<DeleteOutlined />} danger />
-// //                 </Popconfirm>
-// //         },
-// //     ];
-
-// //     return (
-// //         <div>
-// //             <Title level={3}>Tạo Phiếu Xuất Kho NPL (cho Sản xuất)</Title>
-// //             <Form form={form} layout="vertical" onFinish={onFinish}>
-// //                 <Form.Item label="Kho xuất hàng" name="id_kho" rules={[{ required: true, message: "Vui lòng chọn kho xuất hàng" }]}>
-// //                     <Select placeholder="Chọn kho xuất">
-// //                         {khoList.map(k => <Option key={k.id_kho} value={k.id_kho}>{k.ten_kho}</Option>)}
-// //                     </Select>
-// //                 </Form.Item>
-// //                 <Form.Item label="Ngày xuất kho" name="ngay_xuat" rules={[{ required: true, message: "Vui lòng chọn ngày xuất kho" }]}>
-// //                     <DatePicker style={{ width: '100%' }} />
-// //                 </Form.Item>
-                // <Form.Item label="File phiếu xuất (nếu có)" name="file_phieu">
-                //     <Upload><Button icon={<UploadOutlined />}>Tải lên</Button></Upload>
-                // </Form.Item>
-
-// //                 <Title level={4}>Chi tiết Nguyên Phụ Liệu Cần Xuất</Title>
-// //                 <Button onClick={handleAddRow} type="dashed" icon={<PlusOutlined />} style={{ marginBottom: 16 }}>Thêm Nguyên phụ liệu</Button>
-// //                 <Table columns={columns} dataSource={chiTietXuat} pagination={false} rowKey="key" bordered />
-
-// //                 <Form.Item style={{ marginTop: 24 }}>
-// //                     <Button type="primary" htmlType="submit" icon={<SaveOutlined />}>Lưu Phiếu xuất</Button>
-// //                 </Form.Item>
-// //             </Form>
-// //         </div>
-// //     );
-// // }
-
-// // export default XuatKhoNPL;
-
-
 import React, { useState, useEffect } from 'react';
-import { Form, Select, DatePicker, Button, Table, InputNumber, Upload, message, Typography, Popconfirm, Row, Col, Card, Space, Drawer, Descriptions, Tag } from 'antd';
+import { Form, Select, DatePicker, Button, Table, InputNumber, Upload, Typography, Popconfirm, Row, Col, Card, Space, Drawer, Descriptions, Tag } from 'antd';
 import { SaveOutlined, PlusOutlined, DeleteOutlined, EyeOutlined, EditOutlined, CloseCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import * as XuatKhoNPLService from '../../services/xuatkhonpl.service';
+import axios from 'axios';
+import { showCreateSuccess, showUpdateSuccess, showDeleteSuccess, showLoadError, showSaveError, showWarning } from '../../components/notification';
 
 const { Option } = Select;
 const { Title, Text } = Typography;
 
-// --- Giả lập services API ---
-const getAllKho = async () => Promise.resolve([
-    { id_kho: 1, ten_kho: 'Kho Nguyên liệu A' }, 
-    { id_kho: 2, ten_kho: 'Kho Nguyên liệu B' }
-]);
-const getTonKhoNPLByKho = async (id_kho) => {
-    const allTonKhoNPLData = [
-        { id_kho: 1, id_npl: 1, ten_npl: 'Vải Cotton 100%', so_luong_ton: 1500.50, don_vi: 'm' },
-        { id_kho: 1, id_npl: 2, ten_npl: 'Chỉ may Polyester', so_luong_ton: 80.20, don_vi: 'kg' },
-        { id_kho: 2, id_npl: 1, ten_npl: 'Vải Cotton 100%', so_luong_ton: 200.00, don_vi: 'm' },
-    ];
-    return Promise.resolve(allTonKhoNPLData.filter(item => item.id_kho === id_kho));
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const getAuthHeader = () => {
+    const token = localStorage.getItem('accessToken');
+    return token ? { Authorization: `Bearer ${token}` } : {};
 };
-const getXuatKhoNPL = async () => Promise.resolve([
-    { id_xuat: 1, so_phieu: 'PXKNPL-001', ngay_xuat: '2025-11-12', kho: { id_kho: 1, ten_kho: 'Kho Nguyên liệu A'}, chiTietXuatKhoNPLs: [{ id_ct: 1, nguyenPhuLieu: { id_npl: 1, ten_npl: 'Vải Cotton 100%'}, so_luong: 500 }] },
-    { id_xuat: 2, so_phieu: 'PXKNPL-002', ngay_xuat: '2025-11-14', kho: { id_kho: 1, ten_kho: 'Kho Nguyên liệu A'}, chiTietXuatKhoNPLs: [{ id_ct: 2, nguyenPhuLieu: { id_npl: 2, ten_npl: 'Chỉ may Polyester'}, so_luong: 10 }] }
-]);
-const createXuatKhoNPL = async (payload) => Promise.resolve({ success: true, data: payload });
-const updateXuatKhoNPL = async (id, payload) => Promise.resolve({ success: true, data: { id_xuat: id, ...payload } });
-const deleteXuatKhoNPL = async (id) => Promise.resolve({ success: true });
-// -----------------------------
+
+const getAllKho = async () => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/kho`, {
+            headers: getAuthHeader()
+        });
+        return response.data.data || [];
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
+const getTonKhoNPLByKho = async (id_kho) => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/ton-kho-npl/kho/${id_kho}`, {
+            headers: getAuthHeader()
+        });
+        return response.data.data || [];
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
 
 const XuatKhoNPL = () => {
     const [form] = Form.useForm();
@@ -192,14 +55,34 @@ const XuatKhoNPL = () => {
     const fetchLichSu = async () => {
         setLoadingLichSu(true);
         try {
-            const data = await getXuatKhoNPL();
-            setLichSuPhieu(data || []);
-        } catch (err) { message.error("Không tải được lịch sử phiếu xuất NPL!"); }
-        finally { setLoadingLichSu(false); }
+            const response = await XuatKhoNPLService.getAllXuatKhoNPL();
+            setLichSuPhieu(response.data || []);
+        } catch (err) {
+            if (err.status === 401) {
+                showWarning('Phiên làm việc hết hạn', 'Vui lòng đăng nhập lại');
+            } else {
+                showLoadError('lịch sử phiếu xuất NPL');
+            }
+        } finally { 
+            setLoadingLichSu(false); 
+        }
     };
     
     useEffect(() => {
-        getAllKho().then(data => setKhoList(data || []));
+        const fetchInitialData = async () => {
+            try {
+                const khoData = await getAllKho();
+                setKhoList(khoData || []);
+            } catch (err) {
+                if (err.status === 401) {
+                    showWarning('Phiên làm việc hết hạn', 'Vui lòng đăng nhập lại');
+                } else {
+                    showLoadError('danh sách kho');
+                }
+            }
+        };
+        
+        fetchInitialData();
         fetchLichSu();
     }, []);
 
@@ -210,7 +93,13 @@ const XuatKhoNPL = () => {
             try {
                 const data = await getTonKhoNPLByKho(id_kho);
                 setNplTrongKho(data || []);
-            } catch (error) { message.error("Không thể tải tồn kho của kho này!"); }
+            } catch (error) {
+                if (error.status === 401) {
+                    showWarning('Phiên làm việc hết hạn', 'Vui lòng đăng nhập lại');
+                } else {
+                    showLoadError('tồn kho của kho này');
+                }
+            }
         } else {
             setNplTrongKho([]);
         }
@@ -218,7 +107,7 @@ const XuatKhoNPL = () => {
 
     const handleAddRow = () => {
         if (!selectedKhoId) {
-            message.warning("Vui lòng chọn kho xuất hàng trước!");
+            showWarning('Vui lòng chọn kho xuất hàng trước');
             return;
         }
         const newRow = { key: Date.now(), id_npl: null, so_luong: 1, ton_kho: 0, don_vi: '' };
@@ -282,10 +171,16 @@ const XuatKhoNPL = () => {
 
     const handleDelete = async (id_xuat) => {
         try {
-            await deleteXuatKhoNPL(id_xuat);
-            message.success(`Xóa phiếu xuất #${id_xuat} thành công!`);
+            await XuatKhoNPLService.deleteXuatKhoNPL(id_xuat);
+            showDeleteSuccess('Phiếu xuất NPL');
             fetchLichSu();
-        } catch (error) { message.error("Lỗi khi xóa phiếu xuất!"); }
+        } catch (error) {
+            if (error.status === 401) {
+                showWarning('Phiên làm việc hết hạn', 'Vui lòng đăng nhập lại');
+            } else {
+                showSaveError('phiếu xuất NPL');
+            }
+        }
     };
     
     const cancelEdit = () => {
@@ -298,9 +193,18 @@ const XuatKhoNPL = () => {
     
     const onFinish = async (values) => {
         if (!chiTietXuat.length || chiTietXuat.some(item => !item.id_npl)) {
-            message.error("Vui lòng thêm và chọn nguyên phụ liệu!");
+            showWarning('Vui lòng thêm và chọn nguyên phụ liệu');
             return;
         }
+        
+        // Validate số lượng xuất không vượt quá tồn kho
+        for (const item of chiTietXuat) {
+            if (item.so_luong > item.ton_kho) {
+                showWarning('Số lượng xuất không được vượt quá tồn kho khả dụng');
+                return;
+            }
+        }
+        
         setSubmitting(true);
         const payload = {
             id_kho: values.id_kho,
@@ -308,17 +212,26 @@ const XuatKhoNPL = () => {
             file_phieu: null,
             chi_tiets: chiTietXuat.map(({ key, ton_kho, don_vi, ...rest }) => rest)
         };
+        
         try {
             if (editingRecord) {
-                await updateXuatKhoNPL(editingRecord.id_xuat, payload);
+                await XuatKhoNPLService.updateXuatKhoNPL(editingRecord.id_xuat, payload);
+                showUpdateSuccess('Phiếu xuất NPL');
             } else {
-                await createXuatKhoNPL(payload);
+                await XuatKhoNPLService.createXuatKhoNPL(payload);
+                showCreateSuccess('Phiếu xuất NPL');
             }
-            message.success(`${editingRecord ? 'Cập nhật' : 'Tạo'} phiếu xuất NPL thành công!`);
             cancelEdit();
             fetchLichSu();
-        } catch (err) { message.error(`Lỗi khi ${editingRecord ? 'cập nhật' : 'tạo'} phiếu xuất!`); }
-        finally { setSubmitting(false); }
+        } catch (err) {
+            if (err.status === 401) {
+                showWarning('Phiên làm việc hết hạn', 'Vui lòng đăng nhập lại');
+            } else {
+                showSaveError('phiếu xuất NPL');
+            }
+        } finally { 
+            setSubmitting(false); 
+        }
     };
 
     const columns = [
@@ -329,7 +242,7 @@ const XuatKhoNPL = () => {
     ];
 
     const lichSuColumns = [
-        { title: 'Số phiếu', dataIndex: 'so_phieu' },
+        { title: 'Số phiếu', dataIndex: 'so_phieu', render: (text, record) => text || `PXKNPL-${record.id_xuat}` },
         { title: 'Ngày xuất', dataIndex: 'ngay_xuat', render: (text) => dayjs(text).format('DD/MM/YYYY') },
         { title: 'Kho xuất', dataIndex: ['kho', 'ten_kho'] },
         { title: 'Hành động', key: 'action', width: 220, align: 'center', render: (_, record) => (

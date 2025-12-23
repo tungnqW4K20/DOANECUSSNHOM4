@@ -1,0 +1,19 @@
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  width: 100%;
+}
+
+.loading-container .ant-spin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.loading-container .ant-spin-text {
+  margin-top: 12px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.65);
+}
