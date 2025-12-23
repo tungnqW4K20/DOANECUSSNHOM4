@@ -1,0 +1,53 @@
+.recent-contracts-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.recent-contracts-table {
+  width: 100%;
+}
+
+.recent-contracts-table .ant-table {
+  background: white;
+}
+
+.recent-contracts-table .ant-table-thead > tr > th {
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+  border-bottom: 2px solid var(--primary-color) !important;
+  padding: 16px !important;
+  white-space: nowrap;
+}
+
+.recent-contracts-table .ant-table-tbody > tr > td {
+  padding: 14px 16px !important;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.recent-contracts-table .clickable-row {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.recent-contracts-table .clickable-row:hover {
+  background-color: var(--table-row-hover) !important;
+  transform: translateX(2px);
+}
+
+.recent-contracts-table .clickable-row:hover > td {
+  background-color: transparent !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .recent-contracts-table .ant-table-cell {
+    padding: 10px 8px !important;
+    font-size: 13px;
+  }
+  
+  .recent-contracts-table .ant-table-thead > tr > th {
+    padding: 12px 8px !important;
+    font-size: 13px;
+  }
+}

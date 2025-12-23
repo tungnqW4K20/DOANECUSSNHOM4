@@ -1,24 +1,10 @@
-import axios from "axios";
+import { createApiInstance } from "./apiConfig";
 
 // 🔹 Base URL cho API kho
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/kho`;
 
-// 🔹 Tạo instance axios
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        "Content-Type": "application/json",
-    },
-});
-
-// 🔹 Interceptor tự động gắn token nếu có
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+// 🔹 Tạo instance axios với interceptors
+const api = createApiInstance(API_BASE_URL);
 
 // =======================
 // 📦 Các hàm CRUD cho Kho
@@ -39,7 +25,8 @@ export const createKho = async (data) => {
 export const getAllKho = async () => {
     try {
         const res = await api.get("/");
-        return res.data;
+        // Backend trả về array trực tiếp (không wrap)
+        return Array.isArray(res.data) ? res.data : (res.data?.data || res.data || []);
     } catch (err) {
         console.error("Lỗi getAllKho:", err);
         throw err.response?.data || { message: "Lỗi kết nối máy chủ" };

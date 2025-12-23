@@ -1,0 +1,35 @@
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  width: 100%;
+  padding: 24px;
+}
+
+.error-container .ant-result {
+  padding: 48px 32px;
+}
+
+.error-container .ant-result-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.error-container .ant-result-subtitle {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.65);
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .error-container {
+    min-height: 300px;
+    padding: 16px;
+  }
+  
+  .error-container .ant-result {
+    padding: 24px 16px;
+  }
+}

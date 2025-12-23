@@ -1,22 +1,8 @@
-import axios from "axios";
+import { createApiInstance } from "./apiConfig";
 
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/hop-dong`;
 
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        "Content-Type": "application/json",
-    },
-});
-
-// 🧩 Interceptor: tự động gắn access token
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+const api = createApiInstance(API_BASE_URL);
 
 /* ============================================================
    🟢 LẤY TOÀN BỘ HỢP ĐỒNG
@@ -27,7 +13,7 @@ api.interceptors.request.use((config) => {
 export const getAllHopDong = async () => {
     try {
         const res = await api.get("/");
-        return res.data; // { success, data }
+        return res.data;
     } catch (err) {
         console.error("❌ Lỗi getAllHopDong:", err);
         throw err.response?.data || { message: "Lỗi khi lấy danh sách hợp đồng" };

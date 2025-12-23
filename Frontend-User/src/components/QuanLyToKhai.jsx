@@ -1,54 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Select, DatePicker, Space, Popconfirm, message, InputNumber, Row, Col, Typography, Card, Upload, Tooltip, Tabs, Tag, Drawer } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, FileOutlined, UploadOutlined, FolderOpenOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Input, Select, DatePicker, Space, Popconfirm, InputNumber, Row, Col, Typography, Card, Upload, Tooltip, Tabs, Tag, Drawer, Spin } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, FileOutlined, UploadOutlined, FolderOpenOutlined, SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import * as ToKhaiService from '../services/tokhai.service';
+import { 
+    showUpdateSuccess, 
+    showDeleteSuccess, 
+    showLoadError, 
+    showDeleteError 
+} from './notification';
 
 const { Option } = Select;
 const { Title, Text } = Typography;
-const { Search } = Input;
 const { TabPane } = Tabs;
-
-// --- Dữ liệu giả lập ---
-// --- Dữ liệu giả lập ---
-const tienTeList = [ { id_tt: 1, ma_tt: 'USD' }, { id_tt: 2, ma_tt: 'VND' }, { id_tt: 3, ma_tt: 'JPY' }];
-const nplList = [{ id_npl: 1, ten_npl: 'Vải Cotton' }, { id_npl: 2, ten_npl: 'Chỉ may' }];
-const spList = [{ id_sp: 1, ten_sp: 'Áo phông cổ tròn' }, { id_sp: 2, ten_sp: 'Quần Jeans Nam' }];
-const toKhaiTrangThaiList = ['Chờ duyệt', 'Thông quan', 'Kiểm tra hồ sơ', 'Kiểm tra thực tế', 'Tái xuất', 'Tịch thu'];
-
-const mockToKhaiData = {
-    "Nhập": [
-        { 
-            id: 'tkn_301', loai: 'Nhập', so_tk: "105987123", ngay_tk: "2025-04-13", trang_thai: "Thông quan", so_hd: 'HD-2025-001',
-            details: {
-                loHang: [{ id_lh: 1, so_lh: 'LH-001', ngay_dong_goi: '2025-04-10', ngay_xuat_cang: '2025-04-12', cang_xuat: 'Cảng Cát Lái', cang_nhap: 'Cảng Singapore', file_chung_tu: 'chungtu_lh1.pdf' }],
-                hoaDon: [{ id_hd_nhap: 101, so_hd: "INV-123", ngay_hd: "2025-04-09", id_tt: 1, tong_tien: 15000, file_hoa_don: 'hdn_101.pdf', chiTiet: [ 
-                    { id_ct: 1001, id_npl: 1, so_luong: 1000, don_gia: 10, tri_gia: 10000 }, 
-                    { id_ct: 1002, id_npl: 2, so_luong: 50, don_gia: 100, tri_gia: 5000 } 
-                ]}],
-                vanDon: [{ id_vd: 201, so_vd: "BL-ABC", ngay_phat_hanh: "2025-04-11", cang_xuat: 'Cảng Cát Lái', cang_nhap: 'Cảng Singapore', file_van_don: 'vdn_201.pdf' }],
-            }
-        },
-    ],
-    "Xuất": [
-        { 
-            id: 'tkx_401', loai: 'Xuất', so_tk: "301234567", ngay_tk: "2025-05-20", trang_thai: "Chờ duyệt", so_hd: 'HD-2025-002',
-            details: {
-                loHang: [{ id_lh: 3, so_lh: 'LH-EXP-001', ngay_dong_goi: '2025-05-18', ngay_xuat_cang: '2025-05-19', cang_xuat: 'Cảng Hải Phòng', cang_nhap: 'Cảng Los Angeles', file_chung_tu: 'chungtu_lh_exp1.pdf' }],
-                hoaDon: [{ id_hd_xuat: 201, so_hd: "EXP-INV-456", ngay_hd: "2025-05-17", id_tt: 3, tong_tien: 500000, file_hoa_don: 'hdx_201.pdf', chiTiet: [
-                    { id_ct: 2001, id_sp: 1, so_luong: 200, don_gia: 1500, tri_gia: 300000 },
-                    { id_ct: 2002, id_sp: 2, so_luong: 100, don_gia: 2000, tri_gia: 200000 },
-                ]}],
-                vanDon: [{ id_vd: 301, so_vd: "BL-XYZ", ngay_phat_hanh: "2025-05-19", cang_xuat: 'Cảng Hải Phòng', cang_nhap: 'Cảng Los Angeles', file_van_don: 'vdx_301.pdf' }],
-            }
-        },
-        { id: 'tkx_402', loai: 'Xuất', so_tk: "309876543", ngay_tk: "2025-06-10", trang_thai: "Kiểm tra hồ sơ", so_hd: 'HD-2025-002', details: null },
-    ],
-};
-// -----------------------
 
 const QuanLyToKhai = ({ type }) => {
     const [crudForm] = Form.useForm();
     const [dataSource, setDataSource] = useState([]);
+    const [loading, setLoading] = useState(false);
     
     const [isCrudModalOpen, setIsCrudModalOpen] = useState(false);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -58,11 +27,128 @@ const QuanLyToKhai = ({ type }) => {
     const [crudModalContent, setCrudModalContent] = useState({ type: null, record: null, title: '' });
     const [selectedHoaDon, setSelectedHoaDon] = useState(null);
     const [hoaDonChiTiet, setHoaDonChiTiet] = useState([]);
+    
+    // State for dropdown data
+    const [tienTeList, setTienTeList] = useState([]);
+    const [nplList, setNplList] = useState([]);
+    const [spList, setSpList] = useState([]);
 
+    // Fetch data from API
     useEffect(() => {
-        // Lọc dữ liệu dựa trên type (Nhập/Xuất)
-        setDataSource(mockToKhaiData[type] || []);
+        fetchToKhaiData();
+        fetchDropdownData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [type]);
+    
+    const fetchDropdownData = async () => {
+        try {
+            const [tienTeRes, nplRes, spRes] = await Promise.all([
+                ToKhaiService.getAllTienTe(),
+                ToKhaiService.getAllNguyenPhuLieu(),
+                ToKhaiService.getAllSanPham()
+            ]);
+            setTienTeList(tienTeRes || []);
+            setNplList(nplRes || []);
+            setSpList(spRes || []);
+        } catch (error) {
+            showLoadError('dữ liệu dropdown');
+        }
+    };
+
+    const fetchToKhaiData = async () => {
+        try {
+            setLoading(true);
+            let toKhaiResponse;
+            let hoaDonResponse;
+            let vanDonResponse;
+            let loHangResponse;
+            
+            // Fetch all data in parallel
+            if (type === 'Nhập') {
+                [toKhaiResponse, hoaDonResponse, vanDonResponse, loHangResponse] = await Promise.all([
+                    ToKhaiService.getAllToKhaiNhap(),
+                    ToKhaiService.getAllHoaDonNhap(),
+                    ToKhaiService.getAllVanDonNhap(),
+                    ToKhaiService.getAllLoHang()
+                ]);
+            } else {
+                [toKhaiResponse, hoaDonResponse, vanDonResponse, loHangResponse] = await Promise.all([
+                    ToKhaiService.getAllToKhaiXuat(),
+                    ToKhaiService.getAllHoaDonXuat(),
+                    ToKhaiService.getAllVanDonXuat(),
+                    ToKhaiService.getAllLoHang()
+                ]);
+            }
+            
+            // Transform data to match component structure
+            const transformedData = (toKhaiResponse || []).map((item) => {
+                const id_lh = item.id_lh;
+                
+                // Find related LoHang
+                const loHang = loHangResponse?.find(lh => lh.id_lh === id_lh);
+                
+                // Filter HoaDon by id_lh
+                const hoaDonList = (hoaDonResponse || []).filter(hd => hd.id_lh === id_lh);
+                
+                // Filter VanDon by id_lh
+                const vanDonList = (vanDonResponse || []).filter(vd => vd.id_lh === id_lh);
+                
+                // Transform LoHang data
+                const loHangData = loHang ? [{
+                    id_lh: loHang.id_lh,
+                    so_lh: `LH-${loHang.id_lh}`, // Generate display number
+                    ngay_dong_goi: loHang.ngay_dong_goi ? dayjs(loHang.ngay_dong_goi).format('YYYY-MM-DD') : '',
+                    ngay_xuat_cang: loHang.ngay_xuat_cang ? dayjs(loHang.ngay_xuat_cang).format('YYYY-MM-DD') : '',
+                    cang_xuat: loHang.cang_xuat || '',
+                    cang_nhap: loHang.cang_nhap || '',
+                    file_chung_tu: loHang.file_chung_tu || '',
+                }] : [];
+                
+                // Transform HoaDon data
+                const hoaDonData = hoaDonList.map(hd => ({
+                    id_hd_nhap: hd.id_hd_nhap,
+                    id_hd_xuat: hd.id_hd_xuat,
+                    so_hd: hd.so_hd,
+                    ngay_hd: hd.ngay_hd ? dayjs(hd.ngay_hd).format('YYYY-MM-DD') : '',
+                    id_tt: hd.id_tt,
+                    tong_tien: hd.tong_tien,
+                    file_hoa_don: hd.file_hoa_don,
+                    chiTiet: hd.chiTiets || [],
+                }));
+                
+                // Transform VanDon data
+                const vanDonData = vanDonList.map(vd => ({
+                    id_vd: vd.id_vd,
+                    so_vd: vd.so_vd,
+                    ngay_phat_hanh: vd.ngay_phat_hanh ? dayjs(vd.ngay_phat_hanh).format('YYYY-MM-DD') : '',
+                    cang_xuat: vd.cang_xuat || '',
+                    cang_nhap: vd.cang_nhap || '',
+                    file_van_don: vd.file_van_don || '',
+                }));
+                
+                return {
+                    id: type === 'Nhập' ? item.id_tkn : item.id_tkx,
+                    loai: type,
+                    so_tk: item.so_tk,
+                    ngay_tk: item.ngay_tk ? dayjs(item.ngay_tk).format('YYYY-MM-DD') : '',
+                    trang_thai: item.trang_thai,
+                    so_hd: loHang?.hopDong?.so_hd || '-',
+                    details: {
+                        loHang: loHangData,
+                        hoaDon: hoaDonData,
+                        vanDon: vanDonData,
+                    }
+                };
+            });
+            
+            setDataSource(transformedData);
+        } catch (error) {
+            console.error('Error fetching tờ khai:', error);
+            showLoadError('dữ liệu tờ khai');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleOpenCrudModal = (modalType, record = null) => {
         const typeMap = { loHang: 'Lô hàng', hoaDon: 'Hóa đơn', vanDon: 'Vận đơn' };
@@ -82,7 +168,16 @@ const QuanLyToKhai = ({ type }) => {
         setIsCrudModalOpen(true);
     };
     
-    const handleCrudSave = () => { message.success('Lưu thành công!'); setIsCrudModalOpen(false); };
+    const handleCrudSave = () => { 
+        const { type, record } = crudModalContent;
+        const typeMap = { loHang: 'Lô hàng', hoaDon: 'Hóa đơn', vanDon: 'Vận đơn' };
+        if (record) {
+            showUpdateSuccess(typeMap[type]);
+        } else {
+            showUpdateSuccess(typeMap[type]);
+        }
+        setIsCrudModalOpen(false); 
+    };
     const showDrawer = (record) => { setSelectedToKhai(record); setIsDrawerOpen(true); };
     const showChiTietDrawer = (hoaDon) => { setSelectedHoaDon(hoaDon); setIsChiTietDrawerOpen(true); };
 
@@ -102,6 +197,59 @@ const QuanLyToKhai = ({ type }) => {
         setHoaDonChiTiet(newData);
     };
 
+    const handleDeleteToKhai = async (record) => {
+        try {
+            // Call API to delete tờ khai
+            if (type === 'Nhập') {
+                await ToKhaiService.deleteToKhaiNhap(record.id);
+            } else {
+                await ToKhaiService.deleteToKhaiXuat(record.id);
+            }
+            showDeleteSuccess('Tờ khai nhập');
+            fetchToKhaiData();
+        } catch (error) {
+            console.error('Error deleting tờ khai:', error);
+            showDeleteError('tờ khai nhập');
+        }
+    };
+
+    const handleDeleteLoHang = async (record) => {
+        try {
+            await ToKhaiService.deleteLoHang(record.id_lh);
+            showDeleteSuccess('Lô hàng');
+            fetchToKhaiData();
+        } catch (error) {
+            console.error('Error deleting lô hàng:', error);
+            showDeleteError('lô hàng');
+        }
+    };
+
+    const handleDeleteHoaDon = async (record) => {
+        try {
+            if (type === 'Nhập') {
+                await ToKhaiService.deleteHoaDonNhap(record.id_hd_nhap);
+            } else {
+                await ToKhaiService.deleteHoaDonXuat(record.id_hd_xuat);
+            }
+            showDeleteSuccess('Hóa đơn');
+            fetchToKhaiData();
+        } catch (error) {
+            console.error('Error deleting hóa đơn:', error);
+            showDeleteError('hóa đơn');
+        }
+    };
+
+    const handleDeleteVanDon = async (record) => {
+        try {
+            await ToKhaiService.deleteVanDon(record.id_vd);
+            showDeleteSuccess('Vận đơn');
+            fetchToKhaiData();
+        } catch (error) {
+            console.error('Error deleting vận đơn:', error);
+            showDeleteError('vận đơn');
+        }
+    };
+
     const mainColumns = [ 
         { title: 'Số Tờ khai', dataIndex: 'so_tk' }, 
         // { title: 'Loại', dataIndex: 'loai', render: (text) => <Tag color={text === 'Nhập' ? 'blue' : 'green'}>{text.toUpperCase()}</Tag> },
@@ -110,7 +258,7 @@ const QuanLyToKhai = ({ type }) => {
         { title: 'Hành động', key: 'action', align: 'center', render: (_, record) => (
             <Space>
                 <Button icon={<FolderOpenOutlined />} onClick={() => showDrawer(record)}>Chi tiết</Button>
-                <Popconfirm title="Xóa Tờ khai và toàn bộ chứng từ liên quan?"><Button danger icon={<DeleteOutlined />}>Xóa</Button></Popconfirm>
+                <Popconfirm title="Xóa Tờ khai và toàn bộ chứng từ liên quan?" onConfirm={() => handleDeleteToKhai(record)}><Button danger icon={<DeleteOutlined />}>Xóa</Button></Popconfirm>
             </Space>
         )},
     ];
@@ -128,20 +276,20 @@ const QuanLyToKhai = ({ type }) => {
         { title: 'Số Lô hàng', dataIndex: 'so_lh' }, { title: 'Ngày đóng gói', dataIndex: 'ngay_dong_goi' },
         { title: 'Ngày xuất cảng', dataIndex: 'ngay_xuat_cang' }, { title: 'Cảng xuất', dataIndex: 'cang_xuat' },
         { title: 'Cảng nhập', dataIndex: 'cang_nhap' }, { title: 'File', dataIndex: 'file_chung_tu', render: file => file ? <Tooltip title={file}><FileOutlined style={{color: '#1890ff'}}/></Tooltip> : null },
-        actionColumn('loHang', handleOpenCrudModal, (record) => console.log('Delete Lô hàng', record.id_lh))
+        actionColumn('loHang', handleOpenCrudModal, handleDeleteLoHang)
     ];
     const hoaDonColumns = [ 
         { title: 'Số Hóa đơn', dataIndex: 'so_hd' }, { title: 'Ngày HĐ', dataIndex: 'ngay_hd' },
         { title: 'Tổng tiền', dataIndex: 'tong_tien', render: (val) => val?.toLocaleString() }, { title: 'Tiền tệ', dataIndex: 'id_tt', render: (id) => tienTeList.find(t => t.id_tt === id)?.ma_tt },
         { title: 'Hàng hóa', key: 'chi_tiet', align: 'center', render: (_, record) => <Button type="link" onClick={() => showChiTietDrawer(record)}>Xem ({record.chiTiet?.length || 0})</Button> },
         { title: 'File', dataIndex: 'file_hoa_don', render: file => file ? <Tooltip title={file}><FileOutlined style={{color: '#1890ff'}}/></Tooltip> : null },
-        actionColumn('hoaDon', handleOpenCrudModal, (record) => console.log('Delete Hóa đơn', record.id_hd_nhap))
+        actionColumn('hoaDon', handleOpenCrudModal, handleDeleteHoaDon)
     ];
     const vanDonColumns = [ 
         { title: 'Số Vận đơn', dataIndex: 'so_vd' }, { title: 'Ngày phát hành', dataIndex: 'ngay_phat_hanh' },
         { title: 'Cảng xuất', dataIndex: 'cang_xuat' }, { title: 'Cảng nhập', dataIndex: 'cang_nhap' },
         { title: 'File', dataIndex: 'file_van_don', render: file => file ? <Tooltip title={file}><FileOutlined style={{color: '#1890ff'}}/></Tooltip> : null },
-        actionColumn('vanDon', handleOpenCrudModal, (record) => console.log('Delete Vận đơn', record.id_vd))
+        actionColumn('vanDon', handleOpenCrudModal, handleDeleteVanDon)
     ];
     const hoaDonChiTietColumns = [ 
         { title: 'Hàng hóa', dataIndex: 'id_npl', render: (_, record) => (
@@ -187,15 +335,21 @@ const QuanLyToKhai = ({ type }) => {
     };
     
     return (
-        <>
-            <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-                <Col><Title level={3}>Quản lý Tờ khai {type}</Title></Col>
-                <Col><Search placeholder="Tìm theo số TK, số HĐ..." style={{ width: 300 }} /></Col>
-            </Row>
+        <Spin spinning={loading}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 16 }}>
+                <h2 className="page-header-heading" style={{ margin: 0 }}>Quản lý Tờ khai {type}</h2>
+                <div style={{ display: 'flex', gap: 12, flex: 1, justifyContent: 'flex-end' }}>
+                    <Input
+                        placeholder={`Tìm kiếm tờ khai ${type.toLowerCase()}...`}
+                        prefix={<SearchOutlined />}
+                        style={{ width: 300 }}
+                    />
+                </div>
+            </div>
 
             <Card bordered={false}><Table columns={mainColumns} dataSource={dataSource} rowKey="id" /></Card>
 
-            <Modal title={crudModalContent.title} open={isCrudModalOpen} onCancel={() => setIsCrudModalOpen(false)} onOk={handleCrudSave} okText="Lưu" cancelText="Hủy" width={crudModalContent.type === 'hoaDon' ? 800 : 600}>
+            <Modal title={crudModalContent.title} open={isCrudModalOpen} onCancel={() => setIsCrudModalOpen(false)} onOk={handleCrudSave} okText="Lưu" cancelText="Hủy" width={crudModalContent.type === 'hoaDon' ? 1000 : 800}>
                 <Form form={crudForm} layout="vertical">{renderCrudForm()}</Form>
             </Modal>
             
@@ -212,7 +366,7 @@ const QuanLyToKhai = ({ type }) => {
             <Drawer title={`Chi tiết Hóa đơn: ${selectedHoaDon?.so_hd}`} width={720} open={isChiTietDrawerOpen} onClose={() => setIsChiTietDrawerOpen(false)}>
                 <Table title={() => <Text strong>Danh sách hàng hóa</Text>} columns={hoaDonChiTietColumns.slice(0, 4)} dataSource={selectedHoaDon?.chiTiet} rowKey="id_ct" size="small" pagination={false} bordered />
             </Drawer>
-        </>
+        </Spin>
     );
 };
 

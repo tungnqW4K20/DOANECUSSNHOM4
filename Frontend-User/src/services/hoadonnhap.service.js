@@ -1,22 +1,8 @@
-import axios from "axios";
+import { createApiInstance } from "./apiConfig";
 
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/hoa-don-nhap`;
 
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        "Content-Type": "application/json",
-    },
-});
-
-// 🧩 Interceptor: tự động gắn access token nếu có
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+const api = createApiInstance(API_BASE_URL);
 
 /* ============================================================
    🟢 LẤY DANH SÁCH TẤT CẢ HÓA ĐƠN NHẬP
@@ -24,7 +10,8 @@ api.interceptors.request.use((config) => {
 export const getAllHoaDonNhap = async () => {
     try {
         const res = await api.get("/");
-        return res.data;
+        // Backend trả về array trực tiếp
+        return Array.isArray(res.data) ? res.data : (res.data?.data || res.data || []);
     } catch (err) {
         console.error("❌ Lỗi getAllHoaDonNhap:", err);
         throw err.response?.data || { message: "Lỗi khi lấy danh sách hóa đơn nhập" };

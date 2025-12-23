@@ -1,117 +1,15 @@
-// import React, { useState } from 'react';
-// import { Form, Select, DatePicker, Button, Table, InputNumber, Upload, message, Typography, Tag } from 'antd';
-// import { UploadOutlined, SendOutlined } from '@ant-design/icons';
-
-// const { Option } = Select;
-// const { Title } = Typography;
-
-// // Dữ liệu giả lập
-// const hoaDonXuatList = [ { id_hd_xuat: 1, so_hd: 'EXP-2025-001' }];
-// const chiTietHDX1 = [
-//     { key: 1, id_sp: 1, ten_sp: 'Áo phông cổ tròn', so_luong_hd: 500, ton_kho: 520 },
-//     { key: 2, id_sp: 2, ten_sp: 'Quần Jeans Nam', so_luong_hd: 200, ton_kho: 180 },
-// ];
-// const khoList = [{ id_kho: 3, ten_kho: 'Kho thành phẩm A' }, { id_kho: 4, ten_kho: 'Kho thành phẩm B' }];
-
-// const XuatKhoSP = () => {
-//     const [form] = Form.useForm();
-//     const [chiTietXuat, setChiTietXuat] = useState([]);
-    
-//     const handleHoaDonChange = (value) => {
-//         if (value === 1) {
-//             setChiTietXuat(chiTietHDX1.map(item => ({...item, so_luong_xuat: item.so_luong_hd})));
-//         } else {
-//             setChiTietXuat([]);
-//         }
-//     };
-
-//     const handleSoLuongChange = (key, value) => {
-//         setChiTietXuat(chiTietXuat.map(item => item.key === key ? { ...item, so_luong_xuat: value } : item));
-//     };
-
-//     const onFinish = (values) => {
-//         console.log('Received values:', { ...values, chiTiet: chiTietXuat });
-//         message.success('Tạo phiếu xuất kho sản phẩm thành công!');
-//     };
-
-//     const showDrawer = (record) => { setSelectedPhieu(record); setIsDrawerOpen(true); };
-
-//     const columns = [
-//         { title: 'Tên Sản phẩm', dataIndex: 'ten_sp', key: 'ten_sp' },
-//         { title: 'Số lượng theo HĐ', dataIndex: 'so_luong_hd', key: 'so_luong_hd' },
-//         { title: 'Tồn kho khả dụng', dataIndex: 'ton_kho', key: 'ton_kho' },
-//         { title: 'Số lượng thực xuất', dataIndex: 'so_luong_xuat', key: 'so_luong_xuat',
-//             render: (text, record) => (
-//                 <>
-//                     <InputNumber min={0} max={record.ton_kho} defaultValue={text} onChange={(val) => handleSoLuongChange(record.key, val)}/>
-//                     {record.so_luong_xuat > record.ton_kho && <Tag color="error" style={{marginLeft: 8}}>Vượt tồn kho!</Tag>}
-//                 </>
-//             )
-//         },
-//     ];
-
-//     return (
-//         <div>
-//             <Title level={3}>Tạo Phiếu Xuất Kho Sản Phẩm</Title>
-//             <Form form={form} layout="vertical" onFinish={onFinish}>
-//                 <Form.Item label="Hóa đơn xuất liên quan" name="id_hd_xuat" rules={[{ required: true, message: "Vui lòng chọn hóa đơn xuất liên quan!" }]}>
-//                     <Select placeholder="Tìm và chọn số hóa đơn xuất" onChange={handleHoaDonChange} showSearch>
-//                         {hoaDonXuatList.map(hd => <Option key={hd.id_hd_xuat} value={hd.id_hd_xuat}>{hd.so_hd}</Option>)}
-//                     </Select>
-//                 </Form.Item>
-//                  <Form.Item label="Kho xuất hàng" name="id_kho" rules={[{ required: true, message: "Vui lòng chọn kho xuất hàng" }]}>
-//                     <Select placeholder="Chọn kho">
-//                         {khoList.map(k => <Option key={k.id_kho} value={k.id_kho}>{k.ten_kho}</Option>)}
-//                     </Select>
-//                 </Form.Item>
-//                 <Form.Item label="Ngày xuất kho" name="ngay_xuat" rules={[{ required: true, message: "Vui lòng chọn ngày xuất kho" }]}>
-//                     <DatePicker style={{ width: '100%' }} />
-//                 </Form.Item>
-//                  <Form.Item label="File phiếu xuất (nếu có)" name="file_phieu">
-//                     <Upload><Button icon={<UploadOutlined />}>Tải lên</Button></Upload>
-//                 </Form.Item>
-                
-//                 <Title level={4}>Chi tiết Sản Phẩm Xuất Kho</Title>
-//                 <Table columns={columns} dataSource={chiTietXuat} pagination={false} rowKey="key" bordered/>
-
-//                 <Form.Item style={{ marginTop: 24 }}>
-//                     <Button type="primary" htmlType="submit" icon={<SendOutlined />}>Xác nhận Xuất kho</Button>
-//                 </Form.Item>
-//             </Form>
-//         </div>
-//     );
-// }
-
-// export default XuatKhoSP;
-
 import React, { useState, useEffect } from 'react';
-import { Form, Select, DatePicker, Button, Table, InputNumber, Upload, message, Typography, Tag, Space, Row, Col, Card, Drawer, Descriptions, Popconfirm } from 'antd';
+import { Form, Select, DatePicker, Button, Table, InputNumber, Upload, Typography, Tag, Space, Row, Col, Card, Drawer, Descriptions, Popconfirm } from 'antd';
 import { SendOutlined, EyeOutlined, EditOutlined, DeleteOutlined, CloseCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import * as XuatKhoSPService from '../../services/xuatkhosp.service';
+import * as KhoService from '../../services/kho.service';
+import * as HoaDonXuatService from '../../services/hoadonxuat.service';
+import { showCreateSuccess, showUpdateSuccess, showDeleteSuccess, showLoadError, showSaveError, showError } from '../../components/notification';
+import { requiredSelectRule, pastDateRules } from '../../utils/validationRules';
 
 const { Option } = Select;
 const { Title, Text } = Typography;
-
-// --- Dữ liệu và hàm giả lập services API ---
-const mockHoaDonXuatList = [
-    { id_hd_xuat: 1, so_hd: 'EXP-2025-001', chiTiet: [
-        { key: 1, id_sp: 1, ten_sp: 'Áo phông cổ tròn', so_luong_hd: 500, id_qd: 101, ten_dvt_dn: 'Cái' },
-        { key: 2, id_sp: 2, ten_sp: 'Quần Jeans Nam', so_luong_hd: 200, id_qd: 102, ten_dvt_dn: 'Cái' },
-    ]},
-];
-const mockKhoList = [ { id_kho: 1, ten_kho: 'Kho Thành phẩm Chính' }, { id_kho: 2, ten_kho: 'Kho Thành phẩm Phụ' } ];
-const mockTonKhoData = { kho_1: { sp_1: 300, sp_2: 180 }, kho_2: { sp_1: 220, sp_2: 50 } };
-const mockLichSuXuatSP = [
-    { id_xuat: 1, so_phieu: 'PXKSP-001', ngay_xuat: '2025-11-15', kho: {id_kho: 1, ten_kho: 'Kho Thành phẩm Chính'}, hoaDonXuat: { id_hd_xuat: 1, so_hd: 'EXP-2025-001'}, chiTietXuatKhoSPs: [{ id_ct: 1, sanPham: {id_sp: 1, ten_sp: 'Áo phông cổ tròn' }, so_luong: 300 }] }
-];
-const getAllKho = async () => Promise.resolve(mockKhoList);
-const getAllHoaDonXuat = async () => Promise.resolve(mockHoaDonXuatList);
-const getTonKhoSPByKho = async (id_kho) => Promise.resolve(mockTonKhoData[`kho_${id_kho}`] || {});
-const getXuatKhoSP = async () => Promise.resolve(mockLichSuXuatSP);
-const createXuatKhoSP = async (payload) => Promise.resolve({ success: true, data: payload });
-const updateXuatKhoSP = async (id, payload) => Promise.resolve({ success: true, data: { id_xuat: id, ...payload } });
-const deleteXuatKhoSP = async (id) => Promise.resolve({ success: true });
-// ------------------------------------------
 
 const XuatKhoSP = () => {
     const [form] = Form.useForm();
@@ -119,8 +17,6 @@ const XuatKhoSP = () => {
     const [khoList, setKhoList] = useState([]);
     const [hoaDonXuatList, setHoaDonXuatList] = useState([]);
     const [selectedKhoId, setSelectedKhoId] = useState(null);
-    const [selectedHD, setSelectedHD] = useState(null);
-    const [tonKhoTaiKhoChon, setTonKhoTaiKhoChon] = useState({});
     const [submitting, setSubmitting] = useState(false);
 
     const [lichSuPhieu, setLichSuPhieu] = useState([]);
@@ -132,19 +28,27 @@ const XuatKhoSP = () => {
     const fetchLichSu = async () => {
         setLoadingLichSu(true);
         try {
-            const data = await getXuatKhoSP();
-            setLichSuPhieu(data || []);
-        } catch (err) { message.error("Không tải được lịch sử phiếu xuất SP!"); }
-        finally { setLoadingLichSu(false); }
+            const response = await XuatKhoSPService.getAllXuatKhoSP();
+            setLichSuPhieu(response.data || []);
+        } catch {
+            showLoadError('lịch sử phiếu xuất SP'); 
+        } finally { 
+            setLoadingLichSu(false); 
+        }
     };
     
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [resKho, resHDX] = await Promise.all([getAllKho(), getAllHoaDonXuat()]);
-                setKhoList(resKho || []);
-                setHoaDonXuatList(resHDX || []);
-            } catch (err) { message.error("Không tải được dữ liệu ban đầu!"); }
+                const [resKho, resHDX] = await Promise.all([
+                    KhoService.getAllKho(), 
+                    HoaDonXuatService.getAllHoaDonXuat()
+                ]);
+                setKhoList(resKho.data || []);
+                setHoaDonXuatList(resHDX.data || []);
+            } catch {
+                showLoadError('dữ liệu ban đầu'); 
+            }
         };
         fetchData();
         fetchLichSu();
@@ -154,24 +58,20 @@ const XuatKhoSP = () => {
         setSelectedKhoId(id_kho);
         form.setFieldsValue({ id_hd_xuat: null });
         setChiTietXuat([]);
-        if (id_kho) {
-            try {
-                const data = await getTonKhoSPByKho(id_kho);
-                setTonKhoTaiKhoChon(data || {});
-            } catch (error) { message.error("Không thể tải tồn kho của kho này!"); }
-        } else {
-            setTonKhoTaiKhoChon({});
-        }
     };
     
     const handleHoaDonChange = (id_hd_xuat) => {
         const hd = hoaDonXuatList.find(h => h.id_hd_xuat === id_hd_xuat);
-        setSelectedHD(hd);
-        if (hd && selectedKhoId) {
-            const chiTietCapNhat = hd.chiTiet.map(item => ({
-                ...item,
-                ton_kho: tonKhoTaiKhoChon[item.id_sp] || 0,
-                so_luong_xuat: Math.min(item.so_luong_hd, tonKhoTaiKhoChon[item.id_sp] || 0),
+        if (hd && selectedKhoId && hd.chiTiets) {
+            const chiTietCapNhat = hd.chiTiets.map((item, index) => ({
+                key: index + 1,
+                id_sp: item.id_sp,
+                ten_sp: item.sanPham?.ten_sp || 'N/A',
+                so_luong_hd: item.so_luong || 0,
+                ton_kho: 999999, // Backend will validate actual ton kho
+                so_luong_xuat: item.so_luong || 0,
+                id_qd: item.id_qd || null,
+                ten_dvt_dn: item.sanPham?.ten_dvt || 'N/A',
             }));
             setChiTietXuat(chiTietCapNhat);
         } else {
@@ -184,28 +84,54 @@ const XuatKhoSP = () => {
     };
 
     const onFinish = async (values) => {
-        const vuotTonKho = chiTietXuat.some(item => item.so_luong_xuat > item.ton_kho);
-        if(vuotTonKho) {
-            message.error("Số lượng xuất không được vượt quá tồn kho khả dụng!");
+        // Validation: Kiểm tra có chi tiết xuất không
+        if (chiTietXuat.length === 0) {
+            showError('Không có sản phẩm', 'Vui lòng chọn hóa đơn xuất để có danh sách sản phẩm');
             return;
         }
+
+        // Validation: Kiểm tra số lượng xuất
+        const tongSoLuongXuat = chiTietXuat.reduce((sum, item) => sum + (item.so_luong_xuat || 0), 0);
+        if (tongSoLuongXuat === 0) {
+            showError('Số lượng không hợp lệ', 'Tổng số lượng xuất phải lớn hơn 0');
+            return;
+        }
+
+        // Validation: Kiểm tra vượt tồn kho
+        const vuotTonKho = chiTietXuat.some(item => item.so_luong_xuat > item.ton_kho && item.ton_kho !== 999999);
+        if(vuotTonKho) {
+            showError('Số lượng xuất không hợp lệ', 'Số lượng xuất không được vượt quá tồn kho khả dụng');
+            return;
+        }
+
+        // Validation: Kiểm tra có sản phẩm nào chưa nhập số lượng
+        const chuaNhapSoLuong = chiTietXuat.some(item => !item.so_luong_xuat || item.so_luong_xuat <= 0);
+        if (chuaNhapSoLuong) {
+            showError('Số lượng không hợp lệ', 'Vui lòng nhập số lượng xuất cho tất cả sản phẩm');
+            return;
+        }
+
         setSubmitting(true);
         const payload = {
-            ...values,
+            id_kho: values.id_kho,
             ngay_xuat: dayjs(values.ngay_xuat).format("YYYY-MM-DD"),
-            chi_tiets: chiTietXuat.map(item => ({ id_sp: item.id_sp, so_luong: item.so_luong_xuat, id_qd: item.id_qd })),
+            chi_tiets: chiTietXuat.map(item => ({ 
+                id_sp: item.id_sp, 
+                so_luong: item.so_luong_xuat
+            })),
         };
         try {
             if (editingRecord) {
-                await updateXuatKhoSP(editingRecord.id_xuat, payload);
+                await XuatKhoSPService.updateXuatKhoSP(editingRecord.id_xuat, payload);
+                showUpdateSuccess('Phiếu xuất SP');
             } else {
-                await createXuatKhoSP(payload);
+                await XuatKhoSPService.createXuatKhoSP(payload);
+                showCreateSuccess('Phiếu xuất SP');
             }
-            message.success(`${editingRecord ? 'Cập nhật' : 'Tạo'} phiếu xuất thành công!`);
             cancelEdit();
             fetchLichSu();
-        } catch (error) {
-            message.error(`Lỗi khi ${editingRecord ? 'cập nhật' : 'tạo'} phiếu xuất!`);
+        } catch {
+            showSaveError('phiếu xuất SP');
         } finally {
             setSubmitting(false);
         }
@@ -220,23 +146,31 @@ const XuatKhoSP = () => {
         setTimeout(() => {
             form.setFieldsValue({
                 id_kho: record.kho.id_kho,
-                id_hd_xuat: record.hoaDonXuat.id_hd_xuat,
+                id_hd_xuat: record.hoaDonXuat?.id_hd_xuat,
                 ngay_xuat: dayjs(record.ngay_xuat),
             });
-            const hd = hoaDonXuatList.find(h => h.id_hd_xuat === record.hoaDonXuat.id_hd_xuat);
-            setSelectedHD(hd);
+            
+            if (record.hoaDonXuat) {
+                const hd = hoaDonXuatList.find(h => h.id_hd_xuat === record.hoaDonXuat.id_hd_xuat);
 
-            const chiTiet = hd.chiTiet.map(itemHD => {
-                const chiTietDaXuat = record.chiTietXuatKhoSPs.find(ctx => ctx.sanPham.id_sp === itemHD.id_sp);
-                const soLuongDaXuat = chiTietDaXuat ? chiTietDaXuat.so_luong : 0;
-                const tonKhoHienTai = tonKhoTaiKhoChon[itemHD.id_sp] || 0;
-                return {
-                    ...itemHD,
-                    ton_kho: tonKhoHienTai + soLuongDaXuat,
-                    so_luong_xuat: soLuongDaXuat,
+                if (hd && hd.chiTiets) {
+                    const chiTiet = hd.chiTiets.map((itemHD, index) => {
+                        const chiTietDaXuat = record.chiTiets?.find(ctx => ctx.sanPham?.id_sp === itemHD.id_sp);
+                        const soLuongDaXuat = chiTietDaXuat ? chiTietDaXuat.so_luong : 0;
+                        return {
+                            key: index + 1,
+                            id_sp: itemHD.id_sp,
+                            ten_sp: itemHD.sanPham?.ten_sp || 'N/A',
+                            so_luong_hd: itemHD.so_luong || 0,
+                            ton_kho: 999999, // Backend will validate
+                            so_luong_xuat: soLuongDaXuat,
+                            id_qd: itemHD.id_qd || null,
+                            ten_dvt_dn: itemHD.sanPham?.ten_dvt || 'N/A',
+                        }
+                    });
+                    setChiTietXuat(chiTiet);
                 }
-            });
-            setChiTietXuat(chiTiet);
+            }
         }, 100);
 
         window.scrollTo(0, 0);
@@ -244,10 +178,12 @@ const XuatKhoSP = () => {
 
     const handleDelete = async (id_xuat) => {
         try {
-            await deleteXuatKhoSP(id_xuat);
-            message.success(`Xóa phiếu xuất #${id_xuat} thành công!`);
+            await XuatKhoSPService.deleteXuatKhoSP(id_xuat);
+            showDeleteSuccess('Phiếu xuất SP');
             fetchLichSu();
-        } catch (error) { message.error("Lỗi khi xóa phiếu xuất!"); }
+        } catch {
+            showSaveError('phiếu xuất SP'); 
+        }
     };
     
     const cancelEdit = () => {
@@ -255,8 +191,6 @@ const XuatKhoSP = () => {
         form.resetFields();
         setChiTietXuat([]);
         setSelectedKhoId(null);
-        setSelectedHD(null);
-        setTonKhoTaiKhoChon({});
     };
 
     const columns = [
@@ -272,8 +206,10 @@ const XuatKhoSP = () => {
     ];
 
     const lichSuColumns = [
-        { title: 'Số phiếu', dataIndex: 'so_phieu' }, { title: 'Ngày xuất', dataIndex: 'ngay_xuat', render: (text) => dayjs(text).format('DD/MM/YYYY') },
-        { title: 'Kho xuất', dataIndex: ['kho', 'ten_kho'] }, { title: 'Hóa đơn liên quan', dataIndex: ['hoaDonXuat', 'so_hd'] },
+        { title: 'Số phiếu', dataIndex: 'so_phieu', render: (text, record) => text || `PXKSP-${record.id_xuat}` }, 
+        { title: 'Ngày xuất', dataIndex: 'ngay_xuat', render: (text) => dayjs(text).format('DD/MM/YYYY') },
+        { title: 'Kho xuất', dataIndex: ['kho', 'ten_kho'] }, 
+        { title: 'Hóa đơn liên quan', dataIndex: ['hoaDonXuat', 'so_hd'], render: (text) => text || 'N/A' },
         { title: 'Hành động', key: 'action', width: 220, align: 'center', render: (_, record) => (
             <Space>
                 <Button size="small" icon={<EyeOutlined />} onClick={() => showDrawer(record)}>Xem</Button>
@@ -288,7 +224,7 @@ const XuatKhoSP = () => {
         { title: 'Số lượng xuất', dataIndex: 'so_luong', align: 'right' },
     ];
     
-    const isSubmitDisabled = !selectedKhoId || chiTietXuat.length === 0 || chiTietXuat.some(item => item.so_luong_xuat > item.ton_kho) || chiTietXuat.reduce((sum, item) => sum + item.so_luong_xuat, 0) === 0;
+    const isSubmitDisabled = !selectedKhoId || chiTietXuat.length === 0 || chiTietXuat.some(item => item.so_luong_xuat > item.ton_kho && item.ton_kho !== 999999) || chiTietXuat.reduce((sum, item) => sum + item.so_luong_xuat, 0) === 0;
 
     return (
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
@@ -296,9 +232,9 @@ const XuatKhoSP = () => {
                 <Title level={3}>{editingRecord ? `Chỉnh sửa Phiếu Xuất kho SP #${editingRecord.so_phieu}` : 'Tạo Phiếu Xuất Kho Sản Phẩm'}</Title>
                  <Form form={form} layout="vertical" onFinish={onFinish}>
                     <Row gutter={24}>
-                        <Col span={8}><Form.Item label="Kho xuất hàng" name="id_kho" rules={[{ required: true }]}><Select placeholder="-- Chọn kho trước --" onChange={handleKhoChange} disabled={!!editingRecord}>{khoList.map(k => <Option key={k.id_kho} value={k.id_kho}>{k.ten_kho}</Option>)}</Select></Form.Item></Col>
-                        <Col span={8}><Form.Item label="Hóa đơn xuất" name="id_hd_xuat" rules={[{ required: true }]}><Select placeholder="Chọn hóa đơn" onChange={handleHoaDonChange} disabled={!selectedKhoId}>{hoaDonXuatList.map(hd => <Option key={hd.id_hd_xuat} value={hd.id_hd_xuat}>{hd.so_hd}</Option>)}</Select></Form.Item></Col>
-                        <Col span={8}><Form.Item label="Ngày xuất kho" name="ngay_xuat" rules={[{ required: true }]}><DatePicker style={{ width: '100%' }} /></Form.Item></Col>
+                        <Col span={8}><Form.Item label="Kho xuất hàng" name="id_kho" rules={[requiredSelectRule('kho xuất')]}><Select placeholder="-- Chọn kho trước --" onChange={handleKhoChange} disabled={!!editingRecord}>{khoList.map(k => <Option key={k.id_kho} value={k.id_kho}>{k.ten_kho}</Option>)}</Select></Form.Item></Col>
+                        <Col span={8}><Form.Item label="Hóa đơn xuất" name="id_hd_xuat" rules={[requiredSelectRule('hóa đơn xuất')]}><Select placeholder="Chọn hóa đơn" onChange={handleHoaDonChange} disabled={!selectedKhoId}>{hoaDonXuatList.map(hd => <Option key={hd.id_hd_xuat} value={hd.id_hd_xuat}>{hd.so_hd}</Option>)}</Select></Form.Item></Col>
+                        <Col span={8}><Form.Item label="Ngày xuất kho" name="ngay_xuat" rules={pastDateRules('ngày xuất')}><DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="Chọn ngày xuất" /></Form.Item></Col>
                     </Row>
                     <Title level={4}>Chi tiết Sản Phẩm Xuất Kho</Title>
                     <Table columns={columns} dataSource={chiTietXuat} pagination={false} rowKey="key" bordered/>
@@ -317,15 +253,15 @@ const XuatKhoSP = () => {
                 <Table columns={lichSuColumns} dataSource={lichSuPhieu} rowKey="id_xuat" loading={loadingLichSu} />
             </Card>
 
-            <Drawer title={`Chi tiết Phiếu xuất: ${selectedPhieu?.so_phieu}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
+            <Drawer title={`Chi tiết Phiếu xuất: ${selectedPhieu?.so_phieu || `PXKSP-${selectedPhieu?.id_xuat}`}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
                 {selectedPhieu && <>
                     <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
                         <Descriptions.Item label="Ngày xuất">{dayjs(selectedPhieu.ngay_xuat).format('DD/MM/YYYY')}</Descriptions.Item>
-                        <Descriptions.Item label="Kho xuất">{selectedPhieu.kho.ten_kho}</Descriptions.Item>
-                        <Descriptions.Item label="Hóa đơn liên quan">{selectedPhieu.hoaDonXuat.so_hd}</Descriptions.Item>
+                        <Descriptions.Item label="Kho xuất">{selectedPhieu.kho?.ten_kho}</Descriptions.Item>
+                        <Descriptions.Item label="Hóa đơn liên quan">{selectedPhieu.hoaDonXuat?.so_hd || 'N/A'}</Descriptions.Item>
                     </Descriptions>
                     <Title level={5}>Danh sách sản phẩm đã xuất</Title>
-                    <Table columns={chiTietColumns} dataSource={selectedPhieu.chiTietXuatKhoSPs} rowKey="id_ct" pagination={false} size="small" bordered />
+                    <Table columns={chiTietColumns} dataSource={selectedPhieu.chiTiets || []} rowKey="id_ct" pagination={false} size="small" bordered />
                 </>}
             </Drawer>
         </Space>

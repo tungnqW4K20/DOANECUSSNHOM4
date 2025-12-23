@@ -1386,3 +1386,214 @@ body {
     max-width: 100%;
   }
 }
+
+/* ========================================
+   🪟 DRAWER & MODAL SCROLL FIX
+   Fix scroll issue: Only content scrolls, not entire popup
+   Popup stays centered and fits screen
+   ======================================== */
+
+/* Drawer Width Enhancement */
+.ant-drawer-content-wrapper {
+  min-width: 700px !important;
+}
+
+/* Drawer stays within viewport */
+.ant-drawer-content {
+  display: flex;
+  flex-direction: column;
+  height: 100vh !important;
+  max-height: 100vh !important;
+}
+
+.ant-drawer-header {
+  flex-shrink: 0 !important;
+  padding: 20px 24px !important;
+}
+
+.ant-drawer-body {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 24px !important;
+}
+
+.ant-drawer-footer {
+  flex-shrink: 0 !important;
+  border-top: 1px solid var(--border-color) !important;
+  padding: 16px 24px !important;
+  background: var(--bg-white);
+}
+
+/* Modal Width Enhancement - Larger default width */
+.ant-modal {
+  max-width: 90vw !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  padding-bottom: 0 !important;
+}
+
+.ant-modal-content {
+  min-width: 600px !important;
+  max-height: 90vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.ant-modal-header {
+  flex-shrink: 0 !important;
+  padding: 20px 24px !important;
+}
+
+/* Modal Body Scroll Fix - Only body scrolls */
+.ant-modal-body {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 24px !important;
+}
+
+/* Modal footer stays at bottom */
+.ant-modal-footer {
+  flex-shrink: 0 !important;
+  padding: 16px 24px !important;
+  border-top: 1px solid var(--border-color) !important;
+}
+
+/* Prevent body scroll when drawer/modal is open */
+body.ant-scrolling-effect {
+  overflow: hidden !important;
+}
+
+/* Modal mask - prevent scrolling */
+.ant-modal-wrap {
+  overflow: hidden !important;
+}
+
+/* Smooth scrolling for drawer/modal content */
+.ant-drawer-body,
+.ant-modal-body {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for drawer/modal */
+.ant-drawer-body::-webkit-scrollbar,
+.ant-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ant-drawer-body::-webkit-scrollbar-track,
+.ant-modal-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: var(--radius-full);
+}
+
+.ant-drawer-body::-webkit-scrollbar-thumb,
+.ant-modal-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--primary-400) 0%, var(--primary-600) 100%);
+  border-radius: var(--radius-full);
+}
+
+.ant-drawer-body::-webkit-scrollbar-thumb:hover,
+.ant-modal-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--primary-500) 0%, var(--primary-700) 100%);
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  .ant-drawer-content-wrapper {
+    min-width: 100vw !important;
+    width: 100vw !important;
+  }
+  
+  .ant-drawer-body {
+    padding: 16px !important;
+  }
+  
+  .ant-modal {
+    max-width: 95vw !important;
+    margin: 0 auto !important;
+  }
+  
+  .ant-modal-content {
+    min-width: auto !important;
+    max-height: 95vh !important;
+  }
+  
+  .ant-modal-body {
+    padding: 16px !important;
+  }
+}
+
+/* Ensure drawer stays within viewport */
+.ant-drawer-content-wrapper {
+  max-height: 100vh !important;
+}
+
+/* Ensure modal stays centered and within viewport */
+.ant-modal-wrap {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+
+.ant-modal {
+  position: relative !important;
+  top: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Fix for tables inside drawer/modal */
+.ant-drawer-body .ant-table-wrapper,
+.ant-modal-body .ant-table-wrapper {
+  margin: -8px 0;
+}
+
+.ant-drawer-body .ant-table,
+.ant-modal-body .ant-table {
+  font-size: 14px;
+}
+
+.ant-drawer-body .ant-table-thead > tr > th,
+.ant-modal-body .ant-table-thead > tr > th {
+  padding: 12px 8px !important;
+  white-space: nowrap;
+}
+
+.ant-drawer-body .ant-table-tbody > tr > td,
+.ant-modal-body .ant-table-tbody > tr > td {
+  padding: 10px 8px !important;
+}
+
+/* Fix for forms inside drawer/modal */
+.ant-drawer-body .ant-form,
+.ant-modal-body .ant-form {
+  max-width: 100%;
+}
+
+.ant-drawer-body .ant-form-item,
+.ant-modal-body .ant-form-item {
+  margin-bottom: 16px;
+}
+
+/* Better spacing for form rows */
+.ant-drawer-body .ant-row,
+.ant-modal-body .ant-row {
+  margin-left: -8px;
+  margin-right: -8px;
+}
+
+.ant-drawer-body .ant-col,
+.ant-modal-body .ant-col {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+/* Fade in animation for drawer/modal content */
+.ant-drawer-body > *,
+.ant-modal-body > * {
+  animation: fadeInUp 0.3s ease-out;
+}
