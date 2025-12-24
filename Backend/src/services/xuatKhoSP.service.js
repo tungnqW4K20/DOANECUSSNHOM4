@@ -67,10 +67,15 @@ const createXuatSP = async ({ id_kho, ngay_xuat, file_phieu, chi_tiets }) => {
   }
 };
 
-const getAllXuatSP = async () => {
+const getAllXuatSP = async (id_dn) => {
   return await XuatKhoSP.findAll({
     include: [
-      { model: Kho, as: 'kho' },
+      { 
+        model: Kho, 
+        as: 'kho',
+        where: { id_dn },
+        required: true
+      },
       { model: HoaDonXuat, as: 'hoaDonXuat' },
       { model: XuatKhoSPChiTiet, as: 'chiTiets', include: [{ model: SanPham, as: 'sanPham' }] }
     ],

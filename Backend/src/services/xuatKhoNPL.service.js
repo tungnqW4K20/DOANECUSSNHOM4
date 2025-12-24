@@ -136,10 +136,15 @@ const createXuatNPL = async ({ id_kho, ngay_xuat, file_phieu, chi_tiets }) => {
   }
 };
 
-const getAllXuatNPL = async () => {
+const getAllXuatNPL = async (id_dn) => {
   return await XuatKhoNPL.findAll({
     include: [
-      { model: Kho, as: 'kho' },
+      { 
+        model: Kho, 
+        as: 'kho',
+        where: { id_dn },
+        required: true
+      },
       { model: XuatKhoNPLChiTiet, as: 'chiTiets', include: [{ model: NguyenPhuLieu, as: 'nguyenPhuLieu' }] }
     ],
     order: [['id_xuat', 'DESC']]

@@ -59,10 +59,15 @@ const createNhapSP = async ({ id_kho, ngay_nhap, file_phieu, chi_tiets }) => {
     throw err;
   }
 };
-const getAllNhapSP = async () => {
+const getAllNhapSP = async (id_dn) => {
   return await NhapKhoSP.findAll({
     include: [
-      { model: Kho, as: 'kho' },
+      { 
+        model: Kho, 
+        as: 'kho',
+        where: { id_dn },
+        required: true
+      },
       { model: NhapKhoSPChiTiet, as: 'chiTiets', include: [{ model: SanPham, as: 'sanPham' }] }
     ],
     order: [['id_nhap', 'DESC']]

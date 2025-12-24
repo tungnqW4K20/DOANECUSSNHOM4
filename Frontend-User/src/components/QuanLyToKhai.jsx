@@ -168,15 +168,71 @@ const QuanLyToKhai = ({ type }) => {
         setIsCrudModalOpen(true);
     };
     
-    const handleCrudSave = () => { 
+    // Cập nhật selectedToKhai khi dataSource thay đổi
+    useEffect(() => {
+        if (selectedToKhai && dataSource.length > 0) {
+            const updatedToKhai = dataSource.find(item => item.id === selectedToKhai.id);
+            if (updatedToKhai && JSON.stringify(updatedToKhai) !== JSON.stringify(selectedToKhai)) {
+                setSelectedToKhai(updatedToKhai);
+            }
+        }
+    }, [dataSource]);
+
+    const handleCrudSave = async () => { 
         const { type, record } = crudModalContent;
         const typeMap = { loHang: 'Lô hàng', hoaDon: 'Hóa đơn', vanDon: 'Vận đơn' };
-        if (record) {
-            showUpdateSuccess(typeMap[type]);
-        } else {
-            showUpdateSuccess(typeMap[type]);
+        
+        try {
+            const values = await crudForm.validateFields();
+            
+            // Format dates
+            const formattedValues = { ...values };
+            if (values.ngay_dong_goi) formattedValues.ngay_dong_goi = dayjs(values.ngay_dong_goi).format('YYYY-MM-DD');
+            if (values.ngay_xuat_cang) formattedValues.ngay_xuat_cang = dayjs(values.ngay_xuat_cang).format('YYYY-MM-DD');
+            if (values.ngay_hd) formattedValues.ngay_hd = dayjs(values.ngay_hd).format('YYYY-MM-DD');
+            if (values.ngay_phat_hanh) formattedValues.ngay_phat_hanh = dayjs(values.ngay_phat_hanh).format('YYYY-MM-DD');
+            
+            // Add chi tiết for hóa đơn
+            if (type === 'hoaDon') {
+                formattedValues.chi_tiets = hoaDonChiTiet.map(ct => ({
+                    id_npl: ct.id_npl,
+                    id_sp: ct.id_sp,
+                    so_luong: ct.so_luong,
+                    don_gia: ct.don_gia,
+                    tri_gia: (ct.so_luong || 0) * (ct.don_gia || 0)
+                }));
+            }
+            
+            if (record) {
+                // Update existing record
+                if (type === 'loHang') {
+                    await ToKhaiService.updateLoHang(record.id_lh, formattedValues);
+                } else if (type === 'hoaDon') {
+                    const idField = selectedToKhai?.loai === 'Nhập' ? record.id_hd_nhap : record.id_hd_xuat;
+                    if (selectedToKhai?.loai === 'Nhập') {
+                        await ToKhaiService.updateHoaDonNhap(idField, formattedValues);
+                    } else {
+                        await ToKhaiService.updateHoaDonXuat(idField, formattedValues);
+                    }
+                } else if (type === 'vanDon') {
+                    if (selectedToKhai?.loai === 'Nhập') {
+                        await ToKhaiService.updateVanDonNhap(record.id_vd, formattedValues);
+                    } else {
+                        await ToKhaiService.updateVanDonXuat(record.id_vd, formattedValues);
+                    }
+                }
+                showUpdateSuccess(typeMap[type]);
+            } else {
+                // Create new - not implemented in this component
+                showUpdateSuccess(typeMap[type]);
+            }
+            
+            setIsCrudModalOpen(false);
+            fetchToKhaiData(); // Refresh data - useEffect sẽ tự động cập nhật selectedToKhai
+        } catch (error) {
+            console.error('Error saving:', error);
+            showLoadError(`cập nhật ${typeMap[type]}`);
         }
-        setIsCrudModalOpen(false); 
     };
     const showDrawer = (record) => { setSelectedToKhai(record); setIsDrawerOpen(true); };
     const showChiTietDrawer = (hoaDon) => { setSelectedHoaDon(hoaDon); setIsChiTietDrawerOpen(true); };
@@ -254,7 +310,7 @@ const QuanLyToKhai = ({ type }) => {
         { title: 'Số Tờ khai', dataIndex: 'so_tk' }, 
         // { title: 'Loại', dataIndex: 'loai', render: (text) => <Tag color={text === 'Nhập' ? 'blue' : 'green'}>{text.toUpperCase()}</Tag> },
         { title: 'Số Hợp đồng', dataIndex: 'so_hd' }, { title: 'Ngày khai', dataIndex: 'ngay_tk' },
-        { title: 'Trạng thái', dataIndex: 'trang_thai', render: text => <Tag color={text === "Thông quan" ? "success" : "processing"}>{text}</Tag> },
+        // { title: 'Trạng thái', dataIndex: 'trang_thai', render: text => <Tag color={text === "Thông quan" ? "success" : "processing"}>{text}</Tag> },
         { title: 'Hành động', key: 'action', align: 'center', render: (_, record) => (
             <Space>
                 <Button icon={<FolderOpenOutlined />} onClick={() => showDrawer(record)}>Chi tiết</Button>

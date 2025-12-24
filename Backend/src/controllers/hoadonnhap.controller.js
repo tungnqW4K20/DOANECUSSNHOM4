@@ -66,4 +66,20 @@ const remove = async (req, res) => {
   }
 };
 
-module.exports = { create, getAll, getById, remove };
+const update = async (req, res) => {
+  try {
+    const id_dn = req.user?.id;
+    const role = req.user?.role;
+
+    if (!id_dn && role !== 'Admin') {
+      return res.status(400).json({ success: false, message: 'Thiếu thông tin xác thực' });
+    }
+
+    const result = await service.updateHDN(req.params.id_hd_nhap, req.body, id_dn, role);
+    res.json({ success: true, message: 'Cập nhật hóa đơn nhập thành công', data: result });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+};
+
+module.exports = { create, getAll, getById, remove, update };

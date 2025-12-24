@@ -163,10 +163,15 @@ const createNhapNPL = async ({ id_kho, id_hd_nhap, ngay_nhap, file_phieu, chi_ti
   }
 };
 
-const getAllNhapNPL = async () => {
+const getAllNhapNPL = async (id_dn) => {
   return await NhapKhoNPL.findAll({
     include: [
-      { model: Kho, as: 'kho' },
+      { 
+        model: Kho, 
+        as: 'kho',
+        where: { id_dn },
+        required: true
+      },
       { model: HoaDonNhap, as: 'hoaDonNhap' },
       { model: NhapKhoNPLChiTiet, as: 'chiTiets', include: [{ model: NguyenPhuLieu, as: 'nguyenPhuLieu' }] }
     ],
