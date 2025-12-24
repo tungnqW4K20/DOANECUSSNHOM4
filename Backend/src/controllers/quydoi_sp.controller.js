@@ -4,7 +4,14 @@ const quyDoiSPService = require('../services/quydoi_sp.service');
 
 const create = async (req, res) => {
   try {
-    const { id_sp, ten_dvt_sp, id_dvt_hq, he_so, id_dn } = req.body;
+    const { id_sp, ten_dvt_sp, id_dvt_hq, he_so } = req.body;
+    
+    // Lấy id_dn từ user đang đăng nhập (có thể là id_dn hoặc id)
+    const id_dn = req.user?.id_dn || req.user?.id;
+    if (!id_dn) {
+      return res.status(400).json({ success: false, message: "Không xác định được doanh nghiệp" });
+    }
+    
     const result = await quyDoiSPService.createQD({ id_sp, ten_dvt_sp, id_dvt_hq, he_so, id_dn });
     res.status(201).json({ success: true, message: "Tạo quy đổi sản phẩm thành công", data: result });
   } catch (error) {

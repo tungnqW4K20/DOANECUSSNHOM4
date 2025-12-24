@@ -9,7 +9,7 @@ const getHopDong = async (req, res) => {
     }
 
     const data = await thanhKhoanService.getHopDongByDN(id_dn);
-    res.json(data);
+    res.json({ data });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -23,7 +23,7 @@ const calculate = async (req, res) => {
     }
 
     const data = await thanhKhoanService.calculateBaoCao(req.body, id_dn);
-    res.json(data);
+    res.json({ data });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

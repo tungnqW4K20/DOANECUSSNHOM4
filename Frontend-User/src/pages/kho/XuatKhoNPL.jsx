@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Select, DatePicker, Button, Table, InputNumber, Upload, Typography, Popconfirm, Row, Col, Card, Space, Drawer, Descriptions, Tag } from 'antd';
+import { Form, Select, DatePicker, Button, Table, InputNumber, Upload, Typography, Popconfirm, Row, Col, Card, Space, Drawer, Descriptions } from 'antd';
 import { SaveOutlined, PlusOutlined, DeleteOutlined, EyeOutlined, EditOutlined, CloseCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import * as XuatKhoNPLService from '../../services/xuatkhonpl.service';
+import { getAllKho } from '../../services/kho.service';
 import axios from 'axios';
 import { showCreateSuccess, showUpdateSuccess, showDeleteSuccess, showLoadError, showSaveError, showWarning } from '../../components/notification';
 
@@ -16,24 +17,18 @@ const getAuthHeader = () => {
     return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-const getAllKho = async () => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/kho`, {
-            headers: getAuthHeader()
-        });
-        return response.data.data || [];
-    } catch (error) {
-        throw error.response?.data || error;
-    }
-};
-
 const getTonKhoNPLByKho = async (id_kho) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/ton-kho-npl/kho/${id_kho}`, {
+        // Gọi API mới: GET /api/kho/:id_kho/ton-kho-npl
+        const response = await axios.get(`${API_BASE_URL}/kho/${id_kho}/ton-kho-npl`, {
             headers: getAuthHeader()
         });
-        return response.data.data || [];
+        // Xử lý response có thể là { success, data } hoặc array trực tiếp
+        const data = response.data?.data || response.data || [];
+        console.log("Tồn kho NPL:", data);
+        return Array.isArray(data) ? data : [];
     } catch (error) {
+        console.error("Lỗi getTonKhoNPLByKho:", error);
         throw error.response?.data || error;
     }
 };
@@ -71,8 +66,10 @@ const XuatKhoNPL = () => {
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
-                const khoData = await getAllKho();
-                setKhoList(khoData || []);
+                const res = await getAllKho();
+                // Xử lý response có thể là { success, data } hoặc array trực tiếp
+                const khoData = res?.data || res || [];
+                setKhoList(Array.isArray(khoData) ? khoData : []);
             } catch (err) {
                 if (err.status === 401) {
                     showWarning('Phiên làm việc hết hạn', 'Vui lòng đăng nhập lại');
@@ -138,13 +135,16 @@ const XuatKhoNPL = () => {
     const handleEdit = async (record) => {
         setEditingRecord(record);
         // Phải await để đảm bảo nplTrongKho được cập nhật trước khi set chi tiết
-        await handleKhoChange(record.kho.id_kho);
+        await handleKhoChange(record.kho?.id_kho);
         
         form.setFieldsValue({
-            id_kho: record.kho.id_kho,
+            id_kho: record.kho?.id_kho,
             ngay_xuat: dayjs(record.ngay_xuat),
         });
 
+        // Backend trả về chiTiets, không phải chiTietXuatKhoNPLs
+        const chiTiets = record.chiTiets || [];
+        
         // Cần setTimeout nhỏ để đợi state nplTrongKho cập nhật xong sau khi await
         setTimeout(() => {
             const tonKhoHienTai = (nplTrongKho || []).reduce((acc, item) => {
@@ -152,15 +152,15 @@ const XuatKhoNPL = () => {
                 return acc;
             }, {});
 
-            const chiTiet = record.chiTietXuatKhoNPLs.map(item => {
-                const tonKho = tonKhoHienTai[item.nguyenPhuLieu.id_npl] || 0;
+            const chiTiet = chiTiets.map((item, index) => {
+                const tonKho = tonKhoHienTai[item.nguyenPhuLieu?.id_npl] || 0;
                 return {
-                    key: item.id_ct,
-                    id_npl: item.nguyenPhuLieu.id_npl,
+                    key: item.id_ct || index,
+                    id_npl: item.nguyenPhuLieu?.id_npl,
                     so_luong: item.so_luong,
                     // Tồn kho khả dụng khi sửa = tồn kho hiện tại + lượng đã xuất của chính phiếu này
                     ton_kho: tonKho + item.so_luong,
-                    don_vi: item.nguyenPhuLieu.don_vi || '',
+                    don_vi: item.nguyenPhuLieu?.don_vi || '',
                 }
             });
             setChiTietXuat(chiTiet);
@@ -210,7 +210,10 @@ const XuatKhoNPL = () => {
             id_kho: values.id_kho,
             ngay_xuat: dayjs(values.ngay_xuat).format("YYYY-MM-DD"),
             file_phieu: null,
-            chi_tiets: chiTietXuat.map(({ key, ton_kho, don_vi, ...rest }) => rest)
+            chi_tiets: chiTietXuat.map((item) => ({
+                id_npl: item.id_npl,
+                so_luong: item.so_luong
+            }))
         };
         
         try {
@@ -261,7 +264,7 @@ const XuatKhoNPL = () => {
     return (
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <Card bordered={false}>
-                <Title level={3}>{editingRecord ? `Chỉnh sửa Phiếu Xuất kho NPL #${editingRecord.so_phieu}` : 'Tạo Phiếu Xuất Kho NPL (cho Sản xuất)'}</Title>
+                <Title level={3}>{editingRecord ? `Chỉnh sửa Phiếu Xuất kho NPL #${editingRecord.so_phieu || `PXKNPL-${editingRecord.id_xuat}`}` : 'Tạo Phiếu Xuất Kho NPL (cho Sản xuất)'}</Title>
                 <Form form={form} layout="vertical" onFinish={onFinish}>
                     <Row gutter={24}>
                         <Col span={12}><Form.Item label="Kho xuất hàng" name="id_kho" rules={[{ required: true, message: "Vui lòng chọn kho xuất" }]}><Select placeholder={editingRecord ? null : "-- Trước tiên, hãy chọn kho --"} onChange={handleKhoChange} disabled={!!editingRecord}>{khoList.map(k => <Option key={k.id_kho} value={k.id_kho}>{k.ten_kho}</Option>)}</Select></Form.Item></Col>
@@ -286,14 +289,14 @@ const XuatKhoNPL = () => {
                 <Table columns={lichSuColumns} dataSource={lichSuPhieu} rowKey="id_xuat" loading={loadingLichSu} />
             </Card>
 
-            <Drawer title={`Chi tiết Phiếu xuất: ${selectedPhieu?.so_phieu}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
+            <Drawer title={`Chi tiết Phiếu xuất: ${selectedPhieu?.so_phieu || `PXKNPL-${selectedPhieu?.id_xuat}`}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
                 {selectedPhieu && <>
                     <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
                         <Descriptions.Item label="Ngày xuất">{dayjs(selectedPhieu.ngay_xuat).format('DD/MM/YYYY')}</Descriptions.Item>
-                        <Descriptions.Item label="Kho xuất">{selectedPhieu.kho.ten_kho}</Descriptions.Item>
+                        <Descriptions.Item label="Kho xuất">{selectedPhieu.kho?.ten_kho}</Descriptions.Item>
                     </Descriptions>
                     <Title level={5}>Danh sách NPL đã xuất</Title>
-                    <Table columns={chiTietColumns} dataSource={selectedPhieu.chiTietXuatKhoNPLs} rowKey="id_ct" pagination={false} size="small" bordered />
+                    <Table columns={chiTietColumns} dataSource={selectedPhieu.chiTiets || []} rowKey="id_ct" pagination={false} size="small" bordered />
                 </>}
             </Drawer>
         </Space>

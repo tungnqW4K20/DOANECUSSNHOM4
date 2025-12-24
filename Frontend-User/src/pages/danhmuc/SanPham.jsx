@@ -141,10 +141,11 @@ const SanPham = () => {
      🟢 CỘT TABLE
   ============================================================ */
   const columns = [
-    { title: "Mã SP", dataIndex: "id_sp", key: "id_sp", sorter: (a, b) => a.id_sp - b.id_sp },
+    { title: "Mã SP", dataIndex: "id_sp", key: "id_sp", sorter: (a, b) => a.id_sp - b.id_sp, width: 100 },
     { title: "Tên sản phẩm", dataIndex: "ten_sp", key: "ten_sp" },
     { title: "Mô tả", dataIndex: "mo_ta", key: "mo_ta" },
     { title: "Đơn vị tính HQ", dataIndex: "ten_dvt", key: "ten_dvt" },
+    { title: "Doanh nghiệp", key: "ten_dn", render: (_, record) => record.doanhNghiep?.ten_dn || "—" },
     {
       title: "Hành động",
       key: "action",

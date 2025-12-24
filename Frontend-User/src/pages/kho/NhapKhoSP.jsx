@@ -143,15 +143,17 @@ const NhapKhoSP = () => {
     const handleEdit = (record) => {
         setEditingRecord(record);
         form.setFieldsValue({
-            id_kho: record.kho.id_kho,
+            id_kho: record.kho?.id_kho,
             ngay_nhap: dayjs(record.ngay_nhap),
         });
-        setChiTietNhap(record.chiTietNhapKhoSPs.map(item => ({
-            key: item.id_ct,
-            id_sp: item.sanPham.id_sp,
+        // Backend trả về chiTiets, không phải chiTietNhapKhoSPs
+        const chiTiets = record.chiTiets || [];
+        setChiTietNhap(chiTiets.map((item, index) => ({
+            key: item.id_ct || index,
+            id_sp: item.sanPham?.id_sp,
             so_luong: item.so_luong,
         })));
-        window.scrollTo(0, 0); // Cuộn lên đầu trang để người dùng thấy form
+        window.scrollTo(0, 0);
     };
 
     const handleDelete = async (id_nhap) => {
@@ -286,7 +288,7 @@ const NhapKhoSP = () => {
     return (
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <Card bordered={false}>
-                <Title level={3}>{editingRecord ? `Chỉnh sửa Phiếu Nhập kho SP #${editingRecord.so_phieu}` : 'Tạo Phiếu Nhập Kho Sản Phẩm (Thành phẩm)'}</Title>
+                <Title level={3}>{editingRecord ? `Chỉnh sửa Phiếu Nhập kho SP #${editingRecord.so_phieu || `PNKSP-${editingRecord.id_nhap}`}` : 'Tạo Phiếu Nhập Kho Sản Phẩm (Thành phẩm)'}</Title>
                 <Form form={form} layout="vertical" onFinish={onFinish}>
                     <Row gutter={24}>
                         <Col span={12}>
@@ -325,14 +327,14 @@ const NhapKhoSP = () => {
                 <Table columns={lichSuColumns} dataSource={lichSuPhieu} rowKey="id_nhap" loading={loadingLichSu} />
             </Card>
 
-            <Drawer title={`Chi tiết Phiếu nhập: ${selectedPhieu?.so_phieu}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
+            <Drawer title={`Chi tiết Phiếu nhập: ${selectedPhieu?.so_phieu || `PNKSP-${selectedPhieu?.id_nhap}`}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
                 {selectedPhieu && <>
                     <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
                         <Descriptions.Item label="Ngày nhập">{dayjs(selectedPhieu.ngay_nhap).format('DD/MM/YYYY')}</Descriptions.Item>
-                        <Descriptions.Item label="Kho nhận">{selectedPhieu.kho.ten_kho}</Descriptions.Item>
+                        <Descriptions.Item label="Kho nhận">{selectedPhieu.kho?.ten_kho}</Descriptions.Item>
                     </Descriptions>
                     <Title level={5}>Danh sách sản phẩm đã nhập</Title>
-                    <Table columns={chiTietColumns} dataSource={selectedPhieu.chiTietNhapKhoSPs} rowKey="id_ct" pagination={false} size="small" bordered />
+                    <Table columns={chiTietColumns} dataSource={selectedPhieu.chiTiets || []} rowKey="id_ct" pagination={false} size="small" bordered />
                 </>}
             </Drawer>
         </Space>

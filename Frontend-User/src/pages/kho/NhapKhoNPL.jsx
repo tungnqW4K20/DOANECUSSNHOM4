@@ -21,9 +21,10 @@ import dayjs from "dayjs";
 import { uploadSingleFile } from "../../services/upload.service";
 import { getAllHoaDonNhap, getHoaDonNhapById } from "../../services/hoadonnhap.service";
 import { getAllKho } from "../../services/kho.service";
-import { getAllNhapKhoNPL, createNhapKhoNPL, addChiTietNhapKhoNPL } from "../../services/nhapkhonpl.service";
+import { getAllNhapKhoNPL, createNhapKhoNPL, updateNhapKhoNPL, deleteNhapKhoNPL } from "../../services/nhapkhonpl.service";
 import { 
-    showCreateSuccess, 
+    showCreateSuccess,
+    showUpdateSuccess,
     showDeleteSuccess, 
     showLoadError, 
     showSaveError,
@@ -59,7 +60,7 @@ const NhapKhoNPL = () => {
         try {
             const data = await getAllNhapKhoNPL();
             setLichSuPhieu(data || []);
-        } catch (err) {
+        } catch {
             showLoadError('lịch sử phiếu nhập NPL');
         } finally {
             setLoadingLichSu(false);
@@ -77,7 +78,8 @@ const NhapKhoNPL = () => {
                     getAllKho(),
                 ]);
                 setHoaDonNhapList(resHDN || []);
-                setKhoList(resKho || []);
+                // getAllKho trả về { data: [...] }, cần lấy resKho.data
+                setKhoList(resKho?.data || []);
             } catch (err) {
                 console.error(err);
                 showLoadError('dữ liệu hóa đơn nhập và kho');
@@ -95,13 +97,19 @@ const NhapKhoNPL = () => {
             const res = await getHoaDonNhapById(id_hd_nhap);
             console.log("Chi tiết HĐN:", res);
 
-            const chiTiet = (res?.chiTiets || []).map((item, index) => ({
+            // Lấy data từ response (có thể là res.data hoặc res trực tiếp)
+            const hoaDonData = res?.data || res;
+            const chiTiets = hoaDonData?.chiTiets || [];
+
+            const chiTiet = chiTiets.map((item, index) => ({
                 key: index + 1,
-                id_npl: item.nguyenPhuLieu.id_npl,
-                ten_npl: item.nguyenPhuLieu.ten_npl,
+                id_npl: item.nguyenPhuLieu?.id_npl || item.id_npl,
+                ten_npl: item.nguyenPhuLieu?.ten_npl || item.ten_npl || 'N/A',
                 so_luong_hd: item.so_luong,
                 so_luong_nhap: item.so_luong, // mặc định bằng số lượng theo HĐ
             }));
+            
+            console.log("Chi tiết NPL đã xử lý:", chiTiet);
             setChiTietNhap(chiTiet);
         } catch (err) {
             console.error(err);
@@ -147,24 +155,31 @@ const NhapKhoNPL = () => {
     const handleEdit = (record) => {
         setEditingRecord(record);
         form.setFieldsValue({
-            id_hd_nhap: record.hoaDonNhap.id_hd_nhap,
-            id_kho: record.kho.id_kho,
+            id_hd_nhap: record.hoaDonNhap?.id_hd_nhap,
+            id_kho: record.kho?.id_kho,
             ngay_nhap: dayjs(record.ngay_nhap),
         });
-        setChiTietNhap(record.chiTietNhapKhoNPLs.map(item => ({
-            key: item.id_ct,
-            id_npl: item.nguyenPhuLieu.id_npl,
-            ten_npl: item.nguyenPhuLieu.ten_npl,
-            so_luong_hd: item.so_luong, // Giả sử SL hóa đơn bằng SL nhập
+        // Backend trả về chiTiets, không phải chiTietNhapKhoNPLs
+        const chiTiets = record.chiTiets || [];
+        setChiTietNhap(chiTiets.map((item, index) => ({
+            key: item.id_ct || index,
+            id_npl: item.nguyenPhuLieu?.id_npl,
+            ten_npl: item.nguyenPhuLieu?.ten_npl,
+            so_luong_hd: item.so_luong,
             so_luong_nhap: item.so_luong,
         })));
-        window.scrollTo(0, 0); // Cuộn lên đầu trang
+        window.scrollTo(0, 0);
     };
 
-    const handleDelete = () => {
-        // Logic gọi API xóa
-        showDeleteSuccess('Phiếu nhập NPL');
-        // fetchLichSu();
+    const handleDelete = async (id_nhap) => {
+        try {
+            await deleteNhapKhoNPL(id_nhap);
+            showDeleteSuccess('Phiếu nhập NPL');
+            fetchLichSu(); // Refresh danh sách
+        } catch (err) {
+            console.error(err);
+            showSaveError('xóa phiếu nhập NPL');
+        }
     };
 
     const cancelEdit = () => {
@@ -174,11 +189,11 @@ const NhapKhoNPL = () => {
     };
 
     /* ============================================================
-       🟢 SUBMIT FORM — TẠO PHIẾU NHẬP KHO
+       🟢 SUBMIT FORM — TẠO/CẬP NHẬT PHIẾU NHẬP KHO
     ============================================================ */
     const onFinish = async (values) => {
         console.log("values-----------------", values)
-            console.log("values----------------- 🟢 Chi tiết NPL:", chiTietNhap);
+        console.log("values----------------- 🟢 Chi tiết NPL:", chiTietNhap);
 
         if (!chiTietNhap.length) {
             showWarning('Vui lòng chọn hóa đơn nhập', 'Cần có chi tiết NPL để tạo phiếu nhập kho');
@@ -200,37 +215,32 @@ const NhapKhoNPL = () => {
         try {
             setSubmitting(true);
 
-            // 1️⃣ Tạo phiếu nhập NPL
-            const resPhieu = await createNhapKhoNPL(payloadPhieu);
-            if (!resPhieu?.success || !resPhieu?.data?.id_nhap) {
-                showSaveError('phiếu nhập NPL');
-                return;
-            }
-
-            const id_nhap = resPhieu.data.id_nhap;
-            console.log("✅ Đã tạo phiếu nhập:", id_nhap);
-
-            // 2️⃣ Thêm chi tiết phiếu nhập NPL
-            const promises = chiTietNhap.map((item) =>
-                addChiTietNhapKhoNPL(id_nhap, {
-                    id_nhap: id_nhap,
-                    id_npl: item.id_npl,
-                    so_luong: item.so_luong_nhap,
-
-                })
-            );
-
-            const results = await Promise.all(promises);
-            const allSuccess = results.every((r) => r?.success);
-
-            if (allSuccess) {
-                showCreateSuccess('Phiếu nhập NPL');
-                form.resetFields();
-                setChiTietNhap([]);
-                setFileUrl(null);
+            if (editingRecord) {
+                // Cập nhật phiếu nhập
+                const resUpdate = await updateNhapKhoNPL(editingRecord.id_nhap, payloadPhieu);
+                if (!resUpdate?.success) {
+                    showSaveError('cập nhật phiếu nhập NPL');
+                    return;
+                }
+                console.log("✅ Đã cập nhật phiếu nhập:", editingRecord.id_nhap);
+                showUpdateSuccess('Phiếu nhập NPL');
             } else {
-                showWarning('Tạo phiếu nhập thành công', 'Nhưng có một số chi tiết bị lỗi');
+                // Tạo mới phiếu nhập
+                const resPhieu = await createNhapKhoNPL(payloadPhieu);
+                if (!resPhieu?.success || !resPhieu?.data?.id_nhap) {
+                    showSaveError('phiếu nhập NPL');
+                    return;
+                }
+                console.log("✅ Đã tạo phiếu nhập:", resPhieu.data.id_nhap);
+                showCreateSuccess('Phiếu nhập NPL');
             }
+
+            // Reset form
+            setEditingRecord(null);
+            form.resetFields();
+            setChiTietNhap([]);
+            setFileUrl(null);
+            fetchLichSu(); // Refresh danh sách
         } catch (err) {
             console.error(err);
             showSaveError('phiếu nhập kho NPL');
@@ -290,7 +300,7 @@ const NhapKhoNPL = () => {
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <Card bordered={false}>
                 <Title level={3} style={{ marginBottom: 24 }}>
-                    {editingRecord ? `Chỉnh sửa Phiếu Nhập kho NPL #${editingRecord.so_phieu}` : 'Tạo Phiếu Nhập Kho Nguyên Phụ Liệu'}
+                    {editingRecord ? `Chỉnh sửa Phiếu Nhập kho NPL #${editingRecord.so_phieu || `PNKNPL-${editingRecord.id_nhap}`}` : 'Tạo Phiếu Nhập Kho Nguyên Phụ Liệu'}
                 </Title>
                 <Form form={form} layout="vertical" onFinish={onFinish}>
                     {/* Hóa đơn nhập */}
@@ -383,15 +393,15 @@ const NhapKhoNPL = () => {
                 <Table columns={lichSuColumns} dataSource={lichSuPhieu} rowKey="id_nhap" loading={loadingLichSu} />
             </Card>
 
-            <Drawer title={`Chi tiết Phiếu nhập: ${selectedPhieu?.so_phieu}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
+            <Drawer title={`Chi tiết Phiếu nhập: ${selectedPhieu?.so_phieu || `PNKNPL-${selectedPhieu?.id_nhap}`}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
                 {selectedPhieu && <>
                     <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
                         <Descriptions.Item label="Ngày nhập">{dayjs(selectedPhieu.ngay_nhap).format('DD/MM/YYYY')}</Descriptions.Item>
-                        <Descriptions.Item label="Kho nhận">{selectedPhieu.kho.ten_kho}</Descriptions.Item>
-                        <Descriptions.Item label="Hóa đơn">{selectedPhieu.hoaDonNhap.so_hd}</Descriptions.Item>
+                        <Descriptions.Item label="Kho nhận">{selectedPhieu.kho?.ten_kho}</Descriptions.Item>
+                        <Descriptions.Item label="Hóa đơn">{selectedPhieu.hoaDonNhap?.so_hd}</Descriptions.Item>
                     </Descriptions>
                     <Title level={5}>Danh sách NPL đã nhập</Title>
-                    <Table columns={chiTietColumns} dataSource={selectedPhieu.chiTietNhapKhoNPLs} rowKey="id_ct" pagination={false} size="small" bordered />
+                    <Table columns={chiTietColumns} dataSource={selectedPhieu.chiTiets || []} rowKey="id_ct" pagination={false} size="small" bordered />
                 </>}
             </Drawer>
         </Space>

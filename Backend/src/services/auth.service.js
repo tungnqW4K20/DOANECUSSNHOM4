@@ -75,6 +75,7 @@ const loginBussiness = async (loginData) => {
     }
     const payload = {
         id: doanhnghiep.id_dn,
+        id_dn: doanhnghiep.id_dn,  // Thêm id_dn để các controller có thể sử dụng
         email: doanhnghiep.email,
         ten: doanhnghiep.ten_dn,
         role: "business"

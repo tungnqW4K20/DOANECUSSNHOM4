@@ -166,6 +166,11 @@ const NguyenPhuLieu = () => {
         dvtHqList.find((d) => d.id_dvt_hq === id)?.ten_dvt || "—",
     },
     {
+      title: "Doanh nghiệp",
+      key: "ten_dn",
+      render: (_, record) => record.doanhNghiep?.ten_dn || "—",
+    },
+    {
       title: "Hành động",
       key: "action",
       render: (_, record) => (

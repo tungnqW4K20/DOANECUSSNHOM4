@@ -25,8 +25,9 @@ export const createKho = async (data) => {
 export const getAllKho = async () => {
     try {
         const res = await api.get("/");
-        // Backend trả về array trực tiếp (không wrap)
-        return Array.isArray(res.data) ? res.data : (res.data?.data || res.data || []);
+        // Backend trả về { success: true, data: [...] }
+        const data = res.data?.data || res.data || [];
+        return { data: Array.isArray(data) ? data : [] };
     } catch (err) {
         console.error("Lỗi getAllKho:", err);
         throw err.response?.data || { message: "Lỗi kết nối máy chủ" };

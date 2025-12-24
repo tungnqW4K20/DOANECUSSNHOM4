@@ -9,7 +9,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { getAllHopDong, createHopDong, updateHopDong, deleteHopDong } from "../../services/hopdong.service";
-import { getLoHangByHopDong, createLoHang, updateLoHang, deleteLoHang } from "../../services/lohang.service";
+import { getLoHangByHopDong } from "../../services/lohang.service";
 import { uploadSingleFile } from "../../services/upload.service";
 import { getAllTienTe } from '../../services/tiente.service';
 import { 
@@ -25,9 +25,6 @@ import {
 const { Option } = Select;
 const { Title } = Typography;
 const { Search } = Input;
-
-const userData = JSON.parse(localStorage.getItem('user'));
-const LOGGED_IN_DN_ID = userData?.id_dn;
 
 const HopDong = () => {
     const [crudForm] = Form.useForm();
@@ -140,7 +137,8 @@ const HopDong = () => {
             });
 
             if (crudModalContent.type === "hopDong") {
-                const payload = { ...values, file_hop_dong: fileUrl || null, id_dn: LOGGED_IN_DN_ID };
+                // Backend tự lấy id_dn từ token, không cần gửi từ frontend
+                const payload = { ...values, file_hop_dong: fileUrl || null };
 
                 if (crudModalContent.record) {
                     await updateHopDong(crudModalContent.record.id_hd, payload);
@@ -150,27 +148,12 @@ const HopDong = () => {
                     showCreateSuccess('Hợp đồng');
                 }
                 fetchHopDong();
-            } else if (crudModalContent.type === "loHang") {
-                const payload = {
-                    ...values,
-                    so_hd: selectedHopDong.so_hd,
-                    file_chung_tu: fileUrl || null,
-                };
-                if (crudModalContent.record) {
-                    await updateLoHang(crudModalContent.record.id_lh, payload);
-                    showUpdateSuccess('Lô hàng');
-                } else {
-                    await createLoHang(payload);
-                    showCreateSuccess('Lô hàng');
-                }
-                const res = await getLoHangByHopDong(selectedHopDong.so_hd);
-                setLoHangDataSource(res.data || []);
             }
 
             setIsCrudModalOpen(false);
         } catch (err) {
             console.error(err);
-            showSaveError(crudModalContent.type === "hopDong" ? 'hợp đồng' : 'lô hàng');
+            showSaveError('hợp đồng');
         }
     };
 
@@ -181,17 +164,6 @@ const HopDong = () => {
             fetchHopDong();
         } catch {
             showSaveError('hợp đồng');
-        }
-    };
-
-    const handleDeleteLoHang = async (id_lh) => {
-        try {
-            await deleteLoHang(id_lh);
-            showDeleteSuccess('Lô hàng');
-            const res = await getLoHangByHopDong(selectedHopDong.so_hd);
-            setLoHangDataSource(res.data || []);
-        } catch {
-            showSaveError('lô hàng');
         }
     };
 
@@ -241,7 +213,7 @@ const HopDong = () => {
                     <Button icon={<EditOutlined />} onClick={() => handleOpenCrudModal("hopDong", record)}>
                         Sửa
                     </Button>
-                    <Popconfirm title="Bạn có chắc muốn xóa?" onConfirm={() => handleDeleteHopDong(record.so_hd)}>
+                    <Popconfirm title="Bạn có chắc muốn xóa?" onConfirm={() => handleDeleteHopDong(record.id_hd)}>
                         <Button icon={<DeleteOutlined />} danger>
                             Xóa
                         </Button>
@@ -273,23 +245,6 @@ const HopDong = () => {
                 ) : (
                     "-"
                 ),
-        },
-        {
-            title: "Hành động",
-            key: "action",
-            align: "center",
-            render: (_, record) => (
-                <Space>
-                    <Button type="link" onClick={() => handleOpenCrudModal("loHang", record)}>
-                        Sửa
-                    </Button>
-                    <Popconfirm title="Xóa lô hàng này?" onConfirm={() => handleDeleteLoHang(record.id_lh)}>
-                        <Button type="link" danger>
-                            Xóa
-                        </Button>
-                    </Popconfirm>
-                </Space>
-            ),
         },
     ];
 
@@ -364,61 +319,6 @@ const HopDong = () => {
             );
         }
 
-        if (crudModalContent.type === "loHang") {
-            return (
-                <>
-                    {/* <Form.Item name="id_lh" label="Số Lô hàng" rules={[{ required: true }]}>
-                        <Input />
-                    </Form.Item> */}
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item name="ngay_dong_goi" label="Ngày đóng gói">
-                                <DatePicker style={{ width: "100%" }} />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="ngay_xuat_cang" label="Ngày xuất cảng">
-                                <DatePicker style={{ width: "100%" }} />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item name="cang_xuat" label="Cảng xuất">
-                                <Input />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="cang_nhap" label="Cảng nhập">
-                                <Input />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-
-                    {/* ✅ Upload file thật + xem trước (giống LoHang.jsx) */}
-                    <Form.Item label="File chứng từ">
-                        <Upload
-                            customRequest={handleUpload}
-                            maxCount={1}
-                            showUploadList={false}
-                        >
-                            <Button icon={<UploadOutlined />} loading={uploading}>
-                                Tải lên file
-                            </Button>
-                        </Upload>
-
-                        {fileUrl && (
-                            <div style={{ marginTop: 8 }}>
-                                <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-                                    Xem file đã tải lên
-                                </a>
-                            </div>
-                        )}
-                    </Form.Item>
-                </>
-            );
-        }
-
         return null;
     };
 
@@ -449,9 +349,6 @@ const HopDong = () => {
                 footer={null}
                 width="80vw"
             >
-                <Button onClick={() => handleOpenCrudModal("loHang")} icon={<PlusOutlined />} style={{ marginBottom: 16 }}>
-                    Thêm Lô hàng
-                </Button>
                 <Table columns={loHangColumns} dataSource={loHangDataSource} rowKey="id_lh" size="small" />
             </Modal>
 

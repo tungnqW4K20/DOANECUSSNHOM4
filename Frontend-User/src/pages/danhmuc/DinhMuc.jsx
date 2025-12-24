@@ -21,18 +21,17 @@ import {
     SaveOutlined,
     ReloadOutlined,
 } from '@ant-design/icons';
-import { getAllSanPham } from '../../services/sanpham.service';
-import { getAllNguyenPhuLieu } from '../../services/nguyenphulieu.service';
 import {
     getAllDinhMuc,
     getDinhMucBySanPham,
     createDinhMuc,
     deleteDinhMuc,
 } from '../../services/dinhmuc.service';
+import { getAllSanPham } from '../../services/sanpham.service';
+import { getAllNguyenPhuLieu } from '../../services/nguyenphulieu.service';
 import {
     showCreateSuccess,
     showUpdateSuccess,
-    showDeleteSuccess,
     showLoadError,
     showSaveError,
     showError,
@@ -56,6 +55,7 @@ const DinhMuc = () => {
     const fetchAll = async () => {
         try {
             setLoading(true);
+            // Sử dụng API sản phẩm và nguyên liệu đã có (đã phân quyền theo id_dn)
             const [spRes, nplRes, dmRes] = await Promise.all([
                 getAllSanPham(),
                 getAllNguyenPhuLieu(),

@@ -38,8 +38,10 @@ const Kho = () => {
     try {
       setLoading(true);
       const res = await khoService.getAllKho();
-      setDataSource(res || []);
-      setFilteredData(res || []);
+      // getAllKho trả về { data: [...] }
+      const khoData = res?.data || [];
+      setDataSource(khoData);
+      setFilteredData(khoData);
     } catch (err) {
       showLoadError('danh sách kho');
     } finally {

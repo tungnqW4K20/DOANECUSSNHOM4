@@ -24,13 +24,19 @@ const createQD = async ({ id_dn, id_sp, ten_dvt_sp, id_dvt_hq, he_so }) => {
 
 const getAllQD = async () => {
   return await QuyDoiDonViSP.findAll({
-    include: [{ model: db.DonViTinhHQ, as: 'donViTinhHQ' }]
+    include: [
+      { model: db.DonViTinhHQ, as: 'donViTinhHQ' },
+      { model: db.SanPham, as: 'sanPham' }
+    ]
   });
 };
 
 const getQDById = async (id_qd) => {
   return await QuyDoiDonViSP.findByPk(id_qd, {
-    include: [{ model: db.DonViTinhHQ, as: 'donViTinhHQ' }]
+    include: [
+      { model: db.DonViTinhHQ, as: 'donViTinhHQ' },
+      { model: db.SanPham, as: 'sanPham' }
+    ]
   });
 };
 

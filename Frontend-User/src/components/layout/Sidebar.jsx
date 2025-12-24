@@ -37,12 +37,13 @@ const menuItems = [
         label: 'Hợp đồng',
         path: '/hop-dong',
       },
-      {
-        key: '/lo-hang',
-        icon: <Package size={16} />,
-        label: 'Quản lý Lô hàng',
-        path: '/lo-hang',
-      },
+      // Tạm ẩn - xem lô hàng trong hợp đồng
+      // {
+      //   key: '/lo-hang',
+      //   icon: <Package size={16} />,
+      //   label: 'Quản lý Lô hàng',
+      //   path: '/lo-hang',
+      // },
       {
         key: '/san-pham',
         icon: <PackageCheck size={16} />,

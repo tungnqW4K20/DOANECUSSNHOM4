@@ -175,9 +175,13 @@ const calculateBaoCao = async ({ id_hd, tu_ngay, den_ngay }, id_dn) => {
   });
 
   const baoCaoNXT_SP = [];
+  let sttSP = 1;
 
   for (const id_sp_str of Object.keys(sanPhamXuatMap)) {
     const id_sp = Number(id_sp_str);
+
+    // Lấy thông tin sản phẩm
+    const sanPham = await SanPham.findByPk(id_sp);
 
     // tồn đầu kỳ = nhập < tu_ngay – xuất < tu_ngay
     const nhapTruoc = await sumNhapSPBefore(id_sp, tu_ngay);
@@ -193,10 +197,14 @@ const calculateBaoCao = async ({ id_hd, tu_ngay, den_ngay }, id_dn) => {
     const ghiChu = ton_cuoi_ky < 0 ? 'Cảnh báo: Tồn kho âm. Kiểm tra lại số liệu xuất/nhập.' : '';
 
     baoCaoNXT_SP.push({
+      stt: sttSP++,
       id_sp,
+      ma_sp: sanPham?.ma_sp || `SP-${id_sp}`,
+      ten_sp: sanPham?.ten_sp || 'N/A',
+      don_vi_tinh: sanPham?.don_vi_tinh || 'N/A',
       ton_dau_ky,
-      nhap_trong_ky: nhapTrongKy,
-      thay_doi_muc_dich: 0,
+      nhap_kho_trong_ky: nhapTrongKy,
+      chuyen_muc_dich: 0,
       xuat_khau: xuatTrongKy,
       xuat_khac: 0,
       ton_cuoi_ky,
@@ -223,8 +231,12 @@ const calculateBaoCao = async ({ id_hd, tu_ngay, den_ngay }, id_dn) => {
   dmList.forEach((dm) => nplIdSet.add(dm.id_npl));
 
   const baoCaoSD_NPL = [];
+  let sttNPL = 1;
 
   for (const id_npl of nplIdSet) {
+    // Lấy thông tin NPL
+    const npl = await NguyenPhuLieu.findByPk(id_npl);
+
     // tồn đầu kỳ NPL
     const tonNhapTruoc = await sumNhapNPLBefore(id_npl, tu_ngay);
     const tonXuatTruoc = await sumXuatNPLBefore(id_npl, tu_ngay);
@@ -256,7 +268,11 @@ const calculateBaoCao = async ({ id_hd, tu_ngay, den_ngay }, id_dn) => {
     }
 
     baoCaoSD_NPL.push({
+      stt: sttNPL++,
       id_npl: Number(id_npl),
+      ma_npl: npl?.ma_npl || `NPL-${id_npl}`,
+      ten_npl: npl?.ten_npl || 'N/A',
+      don_vi_tinh: npl?.don_vi_tinh || 'N/A',
       ton_dau_ky,
       tai_nhap: 0,
       nhap_khac: nhapTrongKy,
@@ -268,13 +284,28 @@ const calculateBaoCao = async ({ id_hd, tu_ngay, den_ngay }, id_dn) => {
   }
 
   // ====== 16 – Định mức thực tế ======
-  const dinhMucThucTe = await DinhMucSanPham.findAll({
+  const dinhMucRaw = await DinhMucSanPham.findAll({
     where: { id_sp: Object.keys(sanPhamXuatMap) },
     include: [
       { model: SanPham, as: 'sanPham' },
       { model: NguyenPhuLieu, as: 'nguyenPhuLieu' }
     ]
   });
+
+  // Format định mức thực tế theo cấu trúc frontend cần
+  const dinhMucThucTe = dinhMucRaw.map((dm, index) => ({
+    stt: index + 1,
+    id_sp: dm.id_sp,
+    ma_sp: dm.sanPham?.ma_sp || `SP-${dm.id_sp}`,
+    ten_sp: dm.sanPham?.ten_sp || 'N/A',
+    don_vi_tinh_sp: dm.sanPham?.don_vi_tinh || 'N/A',
+    id_npl: dm.id_npl,
+    ma_npl: dm.nguyenPhuLieu?.ma_npl || `NPL-${dm.id_npl}`,
+    ten_npl: dm.nguyenPhuLieu?.ten_npl || 'N/A',
+    don_vi_tinh_npl: dm.nguyenPhuLieu?.don_vi_tinh || 'N/A',
+    luong_sd: dm.so_luong || 0,
+    ghi_chu: ''
+  }));
 
   return {
     thongTinChung,

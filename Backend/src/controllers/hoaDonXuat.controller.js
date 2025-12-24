@@ -3,46 +3,72 @@ const hoaDonXuatService = require('../services/hoaDonXuat.service');
 const hoaDonXuatController = {
   async getAll(req, res) {
     try {
-      const data = await hoaDonXuatService.getAll();
-      res.json(data);
+      const id_dn = req.user?.id;
+      const role = req.user?.role;
+      if (!id_dn && role !== 'Admin') {
+        return res.status(400).json({ success: false, message: 'Thiếu thông tin xác thực' });
+      }
+      const data = await hoaDonXuatService.getAll(id_dn, role);
+      res.json({ success: true, data });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ success: false, error: err.message });
     }
   },
 
   async getById(req, res) {
     try {
-      const data = await hoaDonXuatService.getById(req.params.id);
-      res.json(data);
+      const id_dn = req.user?.id;
+      const role = req.user?.role;
+      if (!id_dn && role !== 'Admin') {
+        return res.status(400).json({ success: false, message: 'Thiếu thông tin xác thực' });
+      }
+      const data = await hoaDonXuatService.getById(req.params.id, id_dn, role);
+      if (!data) return res.status(404).json({ success: false, error: 'Không tìm thấy' });
+      res.json({ success: true, data });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ success: false, error: err.message });
     }
   },
 
   async create(req, res) {
     try {
-      const newHd = await hoaDonXuatService.create(req.body);
-      res.json(newHd);
+      const id_dn = req.user?.id;
+      const role = req.user?.role;
+      if (!id_dn && role !== 'Admin') {
+        return res.status(400).json({ success: false, message: 'Thiếu thông tin xác thực' });
+      }
+      const newHd = await hoaDonXuatService.create(req.body, id_dn, role);
+      res.json({ success: true, data: newHd });
     } catch (err) {
-      res.status(400).json({ error: err.message });
+      res.status(400).json({ success: false, error: err.message });
     }
   },
 
   async update(req, res) {
     try {
-      const updated = await hoaDonXuatService.update(req.params.id, req.body);
-      res.json(updated);
+      const id_dn = req.user?.id;
+      const role = req.user?.role;
+      if (!id_dn && role !== 'Admin') {
+        return res.status(400).json({ success: false, message: 'Thiếu thông tin xác thực' });
+      }
+      const updated = await hoaDonXuatService.update(req.params.id, req.body, id_dn, role);
+      res.json({ success: true, data: updated });
     } catch (err) {
-      res.status(400).json({ error: err.message });
+      res.status(400).json({ success: false, error: err.message });
     }
   },
 
   async delete(req, res) {
     try {
-      const result = await hoaDonXuatService.delete(req.params.id);
-      res.json(result);
+      const id_dn = req.user?.id;
+      const role = req.user?.role;
+      if (!id_dn && role !== 'Admin') {
+        return res.status(400).json({ success: false, message: 'Thiếu thông tin xác thực' });
+      }
+      const result = await hoaDonXuatService.delete(req.params.id, id_dn, role);
+      res.json({ success: true, ...result });
     } catch (err) {
-      res.status(400).json({ error: err.message });
+      res.status(400).json({ success: false, error: err.message });
     }
   }
 };
