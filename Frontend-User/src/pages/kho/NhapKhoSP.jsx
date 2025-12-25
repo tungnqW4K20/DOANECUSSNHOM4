@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
     Form,
     Select,
@@ -327,7 +327,7 @@ const NhapKhoSP = () => {
                 <Table columns={lichSuColumns} dataSource={lichSuPhieu} rowKey="id_nhap" loading={loadingLichSu} />
             </Card>
 
-            <Drawer title={`Chi tiết Phiếu nhập: ${selectedPhieu?.so_phieu || `PNKSP-${selectedPhieu?.id_nhap}`}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
+            <Drawer title={`Chi tiết Phiếu nhập: ${selectedPhieu?.so_phieu || `PNKSP-${selectedPhieu?.id_nhap}`}`} width={600} open={isDrawerOpen} onClose={closeDrawer} destroyOnClose>
                 {selectedPhieu && <>
                     <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
                         <Descriptions.Item label="Ngày nhập">{dayjs(selectedPhieu.ngay_nhap).format('DD/MM/YYYY')}</Descriptions.Item>

@@ -7,8 +7,8 @@ const { authenticateToken, authorizeRole } = require('../middlewares/auth.middle
 const router = express.Router();
 
 router.post("/", authenticateToken, authorizeRole("business"), quyDoiDNController.create);
-router.get("/", quyDoiDNController.getAll);
-router.get("/:id_qd", quyDoiDNController.getById);
+router.get("/", authenticateToken, quyDoiDNController.getAll);
+router.get("/:id_qd", authenticateToken, quyDoiDNController.getById);
 router.put("/:id_qd", authenticateToken, authorizeRole("business"), quyDoiDNController.update);
 router.delete("/:id_qd", authenticateToken, authorizeRole("business"), quyDoiDNController.remove);
 

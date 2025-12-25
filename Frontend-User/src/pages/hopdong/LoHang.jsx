@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Table, Button, Modal, Form, Input, Select, DatePicker, Space, Popconfirm,
   Row, Col, Typography, Card, Upload, Tooltip
@@ -34,6 +34,7 @@ const LoHang = () => {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   // ✅ Thêm mới state cho upload
   const [fileUrl, setFileUrl] = useState(null);
@@ -62,23 +63,36 @@ const LoHang = () => {
   /* ============================================================
      🟢 MỞ MODAL
   ============================================================ */
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setEditingRecord(null);
     form.resetFields();
     setFileUrl(null);
     setIsModalOpen(true);
-  };
+  }, [form]);
 
-  const handleEdit = (record) => {
+  const handleEdit = useCallback((record) => {
     setEditingRecord(record);
     setFileUrl(record.file_chung_tu || null);
-    form.setFieldsValue({
-      ...record,
-      ngay_dong_goi: record.ngay_dong_goi ? dayjs(record.ngay_dong_goi) : null,
-      ngay_xuat_cang: record.ngay_xuat_cang ? dayjs(record.ngay_xuat_cang) : null,
-    });
+    // Dùng setTimeout để đảm bảo form đã mount
+    setTimeout(() => {
+      form.setFieldsValue({
+        ...record,
+        ngay_dong_goi: record.ngay_dong_goi ? dayjs(record.ngay_dong_goi) : null,
+        ngay_xuat_cang: record.ngay_xuat_cang ? dayjs(record.ngay_xuat_cang) : null,
+      });
+    }, 0);
     setIsModalOpen(true);
-  };
+  }, [form]);
+
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+    // Delay reset để tránh flicker
+    setTimeout(() => {
+      setEditingRecord(null);
+      setFileUrl(null);
+      form.resetFields();
+    }, 300);
+  }, [form]);
 
   /* ============================================================
      🟢 XÓA LÔ HÀNG
@@ -120,7 +134,7 @@ const LoHang = () => {
   /* ============================================================
      🟢 SUBMIT FORM
   ============================================================ */
-  const onFinish = async (values) => {
+  const onFinish = useCallback(async (values) => {
     const payload = {
       ...values,
       ngay_dong_goi: values.ngay_dong_goi ? values.ngay_dong_goi.format("YYYY-MM-DD") : null,
@@ -129,6 +143,7 @@ const LoHang = () => {
     };
 
     try {
+      setSaving(true);
       if (editingRecord) {
         await updateLoHang(editingRecord.id_lh, payload);
         showUpdateSuccess('Lô hàng');
@@ -136,12 +151,14 @@ const LoHang = () => {
         await createLoHang(payload);
         showCreateSuccess('Lô hàng');
       }
-      setIsModalOpen(false);
+      closeModal();
       fetchData();
     } catch (err) {
       showSaveError('lô hàng');
+    } finally {
+      setSaving(false);
     }
-  };
+  }, [fileUrl, editingRecord, closeModal]);
 
   /* ============================================================
      🟢 CỘT BẢNG
@@ -222,9 +239,10 @@ const LoHang = () => {
       <Modal
         title={editingRecord ? "Chỉnh sửa Lô hàng" : "Thêm mới Lô hàng"}
         open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
+        onCancel={closeModal}
         footer={null}
         destroyOnClose
+        maskClosable={false}
       >
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Row gutter={16}>
@@ -303,8 +321,8 @@ const LoHang = () => {
 
           <Form.Item>
             <Space>
-              <Button onClick={() => setIsModalOpen(false)}>Hủy</Button>
-              <Button type="primary" htmlType="submit">
+              <Button onClick={closeModal}>Hủy</Button>
+              <Button type="primary" htmlType="submit" loading={saving}>
                 Lưu
               </Button>
             </Space>

@@ -9,8 +9,8 @@ const { authenticateToken, authorizeRole } = require('../middlewares/auth.middle
 
 // Admin mới có quyền tạo / sửa / xóa
 router.post("/", authenticateToken, authorizeRole("business"), quyDoiNPLController.create);
-router.get("/", quyDoiNPLController.getAll);
-router.get("/:id_qd", quyDoiNPLController.getById);
+router.get("/", authenticateToken, quyDoiNPLController.getAll);
+router.get("/:id_qd", authenticateToken, quyDoiNPLController.getById);
 router.put("/:id_qd", authenticateToken, authorizeRole("business"), quyDoiNPLController.update);
 router.delete("/:id_qd", authenticateToken, authorizeRole("business"), quyDoiNPLController.remove);
 

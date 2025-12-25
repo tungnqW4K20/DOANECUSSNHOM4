@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
     Table, Button, Modal, Form, Input, Select, DatePicker, Space, Popconfirm,
     InputNumber, Row, Col, Typography, Card, Upload, Tooltip
@@ -36,6 +36,7 @@ const HopDong = () => {
     const [loHangDataSource, setLoHangDataSource] = useState([]);
     const [tienTeList, setTienTeList] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
 
 
     // ✅ upload file
@@ -75,7 +76,7 @@ const HopDong = () => {
         fetchTienTe();
     }, []);
 
-    const showDetailModal = async (record) => {
+    const showDetailModal = useCallback(async (record) => {
         try {
             setSelectedHopDong(record);
             const res = await getLoHangByHopDong(record.id_hd);
@@ -84,13 +85,22 @@ const HopDong = () => {
         } catch {
             showLoadError('danh sách lô hàng');
         }
-    };
+    }, []);
 
-    const handleOpenCrudModal = (type, record = null) => {
+    const closeDetailModal = useCallback(() => {
+        setDetailModalOpen(false);
+        // Delay reset để tránh flicker
+        setTimeout(() => {
+            setSelectedHopDong(null);
+            setLoHangDataSource([]);
+        }, 300);
+    }, []);
+
+    const handleOpenCrudModal = useCallback((type, record = null) => {
         const title = `${record ? "Chỉnh sửa" : "Thêm mới"} ${type === "hopDong" ? "Hợp đồng" : "Lô hàng"}`;
         setCrudModalContent({ type, record, title });
-        crudForm.resetFields();
         setFileUrl(null);
+        crudForm.resetFields();
 
         if (record) {
             const dateFields = ["ngay_ky", "ngay_hieu_luc", "ngay_het_han", "ngay_dong_goi", "ngay_xuat_cang"];
@@ -98,12 +108,25 @@ const HopDong = () => {
             dateFields.forEach((f) => {
                 if (record[f]) recordWithDayjs[f] = dayjs(record[f]);
             });
-            crudForm.setFieldsValue(recordWithDayjs);
+            // Dùng setTimeout để đảm bảo form đã mount
+            setTimeout(() => {
+                crudForm.setFieldsValue(recordWithDayjs);
+            }, 0);
             if (type === "hopDong" && record.file_hop_dong) setFileUrl(record.file_hop_dong);
             if (type === "loHang" && record.file_chung_tu) setFileUrl(record.file_chung_tu);
         }
         setIsCrudModalOpen(true);
-    };
+    }, [crudForm]);
+
+    const closeCrudModal = useCallback(() => {
+        setIsCrudModalOpen(false);
+        // Delay reset để tránh flicker
+        setTimeout(() => {
+            setCrudModalContent({ type: null, record: null, title: "" });
+            setFileUrl(null);
+            crudForm.resetFields();
+        }, 300);
+    }, [crudForm]);
 
     // ✅ Upload file (theo mẫu LoHang.jsx)
     const handleUpload = async ({ file, onSuccess, onError }) => {
@@ -127,9 +150,11 @@ const HopDong = () => {
         }
     };
 
-    const handleCrudSave = async () => {
+    const handleCrudSave = useCallback(async () => {
         try {
             const values = await crudForm.validateFields();
+            setSaving(true);
+            
             Object.keys(values).forEach((key) => {
                 if (dayjs.isDayjs(values[key])) {
                     values[key] = values[key].format("YYYY-MM-DD");
@@ -137,7 +162,6 @@ const HopDong = () => {
             });
 
             if (crudModalContent.type === "hopDong") {
-                // Backend tự lấy id_dn từ token, không cần gửi từ frontend
                 const payload = { ...values, file_hop_dong: fileUrl || null };
 
                 if (crudModalContent.record) {
@@ -150,12 +174,14 @@ const HopDong = () => {
                 fetchHopDong();
             }
 
-            setIsCrudModalOpen(false);
+            closeCrudModal();
         } catch (err) {
             console.error(err);
             showSaveError('hợp đồng');
+        } finally {
+            setSaving(false);
         }
-    };
+    }, [crudForm, crudModalContent, fileUrl, closeCrudModal]);
 
     const handleDeleteHopDong = async (id_hd) => {
         try {
@@ -343,11 +369,13 @@ const HopDong = () => {
             </Card>
 
             <Modal
-                title={`Danh sách Lô hàng của Hợp đồng: ${selectedHopDong?.so_hd}`}
+                title={`Danh sách Lô hàng của Hợp đồng: ${selectedHopDong?.so_hd || ''}`}
                 open={isDetailModalOpen}
-                onCancel={() => setDetailModalOpen(false)}
+                onCancel={closeDetailModal}
                 footer={null}
                 width="80vw"
+                destroyOnClose
+                maskClosable={false}
             >
                 <Table columns={loHangColumns} dataSource={loHangDataSource} rowKey="id_lh" size="small" />
             </Modal>
@@ -355,10 +383,13 @@ const HopDong = () => {
             <Modal
                 title={crudModalContent.title}
                 open={isCrudModalOpen}
-                onCancel={() => setIsCrudModalOpen(false)}
+                onCancel={closeCrudModal}
                 onOk={handleCrudSave}
                 okText="Lưu"
                 cancelText="Hủy"
+                confirmLoading={saving}
+                destroyOnClose
+                maskClosable={false}
             >
                 <Form form={crudForm} layout="vertical">
                     {renderCrudForm()}

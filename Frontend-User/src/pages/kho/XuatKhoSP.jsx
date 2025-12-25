@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Form, Select, DatePicker, Button, Table, InputNumber, Typography, Tag, Space, Row, Col, Card, Drawer, Descriptions, Popconfirm } from 'antd';
 import { SendOutlined, EyeOutlined, EditOutlined, DeleteOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -177,6 +177,11 @@ const XuatKhoSP = () => {
     
     const showDrawer = (record) => { setSelectedPhieu(record); setIsDrawerOpen(true); };
     
+    const closeDrawer = () => {
+        setIsDrawerOpen(false);
+        setTimeout(() => setSelectedPhieu(null), 300);
+    };
+    
     const handleEdit = async (record) => {
         setEditingRecord(record);
         
@@ -300,7 +305,7 @@ const XuatKhoSP = () => {
                 <Table columns={lichSuColumns} dataSource={lichSuPhieu} rowKey="id_xuat" loading={loadingLichSu} />
             </Card>
 
-            <Drawer title={`Chi tiết Phiếu xuất: ${selectedPhieu?.so_phieu || `PXKSP-${selectedPhieu?.id_xuat}`}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
+            <Drawer title={`Chi tiết Phiếu xuất: ${selectedPhieu?.so_phieu || `PXKSP-${selectedPhieu?.id_xuat}`}`} width={600} open={isDrawerOpen} onClose={closeDrawer} destroyOnClose>
                 {selectedPhieu && <>
                     <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
                         <Descriptions.Item label="Ngày xuất">{dayjs(selectedPhieu.ngay_xuat).format('DD/MM/YYYY')}</Descriptions.Item>

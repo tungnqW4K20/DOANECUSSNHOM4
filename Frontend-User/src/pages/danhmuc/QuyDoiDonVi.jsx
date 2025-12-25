@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Tabs, Table, Button, Modal, Form, Input, Select, InputNumber, Space, Popconfirm, Spin } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { 
@@ -20,12 +20,25 @@ const QuyDoiTable = ({ type, dataSource, setDataSource, itemList, dvtHqList, loa
     const [editingRecord, setEditingRecord] = useState(null);
     const [submitting, setSubmitting] = useState(false);
 
-    const handleAdd = () => { setEditingRecord(null); form.resetFields(); setIsModalVisible(true); };
-    const handleEdit = (record) => { 
-        setEditingRecord(record); 
-        form.setFieldsValue(record); 
+    const handleAdd = useCallback(() => { 
+        setEditingRecord(null); 
+        form.resetFields(); 
         setIsModalVisible(true); 
-    };
+    }, [form]);
+
+    const handleEdit = useCallback((record) => { 
+        setEditingRecord(record); 
+        setTimeout(() => form.setFieldsValue(record), 0);
+        setIsModalVisible(true); 
+    }, [form]);
+
+    const closeModal = useCallback(() => {
+        setIsModalVisible(false);
+        setTimeout(() => {
+            setEditingRecord(null);
+            form.resetFields();
+        }, 300);
+    }, [form]);
     
     const handleDelete = async (id_qd) => { 
         try {
@@ -59,7 +72,7 @@ const QuyDoiTable = ({ type, dataSource, setDataSource, itemList, dvtHqList, loa
                 }
                 showCreateSuccess('Quy đổi đơn vị');
             }
-            setIsModalVisible(false);
+            closeModal();
             fetchData();
         } catch (error) {
             showSaveError('quy đổi đơn vị');
@@ -110,8 +123,10 @@ const QuyDoiTable = ({ type, dataSource, setDataSource, itemList, dvtHqList, loa
             <Modal 
                 title={editingRecord ? 'Chỉnh sửa' : 'Thêm mới'} 
                 open={isModalVisible} 
-                onCancel={() => setIsModalVisible(false)} 
+                onCancel={closeModal} 
                 footer={null}
+                destroyOnClose
+                maskClosable={false}
             >
                 <Form form={form} layout="vertical" onFinish={onFinish}>
                     <Form.Item 
@@ -154,7 +169,7 @@ const QuyDoiTable = ({ type, dataSource, setDataSource, itemList, dvtHqList, loa
                     </Form.Item>
                     <Form.Item>
                         <Space>
-                            <Button onClick={() => setIsModalVisible(false)}>Hủy</Button>
+                            <Button onClick={closeModal}>Hủy</Button>
                             <Button type="primary" htmlType="submit" loading={submitting}>Lưu</Button>
                         </Space>
                     </Form.Item>

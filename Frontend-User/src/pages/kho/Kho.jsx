@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Table,
   Button,
@@ -87,7 +87,7 @@ const Kho = () => {
         });
         showCreateSuccess('Kho');
       }
-      setIsModalOpen(false);
+      closeModal();
       await fetchKho(); // reload danh sách
     } catch (err) {
       console.error("❌ Lỗi:", err);
@@ -116,17 +116,25 @@ const Kho = () => {
   // =============================
   // ✏️ Sửa và thêm
   // =============================
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setEditingRecord(null);
     form.resetFields();
     setIsModalOpen(true);
-  };
+  }, [form]);
 
-  const handleEdit = (record) => {
+  const handleEdit = useCallback((record) => {
     setEditingRecord(record);
-    form.setFieldsValue(record);
+    setTimeout(() => form.setFieldsValue(record), 0);
     setIsModalOpen(true);
-  };
+  }, [form]);
+
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+    setTimeout(() => {
+      setEditingRecord(null);
+      form.resetFields();
+    }, 300);
+  }, [form]);
 
   // =============================
   // 🔍 Cột bảng
@@ -205,9 +213,10 @@ const Kho = () => {
       <Modal
         title={editingRecord ? "Chỉnh sửa Kho" : "Thêm Kho mới"}
         open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
+        onCancel={closeModal}
         footer={null}
-        destroyOnHidden
+        destroyOnClose
+        maskClosable={false}
       >
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Form.Item
@@ -226,7 +235,7 @@ const Kho = () => {
           </Form.Item>
           <Form.Item>
             <Space style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Button onClick={() => setIsModalOpen(false)}>Hủy</Button>
+              <Button onClick={closeModal}>Hủy</Button>
               <Button type="primary" htmlType="submit" loading={loading}>
                 Lưu
               </Button>

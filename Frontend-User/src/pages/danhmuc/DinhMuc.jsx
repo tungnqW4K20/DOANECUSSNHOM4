@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     Table,
     Button,
@@ -50,6 +50,7 @@ const DinhMuc = () => {
     const [allDinhMuc, setAllDinhMuc] = useState([]);
     const [spList, setSpList] = useState([]);
     const [nplList, setNplList] = useState([]);
+    const [saving, setSaving] = useState(false);
 
     // ===================== FETCH DATA =====================
     const fetchAll = async () => {
@@ -98,10 +99,11 @@ const DinhMuc = () => {
     }, []);
 
     // ===================== MODAL =====================
-    const handleOpenModal = async (product = null) => {
+    const handleOpenModal = useCallback(async (product = null) => {
         setEditingProduct(product);
-        setIsModalOpen(true);
+        setDinhMucDetails([]);
         form.resetFields();
+        setIsModalOpen(true);
 
         if (product) {
             setLoadingModal(true);
@@ -115,23 +117,23 @@ const DinhMuc = () => {
                     ghi_chu: dm.ghi_chu || '',
                 }));
                 setDinhMucDetails(details);
-                form.setFieldsValue({ id_sp: product.id_sp });
+                setTimeout(() => form.setFieldsValue({ id_sp: product.id_sp }), 0);
             } catch (err) {
                 showLoadError('định mức chi tiết');
             } finally {
                 setLoadingModal(false);
             }
-        } else {
-            setDinhMucDetails([]);
         }
-    };
+    }, [form]);
 
-    const handleCloseModal = () => {
+    const handleCloseModal = useCallback(() => {
         setIsModalOpen(false);
-        setDinhMucDetails([]);
-        setEditingProduct(null);
-        form.resetFields();
-    };
+        setTimeout(() => {
+            setDinhMucDetails([]);
+            setEditingProduct(null);
+            form.resetFields();
+        }, 300);
+    }, [form]);
 
     const handleAddRow = () => {
         const newRow = { key: Date.now(), id_npl: null, so_luong: 1, ghi_chu: '' };
@@ -156,6 +158,7 @@ const DinhMuc = () => {
                 return;
             }
 
+            setSaving(true);
             const payload = {
                 id_sp: values.id_sp,
                 dinh_muc_chi_tiet: dinhMucDetails.map((item) => ({
@@ -184,6 +187,8 @@ const DinhMuc = () => {
             fetchAll();
         } catch (err) {
             showSaveError('định mức');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -293,6 +298,8 @@ const DinhMuc = () => {
                 onCancel={handleCloseModal}
                 footer={null}
                 width={850}
+                destroyOnClose
+                maskClosable={false}
             >
                 <Spin spinning={loadingModal}>
                     <Form form={form} layout="vertical">
@@ -336,6 +343,7 @@ const DinhMuc = () => {
                                     type="primary"
                                     icon={<SaveOutlined />}
                                     onClick={handleSave}
+                                    loading={saving}
                                 >
                                     Lưu Định mức
                                 </Button>
