@@ -155,7 +155,6 @@ const SanPham = () => {
     { title: "Tên sản phẩm", dataIndex: "ten_sp", key: "ten_sp" },
     { title: "Mô tả", dataIndex: "mo_ta", key: "mo_ta" },
     { title: "Đơn vị tính HQ", dataIndex: "ten_dvt", key: "ten_dvt" },
-    { title: "Doanh nghiệp", key: "ten_dn", render: (_, record) => record.doanhNghiep?.ten_dn || "—" },
     {
       title: "Hành động",
       key: "action",
