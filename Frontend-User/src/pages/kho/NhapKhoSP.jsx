@@ -146,6 +146,11 @@ const NhapKhoSP = () => {
         setIsDrawerOpen(true);
     };
 
+    const closeDrawer = () => {
+        setIsDrawerOpen(false);
+        setTimeout(() => setSelectedPhieu(null), 300);
+    };
+
     const handleEdit = (record) => {
         setEditingRecord(record);
         form.setFieldsValue({
