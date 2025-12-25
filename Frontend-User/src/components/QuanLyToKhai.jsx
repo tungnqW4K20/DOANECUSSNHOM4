@@ -14,6 +14,12 @@ const { Option } = Select;
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 
+// Hàm format số theo kiểu Việt Nam (1.000.000)
+const formatVNNumber = (value) => {
+    if (value === null || value === undefined) return '';
+    return Number(value).toLocaleString('vi-VN');
+};
+
 const QuanLyToKhai = ({ type }) => {
     const [crudForm] = Form.useForm();
     const [dataSource, setDataSource] = useState([]);
@@ -395,7 +401,7 @@ const QuanLyToKhai = ({ type }) => {
     const hoaDonColumns = useMemo(() => [ 
         { title: 'Số Hóa đơn', dataIndex: 'so_hd' }, 
         { title: 'Ngày HĐ', dataIndex: 'ngay_hd' },
-        { title: 'Tổng tiền', dataIndex: 'tong_tien', render: (val) => val?.toLocaleString() }, 
+        { title: 'Tổng tiền', dataIndex: 'tong_tien', render: (val) => formatVNNumber(val) }, 
         { title: 'Tiền tệ', dataIndex: 'id_tt', render: (id) => tienTeList.find(t => t.id_tt === id)?.ma_tt },
         { title: 'Hàng hóa', key: 'chi_tiet', align: 'center', render: (_, record) => (
             <Button type="link" onClick={() => showChiTietDrawer(record)}>Xem ({record.chiTiet?.length || 0})</Button>
@@ -453,7 +459,7 @@ const QuanLyToKhai = ({ type }) => {
             { title: 'Đơn giá', dataIndex: 'don_gia', width: 150, render: (_, record) => (
                 <InputNumber min={0} value={record.don_gia} onChange={(val) => handleChiTietChange(record.key, 'don_gia', val)} style={{width: '100%'}}/>
             )},
-            { title: 'Trị giá', dataIndex: 'tri_gia', width: 150, render: (_, record) => ((record.so_luong || 0) * (record.don_gia || 0)).toLocaleString() },
+            { title: 'Trị giá', dataIndex: 'tri_gia', width: 150, render: (_, record) => formatVNNumber((record.so_luong || 0) * (record.don_gia || 0)) },
             { title: '', width: 60, render: (_, record) => (
                 <Button type="link" danger size="small" onClick={() => handleRemoveChiTietRow(record.key)}>Xóa</Button>
             )},
@@ -468,9 +474,9 @@ const QuanLyToKhai = ({ type }) => {
                 const item = itemList.find(i => (i.id_npl || i.id_sp) === (record.id_npl || record.id_sp));
                 return item?.ten_npl || item?.ten_sp || 'N/A';
             }},
-            { title: 'Số lượng', dataIndex: 'so_luong', width: 120 },
-            { title: 'Đơn giá', dataIndex: 'don_gia', width: 150, render: val => val?.toLocaleString() },
-            { title: 'Trị giá', width: 150, render: (_, record) => ((record.so_luong || 0) * (record.don_gia || 0)).toLocaleString() },
+            { title: 'Số lượng', dataIndex: 'so_luong', width: 120, render: val => formatVNNumber(val) },
+            { title: 'Đơn giá', dataIndex: 'don_gia', width: 150, render: val => formatVNNumber(val) },
+            { title: 'Trị giá', width: 150, render: (_, record) => formatVNNumber((record.so_luong || 0) * (record.don_gia || 0)) },
         ];
     }, [selectedToKhai?.loai, nplList, spList]);
 
@@ -501,7 +507,7 @@ const QuanLyToKhai = ({ type }) => {
                     <Col span={12}><Form.Item name="id_tt" label="Tiền tệ"><Select>{tienTeList.map(t => <Option key={t.id_tt} value={t.id_tt}>{t.ma_tt}</Option>)}</Select></Form.Item></Col>
                 </Row>
                 <Form.Item label="Tổng tiền (tự động tính)">
-                    <InputNumber value={tongTien} disabled style={{ width: '100%' }} formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
+                    <InputNumber value={tongTien} disabled style={{ width: '100%' }} formatter={value => formatVNNumber(value)} parser={value => value.replace(/\./g, '')} />
                 </Form.Item>
                 <Form.Item name="file_hoa_don" label="File scan hóa đơn"><Upload maxCount={1}><Button icon={<UploadOutlined />}>Tải lên</Button></Upload></Form.Item>
                 <Title level={5}>Chi tiết hàng hóa</Title>

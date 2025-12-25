@@ -12,6 +12,12 @@ import { requiredSelectRule, pastDateRules } from '../../utils/validationRules';
 const { Option } = Select;
 const { Title, Text } = Typography;
 
+// Hàm format số theo kiểu Việt Nam (1.000.000)
+const formatVNNumber = (value) => {
+    if (value === null || value === undefined) return '';
+    return Number(value).toLocaleString('vi-VN');
+};
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const getAuthHeader = () => {
@@ -273,7 +279,7 @@ const XuatKhoSP = () => {
 
     const chiTietColumns = [
         { title: 'Tên sản phẩm', dataIndex: ['sanPham', 'ten_sp'] },
-        { title: 'Số lượng xuất', dataIndex: 'so_luong', align: 'right' },
+        { title: 'Số lượng xuất', dataIndex: 'so_luong', align: 'right', render: (val) => formatVNNumber(val) },
     ];
     
     const isSubmitDisabled = !selectedKhoId || chiTietXuat.length === 0 || chiTietXuat.some(item => item.so_luong_xuat > item.ton_kho) || chiTietXuat.reduce((sum, item) => sum + item.so_luong_xuat, 0) === 0;

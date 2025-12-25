@@ -13,6 +13,12 @@ import { showCreateSuccess, showUpdateSuccess, showDeleteSuccess, showLoadError,
 const { Option } = Select;
 const { TabPane } = Tabs;
 
+// Hàm format số theo kiểu Việt Nam (1.000.000)
+const formatVNNumber = (value) => {
+    if (value === null || value === undefined) return '';
+    return Number(value).toLocaleString('vi-VN');
+};
+
 // Component CRUD Table tái sử dụng
 const QuyDoiTable = ({ type, dataSource, setDataSource, itemList, dvtHqList, loading, fetchData }) => {
     const [form] = Form.useForm();
@@ -99,7 +105,7 @@ const QuyDoiTable = ({ type, dataSource, setDataSource, itemList, dvtHqList, loa
             dataIndex: 'id_dvt_hq', 
             render: (id, record) => record.donViTinhHQ?.ten_dvt || dvtHqList.find(d => d.id_dvt_hq === id)?.ten_dvt || '-'
         },
-        { title: 'Hệ số quy đổi', dataIndex: 'he_so' },
+        { title: 'Hệ số quy đổi', dataIndex: 'he_so', render: (val) => formatVNNumber(val) },
         {
             title: 'Hành động', key: 'action', render: (_, record) => (
                 <Space>

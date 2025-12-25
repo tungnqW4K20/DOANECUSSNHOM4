@@ -26,6 +26,12 @@ const { Option } = Select;
 const { Title } = Typography;
 const { Search } = Input;
 
+// Hàm format số theo kiểu Việt Nam (1.000.000)
+const formatVNNumber = (value) => {
+    if (value === null || value === undefined) return '';
+    return Number(value).toLocaleString('vi-VN');
+};
+
 const HopDong = () => {
     const [crudForm] = Form.useForm();
     const [dataSource, setDataSource] = useState([]);
@@ -202,7 +208,7 @@ const HopDong = () => {
             title: "Giá trị",
             dataIndex: "gia_tri",
             align: "right",
-            render: (val) => val?.toLocaleString(),
+            render: (val) => formatVNNumber(val),
         },
         {
             title: "Tiền tệ",
@@ -303,8 +309,8 @@ const HopDong = () => {
                             <Form.Item name="gia_tri" label="Giá trị hợp đồng">
                                 <InputNumber
                                     style={{ width: "100%" }}
-                                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                                    parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
+                                    formatter={(value) => formatVNNumber(value)}
+                                    parser={(value) => value.replace(/\./g, "")}
                                 />
                             </Form.Item>
                         </Col>

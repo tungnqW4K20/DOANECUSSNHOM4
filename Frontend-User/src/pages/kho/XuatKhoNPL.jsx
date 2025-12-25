@@ -10,6 +10,12 @@ import { showCreateSuccess, showUpdateSuccess, showDeleteSuccess, showLoadError,
 const { Option } = Select;
 const { Title, Text } = Typography;
 
+// Hàm format số theo kiểu Việt Nam (1.000.000)
+const formatVNNumber = (value) => {
+    if (value === null || value === undefined) return '';
+    return Number(value).toLocaleString('vi-VN');
+};
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const getAuthHeader = () => {
@@ -263,7 +269,7 @@ const XuatKhoNPL = () => {
     ];
     const chiTietColumns = [
         { title: 'Tên Nguyên phụ liệu', dataIndex: ['nguyenPhuLieu', 'ten_npl'] },
-        { title: 'Số lượng xuất', dataIndex: 'so_luong', align: 'right' },
+        { title: 'Số lượng xuất', dataIndex: 'so_luong', align: 'right', render: (val) => formatVNNumber(val) },
     ];
 
     return (

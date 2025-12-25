@@ -50,6 +50,12 @@ import {
 const { Option } = Select;
 const { Title } = Typography;
 
+// Hàm format số theo kiểu Việt Nam (1.000.000)
+const formatVNNumber = (value) => {
+    if (value === null || value === undefined) return '';
+    return Number(value).toLocaleString('vi-VN');
+};
+
 const NhapKhoSP = () => {
     const [form] = Form.useForm();
 
@@ -282,7 +288,7 @@ const NhapKhoSP = () => {
     
     const chiTietColumns = [
         { title: 'Tên sản phẩm', dataIndex: ['sanPham', 'ten_sp'] },
-        { title: 'Số lượng nhập', dataIndex: 'so_luong', align: 'right' },
+        { title: 'Số lượng nhập', dataIndex: 'so_luong', align: 'right', render: (val) => formatVNNumber(val) },
     ];
 
     return (

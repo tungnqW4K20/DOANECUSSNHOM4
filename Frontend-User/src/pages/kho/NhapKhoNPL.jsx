@@ -36,6 +36,12 @@ import {
 const { Option } = Select;
 const { Title } = Typography;
 
+// Hàm format số theo kiểu Việt Nam (1.000.000)
+const formatVNNumber = (value) => {
+    if (value === null || value === undefined) return '';
+    return Number(value).toLocaleString('vi-VN');
+};
+
 const NhapKhoNPL = () => {
     const [form] = Form.useForm();
 
@@ -298,7 +304,7 @@ const NhapKhoNPL = () => {
     
     const chiTietColumns = [
         { title: 'Tên Nguyên phụ liệu', dataIndex: ['nguyenPhuLieu', 'ten_npl'] },
-        { title: 'Số lượng nhập', dataIndex: 'so_luong', align: 'right' },
+        { title: 'Số lượng nhập', dataIndex: 'so_luong', align: 'right', render: (val) => formatVNNumber(val) },
     ];
 
     return (
