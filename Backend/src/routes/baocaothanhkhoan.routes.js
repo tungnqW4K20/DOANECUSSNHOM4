@@ -1,9 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const thanhKhoanController = require('../controllers/thanhkhoan.controller');
+const thanhKhoanController = require('../controllers/baocaothanhkhoan.controller');
 const { authenticateToken, authorizeRole } = require('../middlewares/auth.middleware');
 
-// API 1: danh sách hợp đồng
+// ========== APIs cho Giao diện Người dùng (Doanh nghiệp) ==========
+
+// API 1: Lấy danh sách Hợp đồng của Doanh nghiệp
+// GET /api/user/thanh-khoan/hop-dong
 router.get(
   '/hop-dong',
   authenticateToken,
@@ -11,7 +14,8 @@ router.get(
   thanhKhoanController.getHopDong
 );
 
-// API 2: tính toán báo cáo
+// API 2: Tính toán và tạo dữ liệu Báo cáo Thanh khoản
+// POST /api/user/thanh-khoan/calculate
 router.post(
   '/calculate',
   authenticateToken,
@@ -19,25 +23,42 @@ router.post(
   thanhKhoanController.calculate
 );
 
-// API 3: lưu báo cáo
+// API 3: Lưu Báo cáo Thanh khoản
+// POST /api/user/thanh-khoan/save
 router.post(
-  '/thanh-khoan/save',
+  '/save',
   authenticateToken,
   authorizeRole('business'),
   thanhKhoanController.saveBaoCao
 );
-router.patch(
-  '/thanh-khoan-reports/:id_bc/status',
-  authenticateToken,
-  authorizeRole('business'),
-  thanhKhoanController.updateStatus
-);
 
+// ========== APIs bổ sung ==========
+
+// Lấy danh sách báo cáo thanh khoản
+// GET /api/user/thanh-khoan/reports
 router.get(
-  '/thanh-khoan-reports',
+  '/reports',
   authenticateToken,
   authorizeRole('business'),
   thanhKhoanController.getThanhKhoanReports
+);
+
+// Lấy chi tiết báo cáo theo ID
+// GET /api/user/thanh-khoan/reports/:id_bc
+router.get(
+  '/reports/:id_bc',
+  authenticateToken,
+  authorizeRole('business'),
+  thanhKhoanController.getBaoCaoById
+);
+
+// Cập nhật trạng thái báo cáo
+// PATCH /api/user/thanh-khoan/reports/:id_bc/status
+router.patch(
+  '/reports/:id_bc/status',
+  authenticateToken,
+  authorizeRole('business'),
+  thanhKhoanController.updateStatus
 );
 
 module.exports = router;

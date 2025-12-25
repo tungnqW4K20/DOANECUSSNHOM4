@@ -311,7 +311,7 @@ const XuatKhoSP = () => {
                     <Table columns={columns} dataSource={chiTietXuat} pagination={false} rowKey="key" bordered/>
                     <Form.Item style={{ marginTop: 24 }}>
                         <Space>
-                            <Button type="primary" htmlType="submit" icon={<SendOutlined />} loading={submitting} disabled={isSubmitDisabled}>
+                            <Button type="primary" htmlType="submit" icon={<SendOutlined />} loading={submitting} disabled={isSubmitDisabled} style={{ color: '#fff' }}>
                                 {editingRecord ? 'Cập nhật' : 'Xác nhận Xuất kho'}
                             </Button>
                             {editingRecord && <Button icon={<CloseCircleOutlined />} onClick={cancelEdit}>Hủy sửa</Button>}

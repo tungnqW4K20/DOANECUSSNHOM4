@@ -136,7 +136,7 @@ const DinhMuc = () => {
     }, [form]);
 
     const handleAddRow = () => {
-        const newRow = { key: Date.now(), id_npl: null, so_luong: 1, ghi_chu: '' };
+        const newRow = { key: Date.now(), id_npl: null, so_luong: 0.01, ghi_chu: '' };
         setDinhMucDetails([...dinhMucDetails, newRow]);
     };
 
@@ -158,12 +158,21 @@ const DinhMuc = () => {
                 return;
             }
 
+            // Kiểm tra dữ liệu hợp lệ
+            const invalidRows = dinhMucDetails.filter(
+                (item) => !item.id_npl || !item.so_luong || item.so_luong <= 0
+            );
+            if (invalidRows.length > 0) {
+                showError('Dữ liệu không hợp lệ', 'Vui lòng chọn nguyên phụ liệu và nhập số lượng hợp lệ cho tất cả các dòng!');
+                return;
+            }
+
             setSaving(true);
             const payload = {
                 id_sp: values.id_sp,
                 dinh_muc_chi_tiet: dinhMucDetails.map((item) => ({
                     id_nguyen_lieu: item.id_npl,
-                    so_luong: item.so_luong,
+                    so_luong: parseFloat(item.so_luong),
                     ghi_chu: item.ghi_chu || '',
                 })),
             };
@@ -245,7 +254,14 @@ const DinhMuc = () => {
                     step="0.01"
                     style={{ width: '100%' }}
                     value={record.so_luong}
-                    onChange={(val) => handleRowChange(record.key, 'so_luong', val)}
+                    onChange={(val) => handleRowChange(record.key, 'so_luong', val || 0.01)}
+                    placeholder="Nhập số lượng"
+                    formatter={(value) => {
+                        if (!value) return '';
+                        const num = parseFloat(value);
+                        return num % 1 === 0 ? num.toString() : value;
+                    }}
+                    parser={(value) => value}
                 />
             ),
         },
