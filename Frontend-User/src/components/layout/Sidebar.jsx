@@ -17,6 +17,7 @@ import {
   PackageX,
   DollarSign,
   Calculator,
+  Ruler,
 } from 'lucide-react';
 
 const menuItems = [
@@ -61,6 +62,12 @@ const menuItems = [
         icon: <Calculator size={16} />,
         label: 'Định mức',
         path: '/dinh-muc',
+      },
+      {
+        key: '/quy-doi-don-vi',
+        icon: <Ruler size={16} />,
+        label: 'Quy đổi đơn vị',
+        path: '/quy-doi-don-vi',
       },
     ],
   },
@@ -107,6 +114,12 @@ const menuItems = [
         path: '/kho',
       },
       {
+        key: '/kho/ton-kho',
+        icon: <Package size={16} />,
+        label: 'Theo dõi tồn kho',
+        path: '/kho/ton-kho',
+      },
+      {
         key: '/kho/nhap-npl',
         icon: <PackagePlus size={16} />,
         label: 'Nhập kho NPL',
@@ -148,12 +161,6 @@ const menuItems = [
         icon: <DollarSign size={16} />,
         label: 'Tỷ giá',
         path: '/ty-gia',
-      },
-      {
-        key: '/quy-doi-don-vi',
-        icon: <Calculator size={16} />,
-        label: 'Quy đổi đơn vị',
-        path: '/quy-doi-don-vi',
       },
     ],
   },

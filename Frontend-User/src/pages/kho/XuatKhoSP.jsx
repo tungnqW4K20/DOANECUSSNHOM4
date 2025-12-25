@@ -91,6 +91,7 @@ const XuatKhoSP = () => {
         // Lấy tồn kho SP của kho được chọn
         if (id_kho) {
             const tonKhoData = await getTonKhoSPByKho(id_kho);
+            console.log('Tồn kho SP:', tonKhoData);
             setTonKhoSP(tonKhoData);
         } else {
             setTonKhoSP([]);
@@ -99,20 +100,31 @@ const XuatKhoSP = () => {
     
     const handleHoaDonChange = (id_hd_xuat) => {
         const hd = hoaDonXuatList.find(h => h.id_hd_xuat === id_hd_xuat);
+        console.log('Hóa đơn xuất được chọn:', hd);
+        console.log('Chi tiết hóa đơn:', hd?.chiTiets);
+        console.log('Tồn kho hiện tại:', tonKhoSP);
+        
         if (hd && selectedKhoId && hd.chiTiets) {
             const chiTietCapNhat = hd.chiTiets.map((item, index) => {
                 // Tìm tồn kho của SP này trong kho đã chọn
-                const tonKhoItem = tonKhoSP.find(tk => tk.id_sp === item.id_sp);
-                const soLuongTon = tonKhoItem ? tonKhoItem.so_luong_ton : 0;
+                // item.id_sp hoặc item.sanPham?.id_sp
+                const spId = item.id_sp || item.sanPham?.id_sp;
+                const tonKhoItem = tonKhoSP.find(tk => tk.id_sp === spId);
+                const soLuongTon = tonKhoItem ? parseFloat(tonKhoItem.so_luong_ton) || 0 : 0;
                 const donVi = item.sanPham?.donViTinhHQ?.ten_dvt || tonKhoItem?.don_vi || 'N/A';
+                
+                // Parse số lượng từ hóa đơn (có thể là string hoặc decimal)
+                const soLuongHD = parseFloat(item.so_luong) || 0;
+                
+                console.log(`SP ${spId} (${item.sanPham?.ten_sp}): SL theo HĐ = ${soLuongHD}, tồn kho = ${soLuongTon}`);
                 
                 return {
                     key: index + 1,
-                    id_sp: item.id_sp,
+                    id_sp: spId,
                     ten_sp: item.sanPham?.ten_sp || 'N/A',
-                    so_luong_hd: item.so_luong || 0,
+                    so_luong_hd: soLuongHD,
                     ton_kho: soLuongTon,
-                    so_luong_xuat: Math.min(item.so_luong || 0, soLuongTon),
+                    so_luong_xuat: Math.min(soLuongHD, soLuongTon),
                     id_qd: item.id_qd || null,
                     ten_dvt_dn: donVi,
                 };
@@ -253,9 +265,10 @@ const XuatKhoSP = () => {
     };
 
     const columns = [
-        { title: 'Tên Sản phẩm', dataIndex: 'ten_sp' }, { title: 'Đơn vị tính', dataIndex: 'ten_dvt_dn' },
-        { title: 'Số lượng theo HĐ', dataIndex: 'so_luong_hd', align: 'center' },
-        { title: 'Tồn kho khả dụng', dataIndex: 'ton_kho', align: 'center', render: text => <Text strong>{text}</Text> },
+        { title: 'Tên Sản phẩm', dataIndex: 'ten_sp' }, 
+        { title: 'Đơn vị tính', dataIndex: 'ten_dvt_dn' },
+        { title: 'Số lượng theo HĐ', dataIndex: 'so_luong_hd', align: 'center', render: val => formatVNNumber(val) },
+        { title: 'Tồn kho khả dụng', dataIndex: 'ton_kho', align: 'center', render: text => <Text strong>{formatVNNumber(text)}</Text> },
         { title: 'Số lượng thực xuất', dataIndex: 'so_luong_xuat', width: 250, render: (text, record) => (
             <Space>
                 <InputNumber min={0} max={record.ton_kho} value={text} onChange={(val) => handleSoLuongChange(record.key, val)}/>

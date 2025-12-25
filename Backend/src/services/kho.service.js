@@ -44,19 +44,32 @@ const getTonKhoNPLByKho = async (id_kho, id_dn) => {
   const kho = await Kho.findOne({ where: { id_kho: khoId, id_dn: dnId } });
   if (!kho) throw new Error("Kho không tồn tại hoặc bạn không có quyền truy cập");
   
-  return await TonKhoNPL.findAll({
+  const tonKhoList = await TonKhoNPL.findAll({
     where: { id_kho: khoId },
     include: [{
       model: NguyenPhuLieu,
       as: 'nguyenPhuLieu',
-      attributes: ['id_npl', 'ten_npl', 'id_dvt_hq'],
       include: [{
         model: DonViTinhHQ,
-        as: 'donViTinhHQ',
-        attributes: ['ten_dvt']
+        as: 'donViTinhHQ'
       }]
     }]
   });
+  
+  // Map lại data để đảm bảo format đúng
+  return tonKhoList.map(item => ({
+    id: item.id,
+    id_kho: item.id_kho,
+    id_npl: item.id_npl,
+    so_luong_ton: item.so_luong_ton,
+    nguyenPhuLieu: item.nguyenPhuLieu ? {
+      id_npl: item.nguyenPhuLieu.id_npl,
+      ten_npl: item.nguyenPhuLieu.ten_npl,
+      donViTinhHQ: item.nguyenPhuLieu.donViTinhHQ ? {
+        ten_dvt: item.nguyenPhuLieu.donViTinhHQ.ten_dvt
+      } : null
+    } : null
+  }));
 };
 
 // Lấy tồn kho SP theo kho
@@ -67,21 +80,32 @@ const getTonKhoSPByKho = async (id_kho, id_dn) => {
   const kho = await Kho.findByPk(khoId);
   if (!kho) throw new Error("Kho không tồn tại");
   
-  const result = await TonKhoSP.findAll({
+  const tonKhoList = await TonKhoSP.findAll({
     where: { id_kho: khoId },
     include: [{
       model: SanPham,
       as: 'sanPham',
-      attributes: ['id_sp', 'ten_sp', 'id_dvt_hq'],
       include: [{
         model: DonViTinhHQ,
-        as: 'donViTinhHQ',
-        attributes: ['ten_dvt']
+        as: 'donViTinhHQ'
       }]
     }]
   });
   
-  return result;
+  // Map lại data để đảm bảo format đúng
+  return tonKhoList.map(item => ({
+    id: item.id,
+    id_kho: item.id_kho,
+    id_sp: item.id_sp,
+    so_luong_ton: item.so_luong_ton,
+    sanPham: item.sanPham ? {
+      id_sp: item.sanPham.id_sp,
+      ten_sp: item.sanPham.ten_sp,
+      donViTinhHQ: item.sanPham.donViTinhHQ ? {
+        ten_dvt: item.sanPham.donViTinhHQ.ten_dvt
+      } : null
+    } : null
+  }));
 };
 
 module.exports = { createKho, getAllKho, getKhoById, updateKho, deleteKho, getTonKhoNPLByKho, getTonKhoSPByKho };

@@ -106,6 +106,8 @@ const hoaDonXuatService = {
   },
 
   async update(id, data, id_dn, role) {
+    const { so_hd, ngay_hd, id_tt, tong_tien, file_hoa_don, chi_tiets } = data;
+    
     let hd;
     if (role === 'Admin') {
       hd = await HoaDonXuat.findByPk(id);
@@ -127,8 +129,27 @@ const hoaDonXuatService = {
     }
 
     if (!hd) throw new Error('Không tìm thấy hóa đơn xuất hoặc bạn không có quyền truy cập');
-    delete data.id_lh;
-    return await hd.update(data);
+    
+    // Cập nhật thông tin hóa đơn
+    await hd.update({ so_hd, ngay_hd, id_tt, tong_tien, file_hoa_don });
+
+    // Cập nhật chi tiết nếu có
+    if (Array.isArray(chi_tiets)) {
+      await HoaDonXuatChiTiet.destroy({ where: { id_hd_xuat: id } });
+      for (const ct of chi_tiets) {
+        await HoaDonXuatChiTiet.create({
+          id_hd_xuat: id,
+          id_sp: ct.id_sp,
+          so_luong: ct.so_luong,
+          don_gia: ct.don_gia,
+          tri_gia: ct.tri_gia
+        });
+      }
+    }
+
+    return await HoaDonXuat.findByPk(id, {
+      include: [{ model: HoaDonXuatChiTiet, as: 'chiTiets' }]
+    });
   },
 
   async delete(id, id_dn, role) {

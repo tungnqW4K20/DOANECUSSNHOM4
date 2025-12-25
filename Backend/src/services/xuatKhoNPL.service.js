@@ -163,10 +163,76 @@ const getXuatNPLById = async (id_xuat) => {
 };
 
 const updateXuatNPL = async (id_xuat, data) => {
-  const rec = await XuatKhoNPL.findByPk(id_xuat);
+  const { id_kho, ngay_xuat, file_phieu, chi_tiets } = data;
+  
+  const rec = await XuatKhoNPL.findByPk(id_xuat, {
+    include: [{ model: XuatKhoNPLChiTiet, as: 'chiTiets' }]
+  });
   if (!rec) throw new Error(`Không tìm thấy phiếu xuất ID=${id_xuat}`);
-  await rec.update(data);
-  return rec;
+
+  const t = await db.sequelize.transaction();
+
+  try {
+    // Hoàn trả tồn kho cũ (cộng lại vì đã trừ khi xuất)
+    const oldChiTiets = rec.chiTiets || [];
+    for (const oldCt of oldChiTiets) {
+      const tonKho = await TonKhoNPL.findOne({ 
+        where: { id_kho: rec.id_kho, id_npl: oldCt.id_npl }, 
+        transaction: t 
+      });
+      if (tonKho) {
+        await tonKho.increment('so_luong_ton', { by: oldCt.so_luong, transaction: t });
+      }
+    }
+
+    // Cập nhật thông tin phiếu xuất
+    await rec.update({ id_kho, ngay_xuat, file_phieu }, { transaction: t });
+
+    // Xóa chi tiết cũ
+    await XuatKhoNPLChiTiet.destroy({ where: { id_xuat }, transaction: t });
+
+    // Thêm chi tiết mới và cập nhật tồn kho
+    if (Array.isArray(chi_tiets)) {
+      const id_kho_new = id_kho || rec.id_kho;
+      
+      for (const ct of chi_tiets) {
+        const { id_npl, so_luong } = ct;
+        if (!id_npl || !so_luong) continue;
+
+        const npl = await NguyenPhuLieu.findByPk(id_npl, { transaction: t });
+        if (!npl) throw new Error(`Không tìm thấy nguyên phụ liệu ID=${id_npl}`);
+
+        // Kiểm tra tồn kho
+        const tonKho = await TonKhoNPL.findOne({ 
+          where: { id_kho: id_kho_new, id_npl }, 
+          transaction: t 
+        });
+        if (!tonKho) throw new Error(`Kho ID=${id_kho_new} chưa có tồn kho cho NPL ID=${id_npl}`);
+        if (tonKho.so_luong_ton < so_luong) 
+          throw new Error(`NPL ID=${id_npl} không đủ tồn kho. Hiện có ${tonKho.so_luong_ton}`);
+
+        await XuatKhoNPLChiTiet.create(
+          { id_xuat, id_npl, so_luong },
+          { transaction: t }
+        );
+
+        // Trừ tồn kho
+        await tonKho.decrement('so_luong_ton', { by: so_luong, transaction: t });
+      }
+    }
+
+    await t.commit();
+
+    return await XuatKhoNPL.findByPk(id_xuat, {
+      include: [
+        { model: XuatKhoNPLChiTiet, as: 'chiTiets' },
+        { model: Kho, as: 'kho' }
+      ]
+    });
+  } catch (err) {
+    if (!t.finished) await t.rollback();
+    throw err;
+  }
 };
 
 const deleteXuatNPL = async (id_xuat) => {

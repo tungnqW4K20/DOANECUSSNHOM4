@@ -124,10 +124,10 @@ const XuatKhoNPL = () => {
         const index = newData.findIndex(item => key === item.key);
         if (index > -1) {
             if (field === 'id_npl') {
-                const selectedNPL = nplTrongKho.find(npl => npl.id_npl === value);
+                const selectedNPL = nplTrongKho.find(npl => (npl.id_npl || npl.nguyenPhuLieu?.id_npl) === value);
                 newData[index].id_npl = value;
-                newData[index].ton_kho = selectedNPL ? selectedNPL.so_luong_ton : 0;
-                newData[index].don_vi = selectedNPL ? selectedNPL.don_vi : '';
+                newData[index].ton_kho = selectedNPL ? (selectedNPL.so_luong_ton || 0) : 0;
+                newData[index].don_vi = selectedNPL ? (selectedNPL.don_vi || selectedNPL.nguyenPhuLieu?.donViTinhHQ?.ten_dvt || '') : '';
                 newData[index].so_luong = 1;
             } else {
                 newData[index][field] = value;
@@ -249,8 +249,18 @@ const XuatKhoNPL = () => {
     };
 
     const columns = [
-        { title: 'Nguyên phụ liệu', dataIndex: 'id_npl', width: '40%', render: (_, record) => (<Select style={{ width: '100%' }} placeholder="Chọn NPL" value={record.id_npl} onChange={(val) => handleRowChange(record.key, 'id_npl', val)} showSearch optionFilterProp="children">{nplTrongKho.map(npl => <Option key={npl.id_npl} value={npl.id_npl}>{`${npl.ten_npl} (Tồn: ${npl.so_luong_ton} ${npl.don_vi})`}</Option>)}</Select>) },
-        { title: 'Tồn kho khả dụng', dataIndex: 'ton_kho', align: 'center', render: (text, record) => <Text strong>{`${text || 0} ${record.don_vi || ''}`}</Text> },
+        { title: 'Nguyên phụ liệu', dataIndex: 'id_npl', width: '40%', render: (_, record) => (
+            <Select style={{ width: '100%' }} placeholder="Chọn NPL" value={record.id_npl} onChange={(val) => handleRowChange(record.key, 'id_npl', val)} showSearch optionFilterProp="children">
+                {nplTrongKho.map(npl => {
+                    const id = npl.id_npl || npl.nguyenPhuLieu?.id_npl;
+                    const ten = npl.ten_npl || npl.nguyenPhuLieu?.ten_npl || 'N/A';
+                    const ton = npl.so_luong_ton || 0;
+                    const dvt = npl.don_vi || npl.nguyenPhuLieu?.donViTinhHQ?.ten_dvt || '';
+                    return <Option key={id} value={id}>{`${ten} (Tồn: ${ton} ${dvt})`}</Option>;
+                })}
+            </Select>
+        ) },
+        { title: 'Tồn kho khả dụng', dataIndex: 'ton_kho', align: 'center', render: (text, record) => <Text strong>{`${formatVNNumber(text || 0)} ${record.don_vi || ''}`}</Text> },
         { title: 'Số lượng xuất', dataIndex: 'so_luong', render: (_, record) => (<InputNumber min={1} max={record.ton_kho} style={{ width: '100%' }} value={record.so_luong} onChange={(val) => handleRowChange(record.key, 'so_luong', val)} disabled={!record.id_npl}/>) },
         { title: 'Hành động', width: 100, align: 'center', render: (_, record) => <Popconfirm title="Chắc chắn xóa?" onConfirm={() => handleRemoveRow(record.key)}><Button icon={<DeleteOutlined/>} danger /></Popconfirm> },
     ];
