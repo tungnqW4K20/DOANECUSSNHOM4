@@ -370,7 +370,7 @@ const QuanLyToKhai = ({ type }) => {
     const mainColumns = useMemo(() => [ 
         { title: 'Số Tờ khai', dataIndex: 'so_tk' }, 
         { title: 'Số Hợp đồng', dataIndex: 'so_hd' }, 
-        { title: 'Ngày khai', dataIndex: 'ngay_tk' },
+        { title: 'Ngày khai', dataIndex: 'ngay_tk', render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
         { title: 'Hành động', key: 'action', align: 'center', render: (_, record) => (
             <Space>
                 <Button icon={<FolderOpenOutlined />} onClick={() => showDrawer(record)}>Chi tiết</Button>
@@ -383,8 +383,8 @@ const QuanLyToKhai = ({ type }) => {
 
     const loHangColumns = useMemo(() => [ 
         { title: 'Số Lô hàng', dataIndex: 'so_lh' }, 
-        { title: 'Ngày đóng gói', dataIndex: 'ngay_dong_goi' },
-        { title: 'Ngày xuất cảng', dataIndex: 'ngay_xuat_cang' }, 
+        { title: 'Ngày đóng gói', dataIndex: 'ngay_dong_goi', render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
+        { title: 'Ngày xuất cảng', dataIndex: 'ngay_xuat_cang', render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' }, 
         { title: 'Cảng xuất', dataIndex: 'cang_xuat' },
         { title: 'Cảng nhập', dataIndex: 'cang_nhap' }, 
         { title: 'File', dataIndex: 'file_chung_tu', render: file => file ? <Tooltip title={file}><FileOutlined style={{color: '#1890ff'}}/></Tooltip> : null },
@@ -400,7 +400,7 @@ const QuanLyToKhai = ({ type }) => {
 
     const hoaDonColumns = useMemo(() => [ 
         { title: 'Số Hóa đơn', dataIndex: 'so_hd' }, 
-        { title: 'Ngày HĐ', dataIndex: 'ngay_hd' },
+        { title: 'Ngày HĐ', dataIndex: 'ngay_hd', render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
         { title: 'Tổng tiền', dataIndex: 'tong_tien', render: (val) => formatVNNumber(val) }, 
         { title: 'Tiền tệ', dataIndex: 'id_tt', render: (id) => tienTeList.find(t => t.id_tt === id)?.ma_tt },
         { title: 'Hàng hóa', key: 'chi_tiet', align: 'center', render: (_, record) => (
@@ -419,7 +419,7 @@ const QuanLyToKhai = ({ type }) => {
 
     const vanDonColumns = useMemo(() => [ 
         { title: 'Số Vận đơn', dataIndex: 'so_vd' }, 
-        { title: 'Ngày phát hành', dataIndex: 'ngay_phat_hanh' },
+        { title: 'Ngày phát hành', dataIndex: 'ngay_phat_hanh', render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
         { title: 'Cảng xuất', dataIndex: 'cang_xuat' }, 
         { title: 'Cảng nhập', dataIndex: 'cang_nhap' },
         { title: 'File', dataIndex: 'file_van_don', render: file => file ? <Tooltip title={file}><FileOutlined style={{color: '#1890ff'}}/></Tooltip> : null },

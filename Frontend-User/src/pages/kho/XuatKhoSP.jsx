@@ -6,7 +6,7 @@ import axios from 'axios';
 import * as XuatKhoSPService from '../../services/xuatkhosp.service';
 import * as KhoService from '../../services/kho.service';
 import * as HoaDonXuatService from '../../services/hoadonxuat.service';
-import { getQuyDoiListSP } from '../../services/quyDoiHelper.service';
+
 import { showCreateSuccess, showUpdateSuccess, showDeleteSuccess, showLoadError, showSaveError, showError } from '../../components/notification';
 import { requiredSelectRule, pastDateRules } from '../../utils/validationRules';
 
@@ -280,7 +280,7 @@ const XuatKhoSP = () => {
 
     const lichSuColumns = [
         { title: 'Số phiếu', dataIndex: 'so_phieu', render: (text, record) => text || `PXKSP-${record.id_xuat}` }, 
-        { title: 'Ngày xuất', dataIndex: 'ngay_xuat', render: (text) => dayjs(text).format('DD/MM/YYYY') },
+        { title: 'Ngày xuất', dataIndex: 'ngay_xuat', render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
         { title: 'Kho xuất', dataIndex: ['kho', 'ten_kho'] },
         { title: 'Hành động', key: 'action', width: 220, align: 'center', render: (_, record) => (
             <Space>

@@ -367,7 +367,7 @@ const ThanhKhoan = () => {
         { 
             title: 'Thời gian tạo', 
             dataIndex: 'thoi_gian_tao', 
-            render: (text) => dayjs(text).format('HH:mm DD/MM/YYYY')
+            render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-'
         },
         { 
             title: 'Kết luận', 

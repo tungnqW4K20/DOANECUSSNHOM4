@@ -201,9 +201,9 @@ const HopDong = () => {
 
     const mainColumns = [
         { title: "Số Hợp đồng", dataIndex: "so_hd" },
-        { title: "Ngày ký", dataIndex: "ngay_ky" },
-        { title: "Ngày hiệu lực", dataIndex: "ngay_hieu_luc" },
-        { title: "Ngày hết hạn", dataIndex: "ngay_het_han" },
+        { title: "Ngày ký", dataIndex: "ngay_ky", render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
+        { title: "Ngày hiệu lực", dataIndex: "ngay_hieu_luc", render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
+        { title: "Ngày hết hạn", dataIndex: "ngay_het_han", render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
         {
             title: "Giá trị",
             dataIndex: "gia_tri",
@@ -257,8 +257,8 @@ const HopDong = () => {
 
     const loHangColumns = [
         // { title: "Số Lô hàng", dataIndex: "id_lh" },
-        { title: "Ngày đóng gói", dataIndex: "ngay_dong_goi" },
-        { title: "Ngày xuất cảng", dataIndex: "ngay_xuat_cang" },
+        { title: "Ngày đóng gói", dataIndex: "ngay_dong_goi", render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
+        { title: "Ngày xuất cảng", dataIndex: "ngay_xuat_cang", render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
         { title: "Cảng xuất", dataIndex: "cang_xuat" },
         { title: "Cảng nhập", dataIndex: "cang_nhap" },
         {

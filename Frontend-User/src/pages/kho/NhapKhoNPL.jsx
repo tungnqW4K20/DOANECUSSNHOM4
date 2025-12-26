@@ -406,7 +406,7 @@ const NhapKhoNPL = () => {
 
     const lichSuColumns = [
         { title: 'Số phiếu', dataIndex: 'so_phieu', render: (text, record) => text || `PNKNPL-${record.id_nhap}` },
-        { title: 'Ngày nhập', dataIndex: 'ngay_nhap', render: (text) => dayjs(text).format('DD/MM/YYYY') },
+        { title: 'Ngày nhập', dataIndex: 'ngay_nhap', render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
         { title: 'Kho nhận', dataIndex: ['kho', 'ten_kho'] },
         { title: 'Hóa đơn liên quan', dataIndex: ['hoaDonNhap', 'so_hd'] },
         { title: 'Hành động', key: 'action', render: (_, record) => (

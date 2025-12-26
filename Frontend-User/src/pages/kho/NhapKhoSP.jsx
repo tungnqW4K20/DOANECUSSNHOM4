@@ -369,7 +369,7 @@ const NhapKhoSP = () => {
 
     const lichSuColumns = [
         { title: 'Số phiếu', dataIndex: 'so_phieu', render: (text, record) => text || `PNKSP-${record.id_nhap}` },
-        { title: 'Ngày nhập', dataIndex: 'ngay_nhap', render: (text) => dayjs(text).format('DD/MM/YYYY') },
+        { title: 'Ngày nhập', dataIndex: 'ngay_nhap', render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
         { title: 'Kho nhận', dataIndex: ['kho', 'ten_kho'] },
         { title: 'Hành động', key: 'action', width: 220, align: 'center', render: (_, record) => (
             <Space>

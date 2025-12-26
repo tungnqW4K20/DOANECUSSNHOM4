@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Form, Select, DatePicker, Button, Table, InputNumber, Upload, Typography, Popconfirm, Row, Col, Card, Space, Drawer, Descriptions, message } from 'antd';
+import { Form, Select, DatePicker, Button, Table, InputNumber, Upload, Typography, Popconfirm, Row, Col, Card, Space, Drawer, Descriptions } from 'antd';
 import { SaveOutlined, PlusOutlined, DeleteOutlined, EyeOutlined, EditOutlined, CloseCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import * as XuatKhoNPLService from '../../services/xuatkhonpl.service';
@@ -359,7 +359,7 @@ const XuatKhoNPL = () => {
 
     const lichSuColumns = [
         { title: 'Số phiếu', dataIndex: 'so_phieu', render: (text, record) => text || `PXKNPL-${record.id_xuat}` },
-        { title: 'Ngày xuất', dataIndex: 'ngay_xuat', render: (text) => dayjs(text).format('DD/MM/YYYY') },
+        { title: 'Ngày xuất', dataIndex: 'ngay_xuat', render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
         { title: 'Kho xuất', dataIndex: ['kho', 'ten_kho'] },
         { title: 'Hành động', key: 'action', width: 220, align: 'center', render: (_, record) => (
             <Space>
