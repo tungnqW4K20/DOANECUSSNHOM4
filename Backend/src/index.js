@@ -36,6 +36,7 @@ const nhapKhoSPRoutes = require('./routes/nhapKhoSP.routes');
 const xuatKhoSPRoutes = require('./routes/xuatKhoSP.routes');
 const baocaothanhkhoanRoutes = require('./routes/baocaothanhkhoan.routes');
 const toKhaiRoutes = require('./routes/tokhai.routes');
+const profileRoutes = require('./routes/profile.routes');
 const scheduleTyGiaUpdate = require('./cron/tygia.cron');
 
 // const donvitinhhaiquanRoutes = require('./routes/dvtinh.routes')
@@ -80,6 +81,7 @@ app.use('/api/xuatkho-sp', xuatKhoSPRoutes);
 app.use('/api/bao-cao-thanh-khoan', baocaothanhkhoanRoutes);
 app.use('/api/thanh-khoan', baocaothanhkhoanRoutes);
 app.use('/api/to-khai', toKhaiRoutes);
+app.use('/api/profile', profileRoutes);
 
 
 // --- Kết nối DB và khởi động Server ---
