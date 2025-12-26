@@ -1,9 +1,11 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Form, Select, DatePicker, Button, Table, InputNumber, Upload, Typography, Popconfirm, Row, Col, Card, Space, Drawer, Descriptions } from 'antd';
+import { Form, Select, DatePicker, Button, Table, InputNumber, Upload, Typography, Popconfirm, Row, Col, Card, Space, Drawer, Descriptions, message } from 'antd';
 import { SaveOutlined, PlusOutlined, DeleteOutlined, EyeOutlined, EditOutlined, CloseCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import * as XuatKhoNPLService from '../../services/xuatkhonpl.service';
 import { getAllKho } from '../../services/kho.service';
+import { getQuyDoiListNPL, calculateNPL_DN_to_HQ } from '../../services/quyDoiHelper.service';
+
 import axios from 'axios';
 import { showCreateSuccess, showUpdateSuccess, showDeleteSuccess, showLoadError, showSaveError, showWarning } from '../../components/notification';
 
@@ -113,13 +115,24 @@ const XuatKhoNPL = () => {
             showWarning('Vui lòng chọn kho xuất hàng trước');
             return;
         }
-        const newRow = { key: Date.now(), id_npl: null, so_luong: 1, ton_kho: 0, don_vi: '' };
+        const newRow = { 
+            key: Date.now(), 
+            id_npl: null, 
+            so_luong_dn: 1,
+            so_luong_hq: 1, 
+            ton_kho: 0, 
+            don_vi: '',
+            quyDoiList: [],
+            id_qd: null,
+            ten_dvt_dn: null,
+            ten_dvt_hq: null
+        };
         setChiTietXuat([...chiTietXuat, newRow]);
     };
 
     const handleRemoveRow = (key) => setChiTietXuat(chiTietXuat.filter(item => item.key !== key));
     
-    const handleRowChange = (key, field, value) => {
+    const handleRowChange = async (key, field, value) => {
         const newData = [...chiTietXuat];
         const index = newData.findIndex(item => key === item.key);
         if (index > -1) {
@@ -128,7 +141,42 @@ const XuatKhoNPL = () => {
                 newData[index].id_npl = value;
                 newData[index].ton_kho = selectedNPL ? (selectedNPL.so_luong_ton || 0) : 0;
                 newData[index].don_vi = selectedNPL ? (selectedNPL.don_vi || selectedNPL.nguyenPhuLieu?.donViTinhHQ?.ten_dvt || '') : '';
-                newData[index].so_luong = 1;
+                newData[index].so_luong_dn = 1;
+                newData[index].so_luong_hq = 1;
+                
+                // Load quy đổi
+                try {
+                    const quyDoiList = await getQuyDoiListNPL(value);
+                    newData[index].quyDoiList = quyDoiList;
+                } catch (err) {
+                    console.log('Không có quy đổi cho NPL', value, err);
+                    newData[index].quyDoiList = [];
+                }
+            } else if (field === 'id_qd') {
+                const qd = newData[index].quyDoiList.find(q => q.id_qd === value);
+                newData[index].id_qd = value;
+                newData[index].ten_dvt_dn = qd?.ten_dvt_dn || null;
+                newData[index].ten_dvt_hq = qd?.ten_dvt_hq || null;
+            } else if (field === 'so_luong') {
+                // Tính toán quy đổi nếu có
+                if (newData[index].id_qd) {
+                    try {
+                        const result = await calculateNPL_DN_to_HQ(
+                            newData[index].id_npl,
+                            newData[index].ten_dvt_dn,
+                            value
+                        );
+                        newData[index].so_luong_dn = value;
+                        newData[index].so_luong_hq = result.so_luong_hq;
+                    } catch (err) {
+                        console.log('Lỗi tính quy đổi', err);
+                        newData[index].so_luong_dn = value;
+                        newData[index].so_luong_hq = value;
+                    }
+                } else {
+                    newData[index].so_luong_dn = value;
+                    newData[index].so_luong_hq = value;
+                }
             } else {
                 newData[index][field] = value;
             }
@@ -223,7 +271,7 @@ const XuatKhoNPL = () => {
             file_phieu: null,
             chi_tiets: chiTietXuat.map((item) => ({
                 id_npl: item.id_npl,
-                so_luong: item.so_luong
+                so_luong: item.so_luong_hq || item.so_luong_dn // Lưu số lượng HQ
             }))
         };
         
@@ -249,7 +297,7 @@ const XuatKhoNPL = () => {
     };
 
     const columns = [
-        { title: 'Nguyên phụ liệu', dataIndex: 'id_npl', width: '40%', render: (_, record) => (
+        { title: 'Nguyên phụ liệu', dataIndex: 'id_npl', width: '30%', render: (_, record) => (
             <Select style={{ width: '100%' }} placeholder="Chọn NPL" value={record.id_npl} onChange={(val) => handleRowChange(record.key, 'id_npl', val)} showSearch optionFilterProp="children">
                 {nplTrongKho.map(npl => {
                     const id = npl.id_npl || npl.nguyenPhuLieu?.id_npl;
@@ -260,8 +308,52 @@ const XuatKhoNPL = () => {
                 })}
             </Select>
         ) },
-        { title: 'Tồn kho khả dụng', dataIndex: 'ton_kho', align: 'center', render: (text, record) => <Text strong>{`${formatVNNumber(text || 0)} ${record.don_vi || ''}`}</Text> },
-        { title: 'Số lượng xuất', dataIndex: 'so_luong', render: (_, record) => (<InputNumber min={1} max={record.ton_kho} style={{ width: '100%' }} value={record.so_luong} onChange={(val) => handleRowChange(record.key, 'so_luong', val)} disabled={!record.id_npl}/>) },
+        { 
+            title: 'Đơn vị', 
+            width: '20%',
+            render: (_, record) => {
+                if (!record.quyDoiList || record.quyDoiList.length === 0) {
+                    return <span style={{ color: '#999' }}>-</span>;
+                }
+                return (
+                    <Select
+                        style={{ width: '100%' }}
+                        placeholder="Chọn đơn vị"
+                        value={record.id_qd}
+                        onChange={(val) => handleRowChange(record.key, 'id_qd', val)}
+                    >
+                        {record.quyDoiList.map(qd => (
+                            <Option key={qd.id_qd} value={qd.id_qd}>
+                                {qd.ten_dvt_dn}
+                            </Option>
+                        ))}
+                    </Select>
+                );
+            }
+        },
+        { title: 'Tồn kho', dataIndex: 'ton_kho', align: 'center', width: '15%', render: (text, record) => <Text strong>{`${formatVNNumber(text || 0)} ${record.ten_dvt_hq || record.don_vi || ''}`}</Text> },
+        { 
+            title: 'Số lượng xuất', 
+            width: '20%',
+            render: (_, record) => (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                    <InputNumber 
+                        min={1} 
+                        max={record.ton_kho} 
+                        style={{ width: '100%' }} 
+                        value={record.so_luong_dn} 
+                        onChange={(val) => handleRowChange(record.key, 'so_luong', val)} 
+                        disabled={!record.id_npl}
+                        placeholder={record.id_qd ? record.ten_dvt_dn : 'Số lượng'}
+                    />
+                    {record.id_qd && record.so_luong_hq !== record.so_luong_dn && (
+                        <Text type="secondary" style={{ fontSize: '12px' }}>
+                            = {formatVNNumber(record.so_luong_hq)} {record.ten_dvt_hq}
+                        </Text>
+                    )}
+                </Space>
+            )
+        },
         { title: 'Hành động', width: 100, align: 'center', render: (_, record) => <Popconfirm title="Chắc chắn xóa?" onConfirm={() => handleRemoveRow(record.key)}><Button icon={<DeleteOutlined/>} danger /></Popconfirm> },
     ];
 
@@ -292,7 +384,17 @@ const XuatKhoNPL = () => {
                         <Col span={12}><Form.Item label="Ngày xuất kho" name="ngay_xuat" rules={[{ required: true, message: "Vui lòng chọn ngày xuất" }]}><DatePicker style={{ width: '100%' }} /></Form.Item></Col>
                     </Row>
                     <Form.Item label="File phiếu xuất (nếu có)" name="file_phieu">
-                        <Upload><Button icon={<UploadOutlined />}>Tải lên</Button></Upload>
+                        <Upload
+                            maxCount={1}
+                            beforeUpload={() => false}
+                            onChange={(info) => {
+                                if (info.fileList.length > 0) {
+                                    form.setFieldsValue({ file_phieu: info.fileList[0].originFileObj });
+                                }
+                            }}
+                        >
+                            <Button icon={<UploadOutlined />}>Tải lên</Button>
+                        </Upload>
                     </Form.Item>
                     <Title level={4}>Chi tiết Nguyên Phụ Liệu Cần Xuất</Title>
                     <Button onClick={handleAddRow} type="dashed" icon={<PlusOutlined />} style={{ marginBottom: 16 }} disabled={!selectedKhoId}>Thêm Nguyên phụ liệu</Button>

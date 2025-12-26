@@ -10,6 +10,8 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import * as BaoCaoThanhKhoanService from '../../services/baocaothanhkhoan.service';
+import { exportBaoCaoToExcel } from '../../utils/exportExcel';
+import { exportBaoCaoToPDF } from '../../utils/exportPDF';
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -25,6 +27,8 @@ const ThanhKhoan = () => {
     const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
     const [searchText, setSearchText] = useState('');
     const [filterKetLuan, setFilterKetLuan] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [currentReportId, setCurrentReportId] = useState(null);
 
     // Fetch initial data
     useEffect(() => {
@@ -94,6 +98,7 @@ const ThanhKhoan = () => {
             };
             const response = await BaoCaoThanhKhoanService.calculateReport(payload);
             setBaoCaoData(response);
+            setCurrentReportId(null); // Reset khi tính toán mới
             setStep(2);
             message.success('Tính toán thanh khoản thành công!');
         } catch (error) {
@@ -132,6 +137,7 @@ const ThanhKhoan = () => {
             console.log('Reconstructed report data:', reportData);
             
             setBaoCaoData(reportData);
+            setCurrentReportId(record.id_bc); // Lưu ID báo cáo đang xem
             setStep(2);
         } catch (error) {
             console.error('Error viewing report:', error);
@@ -143,9 +149,25 @@ const ThanhKhoan = () => {
 
 
     const handleSaveReport = async () => {
-        if (!baoCaoData) return;
+        if (!baoCaoData) {
+            message.warning('Không có dữ liệu báo cáo để lưu!');
+            return;
+        }
+
+        // Prevent double-click
+        if (isSaving) {
+            message.warning('Đang xử lý, vui lòng đợi...');
+            return;
+        }
+
+        // Nếu đang xem báo cáo cũ, không cho lưu
+        if (currentReportId) {
+            message.warning('Báo cáo này đã tồn tại. Không thể lưu lại!');
+            return;
+        }
         
         try {
+            setIsSaving(true);
             setLoading(true);
             
             // Determine ket_luan_tong_the based on warnings
@@ -173,7 +195,7 @@ const ThanhKhoan = () => {
             
             const response = await BaoCaoThanhKhoanService.saveReport(payload);
             message.success(response.message || 'Lưu báo cáo thành công!');
-            fetchSavedReports();
+            await fetchSavedReports();
         } catch (error) {
             if (error.status === 401) {
                 message.error('Phiên đăng nhập hết hạn!');
@@ -181,12 +203,46 @@ const ThanhKhoan = () => {
                 message.error(error.error || error.message || 'Lỗi khi lưu báo cáo!');
             }
         } finally {
+            setIsSaving(false);
             setLoading(false);
         }
     };
 
     const handlePrint = () => { 
         window.print(); 
+    };
+
+    const handleExportExcel = () => {
+        if (!baoCaoData) {
+            message.warning('Không có dữ liệu để xuất!');
+            return;
+        }
+        
+        try {
+            const fileName = `BaoCao_${baoCaoData.kyBaoCao?.so_hd}_${dayjs().format('YYYYMMDD_HHmmss')}`;
+            exportBaoCaoToExcel(baoCaoData, fileName);
+            message.success('Đã xuất file Excel thành công!');
+        } catch (error) {
+            message.error('Lỗi khi xuất file Excel!');
+            console.error(error);
+        }
+    };
+
+    const handleExportPDF = async () => {
+        if (!baoCaoData) {
+            message.warning('Không có dữ liệu để xuất!');
+            return;
+        }
+        
+        try {
+            const fileName = `BaoCao_${baoCaoData.kyBaoCao?.so_hd}_${dayjs().format('YYYYMMDD_HHmmss')}`;
+            console.log('Bắt đầu xuất PDF với dữ liệu:', baoCaoData);
+            await exportBaoCaoToPDF(baoCaoData, fileName);
+            message.success('Đã xuất file PDF thành công!');
+        } catch (error) {
+            message.error(`Lỗi khi xuất file PDF: ${error.message}`);
+            console.error('Chi tiết lỗi PDF:', error);
+        }
     };
 
     const handleTableChange = (paginationConfig) => {
@@ -359,6 +415,7 @@ const ThanhKhoan = () => {
                                     onClick={() => { 
                                         setStep(1); 
                                         setBaoCaoData(null);
+                                        setCurrentReportId(null);
                                     }}
                                 >
                                     Quay lại
@@ -373,9 +430,19 @@ const ThanhKhoan = () => {
                         </Col>
                         <Col>
                             <Space>
-                                <Button icon={<PrinterOutlined />} onClick={handlePrint}>In Báo cáo</Button>
-                                <Button icon={<DownloadOutlined />}>Tải file</Button>
-                                <Button type="primary" icon={<SaveOutlined />} onClick={handleSaveReport}>Lưu Báo cáo</Button>
+                                <Button icon={<PrinterOutlined />} onClick={handlePrint} disabled={isSaving}>In Báo cáo</Button>
+                                <Button icon={<DownloadOutlined />} onClick={handleExportExcel} disabled={isSaving}>Xuất Excel</Button>
+                                <Button icon={<DownloadOutlined />} onClick={handleExportPDF} disabled={isSaving}>Xuất PDF</Button>
+                                <Button 
+                                    type="primary" 
+                                    icon={<SaveOutlined />} 
+                                    onClick={handleSaveReport}
+                                    loading={isSaving}
+                                    disabled={isSaving || currentReportId}
+                                    style={currentReportId ? { backgroundColor: '#52c41a', borderColor: '#52c41a', color: '#fff' } : {}}
+                                >
+                                    {currentReportId ? 'Đã lưu' : (isSaving ? 'Đang lưu...' : 'Lưu Báo cáo')}
+                                </Button>
                             </Space>
                         </Col>
                     </Row>

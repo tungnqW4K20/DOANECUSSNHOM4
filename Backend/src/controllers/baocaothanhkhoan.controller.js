@@ -121,11 +121,33 @@ const getBaoCaoById = async (req, res) => {
   }
 };
 
+// API bổ sung: Cập nhật báo cáo
+const updateBaoCao = async (req, res) => {
+  try {
+    const { id_bc } = req.params;
+    const { ket_luan_tong_the, data_snapshot } = req.body;
+
+    if (!id_bc) {
+      return res.status(400).json({ error: 'Thiếu id_bc' });
+    }
+
+    const data = await thanhKhoanService.updateBaoCao(id_bc, { ket_luan_tong_the, data_snapshot });
+    res.json({
+      message: 'Cập nhật báo cáo thành công!',
+      data
+    });
+  } catch (err) {
+    console.error('Error in updateBaoCao:', err);
+    res.status(400).json({ error: err.message });
+  }
+};
+
 module.exports = { 
   getHopDong, 
   calculate, 
   saveBaoCao, 
   updateStatus, 
   getThanhKhoanReports,
-  getBaoCaoById
+  getBaoCaoById,
+  updateBaoCao
 };

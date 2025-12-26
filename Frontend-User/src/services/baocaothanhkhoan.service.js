@@ -36,6 +36,16 @@ export const saveReport = async (data) => {
     }
 };
 
+// Cập nhật báo cáo đã tồn tại
+export const updateReport = async (id_bc, data) => {
+    try {
+        const response = await api.put(`/reports/${id_bc}`, data);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
 // Lấy danh sách báo cáo đã lưu (có phân trang và filter)
 export const getAllReports = async (params = {}) => {
     try {
@@ -79,6 +89,7 @@ export default {
     getAllHopDong,
     calculateReport,
     saveReport,
+    updateReport,
     getAllReports,
     getReportById,
     updateReportStatus,

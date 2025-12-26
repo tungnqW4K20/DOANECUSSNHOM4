@@ -61,4 +61,13 @@ router.patch(
   thanhKhoanController.updateStatus
 );
 
+// Cập nhật nội dung báo cáo
+// PUT /api/user/thanh-khoan/reports/:id_bc
+router.put(
+  '/reports/:id_bc',
+  authenticateToken,
+  authorizeRole('business'),
+  thanhKhoanController.updateBaoCao
+);
+
 module.exports = router;

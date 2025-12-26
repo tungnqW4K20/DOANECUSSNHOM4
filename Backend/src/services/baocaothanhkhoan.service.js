@@ -415,6 +415,20 @@ const saveBaoCao = async ({ id_hd, tu_ngay, den_ngay, ket_luan_tong_the, data_sn
     throw new Error('Hợp đồng không tồn tại');
   }
 
+  // Kiểm tra xem đã có báo cáo trùng lặp chưa (cùng hợp đồng, cùng kỳ báo cáo)
+  const existingReport = await BaoCaoThanhKhoan.findOne({
+    where: {
+      id_hd,
+      tu_ngay,
+      den_ngay,
+      trang_thai: { [Op.ne]: 'Huy' } // Không tính báo cáo đã hủy
+    }
+  });
+
+  if (existingReport) {
+    throw new Error('Đã tồn tại báo cáo cho hợp đồng và kỳ báo cáo này. Vui lòng kiểm tra lại hoặc cập nhật báo cáo cũ.');
+  }
+
   // Xác định kết luận tổng thể nếu không được cung cấp
   let ketLuan = ket_luan_tong_the || 'HopLe';
   
@@ -460,6 +474,39 @@ const updateTrangThaiBaoCao = async (id_bc, trang_thai) => {
   }
 
   baoCao.trang_thai = trang_thai;
+  await baoCao.save();
+
+  return baoCao;
+};
+
+// ========== API bổ sung: Cập nhật báo cáo (thay vì tạo mới) ==========
+const updateBaoCao = async (id_bc, { ket_luan_tong_the, data_snapshot }) => {
+  if (!id_bc) {
+    throw new Error('Thiếu id_bc');
+  }
+
+  const baoCao = await BaoCaoThanhKhoan.findByPk(id_bc);
+  if (!baoCao) {
+    throw new Error('Không tìm thấy báo cáo thanh khoản');
+  }
+
+  // Xác định kết luận tổng thể
+  let ketLuan = ket_luan_tong_the || 'HopLe';
+  
+  if (data_snapshot) {
+    const hasWarning = 
+      (data_snapshot.baoCaoNXT_SP || []).some(sp => sp.ghi_chu && sp.ghi_chu.includes('Cảnh báo')) ||
+      (data_snapshot.baoCaoSD_NPL || []).some(npl => npl.ghi_chu && npl.ghi_chu.includes('Cảnh báo'));
+    
+    if (hasWarning) {
+      ketLuan = 'CanhBao';
+    }
+  }
+
+  // Cập nhật báo cáo
+  baoCao.ket_luan_tong_the = ketLuan;
+  baoCao.data_snapshot = data_snapshot;
+  baoCao.thoi_gian_tao = new Date(); // Cập nhật thời gian
   await baoCao.save();
 
   return baoCao;
@@ -603,7 +650,8 @@ module.exports = {
   getHopDongByDN, 
   calculateBaoCao, 
   saveBaoCao, 
-  updateTrangThaiBaoCao, 
+  updateTrangThaiBaoCao,
+  updateBaoCao,
   getThanhKhoanReports,
   getBaoCaoById
 };
