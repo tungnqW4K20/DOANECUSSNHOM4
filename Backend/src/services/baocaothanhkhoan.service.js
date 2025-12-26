@@ -530,6 +530,7 @@ const getThanhKhoanReports = async ({ page = 1, limit = 10, q, ket_luan_tong_the
       where: whereBC,
       attributes: [
         'id_bc',
+        'id_hd', // ← Thêm id_hd vào attributes
         'tu_ngay',
         'den_ngay',
         'thoi_gian_tao',
@@ -570,12 +571,13 @@ const getThanhKhoanReports = async ({ page = 1, limit = 10, q, ket_luan_tong_the
     // Format response
     const data = filteredRows.map((bc) => ({
       id_bc: bc.id_bc,
+      id_hd: bc.id_hd, // ← Thêm id_hd
       so_hd: bc.hopdong?.so_hd,
       ten_dn: bc.hopdong?.doanhNghiep?.ten_dn,
       tu_ngay: bc.tu_ngay,
       den_ngay: bc.den_ngay,
       thoi_gian_tao: bc.thoi_gian_tao,
-      ket_luan_tong_the: bc.ket_luan_tong_the,
+      ket_luan: bc.ket_luan_tong_the, // ← Đổi tên cho khớp với frontend
       trang_thai: bc.trang_thai
     }));
 

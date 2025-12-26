@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Form, Input, Button, Typography, Upload } from "antd";
+import { Form, Input, Button, Typography, Upload, App } from "antd";
 import {
     UserOutlined,
     LockOutlined,
@@ -17,12 +17,12 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { registerBusiness } from "../../services/auth.service";
 import { uploadSingleFile } from "../../services/upload.service";
-import { showSuccess, showError, showUploadSuccess, showUploadError } from "../../components/notification";
 
 const { Title, Text } = Typography;
 
 const Register = () => {
     const navigate = useNavigate();
+    const { notification } = App.useApp();
     const [uploading, setUploading] = useState(false);
     const [loading, setLoading] = useState(false);
     const [fileUrl, setFileUrl] = useState(null);
@@ -34,14 +34,26 @@ const Register = () => {
             const res = await uploadSingleFile(file, "fileUpload");
             if (res?.data?.imageUrl) {
                 setFileUrl(res.data.imageUrl);
-                showUploadSuccess(file.name);
+                notification.success({
+                    message: 'Upload thành công',
+                    description: `File ${file.name} đã được tải lên`,
+                    placement: 'topRight',
+                });
                 onSuccess(res.data, file);
             } else {
-                showError('Upload thất bại', 'Máy chủ không trả về URL file!');
+                notification.error({
+                    message: 'Upload thất bại',
+                    description: 'Máy chủ không trả về URL file!',
+                    placement: 'topRight',
+                });
                 onError(new Error("Không có URL file!"));
             }
         } catch (err) {
-            showUploadError();
+            notification.error({
+                message: 'Upload thất bại',
+                description: 'Không thể tải file lên. Vui lòng thử lại!',
+                placement: 'topRight',
+            });
             onError(err);
         } finally {
             setUploading(false);
@@ -63,22 +75,35 @@ const Register = () => {
 
             const res = await registerBusiness(payload);
             if (res?.success) {
-                showSuccess('Đăng ký thành công', 'Vui lòng đăng nhập để tiếp tục');
-                navigate("/auth/login");
+                notification.success({
+                    message: 'Đăng ký thành công',
+                    description: 'Tài khoản đã được tạo. Vui lòng đăng nhập để tiếp tục',
+                    placement: 'topRight',
+                    duration: 3,
+                });
+                setTimeout(() => navigate("/auth/login"), 1000);
             } else {
-                showError('Đăng ký thất bại', res?.message || 'Đăng ký không thành công!');
+                notification.error({
+                    message: 'Đăng ký thất bại',
+                    description: res?.message || 'Đăng ký không thành công!',
+                    placement: 'topRight',
+                });
             }
         } catch (err) {
-            showError('Đăng ký thất bại', err?.message || 'Lỗi khi đăng ký tài khoản!');
+            notification.error({
+                message: 'Đăng ký thất bại',
+                description: err?.message || 'Lỗi khi đăng ký tài khoản!',
+                placement: 'topRight',
+            });
         } finally {
             setLoading(false);
         }
     };
 
     const features = [
-        { icon: <SafetyCertificateOutlined />, title: 'Bảo mật cao', desc: 'Thông tin được mã hóa an toàn' },
-        { icon: <FileProtectOutlined />, title: 'Quản lý dễ dàng', desc: 'Giao diện thân thiện, dễ sử dụng' },
-        { icon: <CheckCircleOutlined />, title: 'Hỗ trợ 24/7', desc: 'Đội ngũ hỗ trợ luôn sẵn sàng' },
+        { icon: <SafetyCertificateOutlined />, title: 'Bảo mật & An toàn', desc: 'Dữ liệu được mã hóa và bảo vệ' },
+        { icon: <FileProtectOutlined />, title: 'Tuân thủ Hải quan', desc: 'Đáp ứng quy định pháp luật Việt Nam' },
+        { icon: <CheckCircleOutlined />, title: 'Hỗ trợ Chuyên nghiệp', desc: 'Đội ngũ tư vấn nhiệt tình 24/7' },
     ];
 
     return (
@@ -114,24 +139,26 @@ const Register = () => {
                         <div
                             className="logo-icon"
                             style={{
-                                width: '64px',
-                                height: '64px',
-                                background: 'rgba(255, 255, 255, 0.2)',
-                                borderRadius: '16px',
+                                width: '80px',
+                                height: '80px',
+                                background: 'rgba(255, 255, 255, 0.25)',
+                                borderRadius: '20px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                marginBottom: '20px',
-                                backdropFilter: 'blur(10px)',
+                                marginBottom: '24px',
+                                backdropFilter: 'blur(15px)',
+                                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+                                border: '2px solid rgba(255, 255, 255, 0.3)',
                             }}
                         >
-                            <ShopOutlined style={{ fontSize: '32px', color: 'white' }} />
+                            <ShopOutlined style={{ fontSize: '40px', color: 'white' }} />
                         </div>
-                        <Title level={2} style={{ color: 'white', margin: 0, fontSize: '32px', fontWeight: 700 }}>
+                        <Title level={2} style={{ color: 'white', margin: 0, fontSize: '42px', fontWeight: 800, letterSpacing: '-0.5px' }}>
                             Đăng ký Doanh nghiệp
                         </Title>
-                        <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px' }}>
-                            Tham gia hệ thống Quản lý Sản xuất Xuất khẩu
+                        <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: '17px', fontWeight: 400 }}>
+                            Hệ thống Thanh khoản hợp đồng Sản xuất xuất khẩu
                         </Text>
                     </div>
 
@@ -145,22 +172,22 @@ const Register = () => {
                                     alignItems: 'center',
                                     gap: '16px',
                                     marginBottom: '16px',
-                                    padding: '14px 18px',
+                                    padding: '16px 20px',
                                     background: 'rgba(255, 255, 255, 0.1)',
-                                    borderRadius: '12px',
+                                    borderRadius: '14px',
                                     backdropFilter: 'blur(10px)',
                                 }}
                             >
                                 <div
                                     style={{
-                                        width: '40px',
-                                        height: '40px',
+                                        width: '48px',
+                                        height: '48px',
                                         background: 'rgba(255, 255, 255, 0.2)',
-                                        borderRadius: '10px',
+                                        borderRadius: '12px',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        fontSize: '20px',
+                                        fontSize: '24px',
                                         color: 'white',
                                         flexShrink: 0,
                                     }}
@@ -168,10 +195,10 @@ const Register = () => {
                                     {feature.icon}
                                 </div>
                                 <div>
-                                    <Text strong style={{ color: 'white', fontSize: '14px', display: 'block' }}>
+                                    <Text strong style={{ color: 'white', fontSize: '16px', display: 'block' }}>
                                         {feature.title}
                                     </Text>
-                                    <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px' }}>
+                                    <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px' }}>
                                         {feature.desc}
                                     </Text>
                                 </div>
@@ -189,84 +216,114 @@ const Register = () => {
                     flexDirection: 'column',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    padding: '20px 60px',
+                    padding: '30px 70px',
                     background: '#fff',
                     overflowY: 'auto',
                 }}
             >
-                <div className="login-form-container" style={{ width: '100%', maxWidth: '420px' }}>
-                    <div style={{ marginBottom: '20px' }}>
-                        <Title level={3} style={{ margin: '0 0 6px 0', color: '#1e293b', fontWeight: 700 }}>
+                <div className="login-form-container" style={{ width: '100%', maxWidth: '520px' }}>
+                    <div style={{ marginBottom: '28px' }}>
+                        <Title level={2} style={{ margin: '0 0 8px 0', color: '#0f172a', fontWeight: 800, fontSize: '36px', letterSpacing: '-0.5px' }}>
                             Tạo tài khoản mới
                         </Title>
-                        <Text style={{ color: '#64748b', fontSize: '14px' }}>
+                        <Text style={{ color: '#64748b', fontSize: '16px', fontWeight: 400 }}>
                             Điền thông tin để đăng ký tài khoản doanh nghiệp
                         </Text>
                     </div>
 
-                    <Form form={form} name="register" onFinish={onFinish} layout="vertical" requiredMark={false} size="middle">
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <Form form={form} name="register" onFinish={onFinish} layout="vertical" requiredMark={false}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                             <Form.Item
                                 name="ten_dn"
-                                label={<span style={{ fontWeight: 500, color: '#374151', fontSize: '12px' }}>Tên doanh nghiệp</span>}
+                                label={<span style={{ fontWeight: 600, color: '#1e293b', fontSize: '15px' }}>Tên doanh nghiệp</span>}
                                 rules={[{ required: true, message: "Vui lòng nhập!" }]}
-                                style={{ marginBottom: '12px' }}
+                                style={{ marginBottom: '16px' }}
                             >
-                                <Input prefix={<SolutionOutlined style={{ color: '#94a3b8' }} />} placeholder="Tên doanh nghiệp" className="login-input" style={{ height: '38px', borderRadius: '8px', border: '1.5px solid #e2e8f0' }} />
+                                <Input 
+                                    prefix={<SolutionOutlined style={{ color: '#94a3b8', fontSize: '16px' }} />} 
+                                    placeholder="Tên doanh nghiệp" 
+                                    className="login-input" 
+                                    style={{ height: '48px', borderRadius: '10px', border: '2px solid #e2e8f0', fontSize: '15px' }} 
+                                />
                             </Form.Item>
 
                             <Form.Item
                                 name="ma_so_thue"
-                                label={<span style={{ fontWeight: 500, color: '#374151', fontSize: '12px' }}>Mã số thuế</span>}
+                                label={<span style={{ fontWeight: 600, color: '#1e293b', fontSize: '15px' }}>Mã số thuế</span>}
                                 rules={[{ required: true, message: "Vui lòng nhập!" }]}
-                                style={{ marginBottom: '12px' }}
+                                style={{ marginBottom: '16px' }}
                             >
-                                <Input prefix={<UserOutlined style={{ color: '#94a3b8' }} />} placeholder="Mã số thuế" className="login-input" style={{ height: '38px', borderRadius: '8px', border: '1.5px solid #e2e8f0' }} />
+                                <Input 
+                                    prefix={<UserOutlined style={{ color: '#94a3b8', fontSize: '16px' }} />} 
+                                    placeholder="Mã số thuế" 
+                                    className="login-input" 
+                                    style={{ height: '48px', borderRadius: '10px', border: '2px solid #e2e8f0', fontSize: '15px' }} 
+                                />
                             </Form.Item>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                             <Form.Item
                                 name="email"
-                                label={<span style={{ fontWeight: 500, color: '#374151', fontSize: '12px' }}>Email</span>}
+                                label={<span style={{ fontWeight: 600, color: '#1e293b', fontSize: '15px' }}>Email</span>}
                                 rules={[{ type: "email", message: "Email không hợp lệ!" }, { required: true, message: "Vui lòng nhập!" }]}
-                                style={{ marginBottom: '12px' }}
+                                style={{ marginBottom: '16px' }}
                             >
-                                <Input prefix={<MailOutlined style={{ color: '#94a3b8' }} />} placeholder="Email" className="login-input" style={{ height: '38px', borderRadius: '8px', border: '1.5px solid #e2e8f0' }} />
+                                <Input 
+                                    prefix={<MailOutlined style={{ color: '#94a3b8', fontSize: '16px' }} />} 
+                                    placeholder="Email" 
+                                    className="login-input" 
+                                    style={{ height: '48px', borderRadius: '10px', border: '2px solid #e2e8f0', fontSize: '15px' }} 
+                                />
                             </Form.Item>
 
                             <Form.Item
                                 name="sdt"
-                                label={<span style={{ fontWeight: 500, color: '#374151', fontSize: '12px' }}>Số điện thoại</span>}
+                                label={<span style={{ fontWeight: 600, color: '#1e293b', fontSize: '15px' }}>Số điện thoại</span>}
                                 rules={[{ required: true, message: "Vui lòng nhập!" }]}
-                                style={{ marginBottom: '12px' }}
+                                style={{ marginBottom: '16px' }}
                             >
-                                <Input prefix={<PhoneOutlined style={{ color: '#94a3b8' }} />} placeholder="Số điện thoại" className="login-input" style={{ height: '38px', borderRadius: '8px', border: '1.5px solid #e2e8f0' }} />
+                                <Input 
+                                    prefix={<PhoneOutlined style={{ color: '#94a3b8', fontSize: '16px' }} />} 
+                                    placeholder="Số điện thoại" 
+                                    className="login-input" 
+                                    style={{ height: '48px', borderRadius: '10px', border: '2px solid #e2e8f0', fontSize: '15px' }} 
+                                />
                             </Form.Item>
                         </div>
 
                         <Form.Item
                             name="dia_chi"
-                            label={<span style={{ fontWeight: 500, color: '#374151', fontSize: '12px' }}>Địa chỉ</span>}
+                            label={<span style={{ fontWeight: 600, color: '#1e293b', fontSize: '15px' }}>Địa chỉ</span>}
                             rules={[{ required: true, message: "Vui lòng nhập!" }]}
-                            style={{ marginBottom: '12px' }}
+                            style={{ marginBottom: '16px' }}
                         >
-                            <Input prefix={<HomeOutlined style={{ color: '#94a3b8' }} />} placeholder="Địa chỉ" className="login-input" style={{ height: '38px', borderRadius: '8px', border: '1.5px solid #e2e8f0' }} />
+                            <Input 
+                                prefix={<HomeOutlined style={{ color: '#94a3b8', fontSize: '16px' }} />} 
+                                placeholder="Địa chỉ" 
+                                className="login-input" 
+                                style={{ height: '48px', borderRadius: '10px', border: '2px solid #e2e8f0', fontSize: '15px' }} 
+                            />
                         </Form.Item>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                             <Form.Item
                                 name="mat_khau"
-                                label={<span style={{ fontWeight: 500, color: '#374151', fontSize: '12px' }}>Mật khẩu</span>}
+                                label={<span style={{ fontWeight: 600, color: '#1e293b', fontSize: '15px' }}>Mật khẩu</span>}
                                 rules={[{ required: true, message: "Vui lòng nhập!" }]}
-                                style={{ marginBottom: '12px' }}
+                                style={{ marginBottom: '16px' }}
                             >
-                                <Input.Password prefix={<LockOutlined style={{ color: '#94a3b8' }} />} placeholder="Mật khẩu" className="login-input" style={{ height: '38px', borderRadius: '8px', border: '1.5px solid #e2e8f0' }} />
+                                <Input.Password 
+                                    prefix={<LockOutlined style={{ color: '#94a3b8', fontSize: '16px' }} />} 
+                                    placeholder="Mật khẩu" 
+                                    className="login-input" 
+                                    style={{ height: '48px', borderRadius: '10px', border: '2px solid #e2e8f0', fontSize: '15px' }} 
+                                />
                             </Form.Item>
 
                             <Form.Item
                                 name="confirm"
-                                label={<span style={{ fontWeight: 500, color: '#374151', fontSize: '12px' }}>Xác nhận mật khẩu</span>}
+                                label={<span style={{ fontWeight: 600, color: '#1e293b', fontSize: '15px' }}>Xác nhận mật khẩu</span>}
                                 dependencies={["mat_khau"]}
                                 rules={[
                                     { required: true, message: "Vui lòng nhập!" },
@@ -277,24 +334,38 @@ const Register = () => {
                                         },
                                     }),
                                 ]}
-                                style={{ marginBottom: '12px' }}
+                                style={{ marginBottom: '16px' }}
                             >
-                                <Input.Password prefix={<LockOutlined style={{ color: '#94a3b8' }} />} placeholder="Xác nhận" className="login-input" style={{ height: '38px', borderRadius: '8px', border: '1.5px solid #e2e8f0' }} />
+                                <Input.Password 
+                                    prefix={<LockOutlined style={{ color: '#94a3b8', fontSize: '16px' }} />} 
+                                    placeholder="Xác nhận" 
+                                    className="login-input" 
+                                    style={{ height: '48px', borderRadius: '10px', border: '2px solid #e2e8f0', fontSize: '15px' }} 
+                                />
                             </Form.Item>
                         </div>
 
-                        <Form.Item label={<span style={{ fontWeight: 500, color: '#374151', fontSize: '12px' }}>Giấy phép kinh doanh (tùy chọn)</span>} style={{ marginBottom: '16px' }}>
+                        <Form.Item 
+                            label={<span style={{ fontWeight: 600, color: '#1e293b', fontSize: '15px' }}>Giấy phép kinh doanh (tùy chọn)</span>} 
+                            style={{ marginBottom: '20px' }}
+                        >
                             <Upload customRequest={handleUpload} maxCount={1} showUploadList={{ showRemoveIcon: false }}>
-                                <Button icon={<UploadOutlined />} loading={uploading} size="small">Tải lên</Button>
+                                <Button 
+                                    icon={<UploadOutlined />} 
+                                    loading={uploading}
+                                    style={{ height: '42px', borderRadius: '10px', fontSize: '15px', fontWeight: 500 }}
+                                >
+                                    Tải lên file
+                                </Button>
                             </Upload>
                             {fileUrl && (
-                                <a href={fileUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: '#2563eb' }}>
-                                    Xem file đã tải
+                                <a href={fileUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '14px', color: '#2563eb', marginTop: '8px', display: 'inline-block' }}>
+                                    ✓ Xem file đã tải
                                 </a>
                             )}
                         </Form.Item>
 
-                        <Form.Item style={{ marginBottom: '12px' }}>
+                        <Form.Item style={{ marginBottom: '16px' }}>
                             <Button
                                 type="primary"
                                 htmlType="submit"
@@ -302,27 +373,28 @@ const Register = () => {
                                 block
                                 className="login-btn"
                                 style={{
-                                    height: '42px',
-                                    borderRadius: '10px',
-                                    fontSize: '14px',
-                                    fontWeight: 600,
+                                    height: '56px',
+                                    borderRadius: '12px',
+                                    fontSize: '17px',
+                                    fontWeight: 700,
                                     background: 'linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%)',
                                     border: 'none',
-                                    boxShadow: '0 8px 20px rgba(37, 99, 235, 0.3)',
+                                    boxShadow: '0 10px 30px rgba(37, 99, 235, 0.35)',
+                                    letterSpacing: '0.3px',
                                 }}
                             >
                                 {loading ? 'Đang xử lý...' : (
-                                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                        Đăng ký <ArrowRightOutlined />
+                                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                                        Đăng ký <ArrowRightOutlined style={{ fontSize: '18px' }} />
                                     </span>
                                 )}
                             </Button>
                         </Form.Item>
 
                         <div style={{ textAlign: 'center' }}>
-                            <Text style={{ color: '#64748b', fontSize: '13px' }}>
+                            <Text style={{ color: '#64748b', fontSize: '15px', fontWeight: 500 }}>
                                 Đã có tài khoản?{' '}
-                                <Link to="/auth/login" style={{ color: '#2563eb', fontWeight: 600 }}>
+                                <Link to="/auth/login" style={{ color: '#2563eb', fontWeight: 700, textDecoration: 'none' }} className="register-link">
                                     Đăng nhập ngay!
                                 </Link>
                             </Text>
@@ -335,32 +407,40 @@ const Register = () => {
                 html, body, #root { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
                 .login-wrapper { position: fixed; top: 0; left: 0; right: 0; bottom: 0; }
                 .bg-shapes { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-                .shape { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, 0.08); }
-                .shape-1 { width: 400px; height: 400px; top: -100px; left: -100px; animation: float 8s ease-in-out infinite; }
-                .shape-2 { width: 300px; height: 300px; bottom: -80px; right: -80px; animation: float 10s ease-in-out infinite reverse; }
-                .shape-3 { width: 200px; height: 200px; top: 50%; left: 60%; animation: float 12s ease-in-out infinite; }
-                @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+                .shape { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, 0.1); filter: blur(40px); }
+                .shape-1 { width: 500px; height: 500px; top: -150px; left: -150px; animation: float 10s ease-in-out infinite; }
+                .shape-2 { width: 400px; height: 400px; bottom: -100px; right: -100px; animation: float 12s ease-in-out infinite reverse; }
+                .shape-3 { width: 300px; height: 300px; top: 40%; left: 50%; animation: float 15s ease-in-out infinite; }
+                @keyframes float { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 33% { transform: translate(30px, -30px) rotate(120deg); } 66% { transform: translate(-20px, 20px) rotate(240deg); } }
                 .particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-                .particle { position: absolute; width: 5px; height: 5px; background: rgba(255, 255, 255, 0.4); border-radius: 50%; animation: rise 18s infinite; }
+                .particle { position: absolute; width: 6px; height: 6px; background: rgba(255, 255, 255, 0.5); border-radius: 50%; animation: rise 20s infinite; box-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
                 .particle-1 { left: 10%; animation-delay: 0s; } .particle-2 { left: 20%; animation-delay: 2s; }
                 .particle-3 { left: 30%; animation-delay: 4s; } .particle-4 { left: 40%; animation-delay: 6s; }
                 .particle-5 { left: 50%; animation-delay: 8s; } .particle-6 { left: 60%; animation-delay: 10s; }
                 .particle-7 { left: 70%; animation-delay: 12s; } .particle-8 { left: 80%; animation-delay: 14s; }
                 .particle-9 { left: 90%; animation-delay: 16s; } .particle-10 { left: 95%; animation-delay: 1s; }
-                @keyframes rise { 0% { transform: translateY(100vh); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 0.5; } 100% { transform: translateY(-50px); opacity: 0; } }
-                .logo-icon { animation: pulse 3s ease-in-out infinite; }
-                @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-                .feature-item { animation: slideIn 0.5s ease-out backwards; transition: transform 0.3s ease; }
-                .feature-item:hover { transform: translateX(8px); }
-                .feature-item:nth-child(1) { animation-delay: 0.1s; }
-                .feature-item:nth-child(2) { animation-delay: 0.2s; }
-                .feature-item:nth-child(3) { animation-delay: 0.3s; }
-                @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-                .login-form-container { animation: fadeIn 0.5s ease-out; }
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-                .login-input:focus, .login-input:hover { border-color: #2563eb !important; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1) !important; }
-                .login-btn { transition: all 0.3s ease !important; }
-                .login-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(37, 99, 235, 0.4) !important; }
+                @keyframes rise { 0% { transform: translateY(100vh) scale(0); opacity: 0; } 10% { opacity: 1; transform: scale(1); } 90% { opacity: 0.6; } 100% { transform: translateY(-100px) scale(0.5); opacity: 0; } }
+                .logo-icon { animation: pulse 4s ease-in-out infinite; transition: all 0.3s ease; }
+                .logo-icon:hover { transform: scale(1.1) rotate(5deg); }
+                @keyframes pulse { 0%, 100% { transform: scale(1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); } 50% { transform: scale(1.08); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15); } }
+                .feature-item { animation: slideIn 0.6s ease-out backwards; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+                .feature-item:hover { transform: translateX(12px) scale(1.02); background: rgba(255, 255, 255, 0.15) !important; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1); }
+                .feature-item:nth-child(1) { animation-delay: 0.2s; }
+                .feature-item:nth-child(2) { animation-delay: 0.4s; }
+                .feature-item:nth-child(3) { animation-delay: 0.6s; }
+                @keyframes slideIn { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
+                .login-form-container { animation: fadeIn 0.7s ease-out; }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+                .login-input { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; }
+                .login-input:focus { border-color: #2563eb !important; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12) !important; transform: translateY(-2px); }
+                .login-input:hover { border-color: #60a5fa !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08) !important; }
+                .login-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; position: relative; overflow: hidden; }
+                .login-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: left 0.5s; }
+                .login-btn:hover::before { left: 100%; }
+                .login-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 35px rgba(37, 99, 235, 0.45) !important; }
+                .login-btn:active { transform: translateY(-1px) scale(0.98); }
+                .register-link { transition: all 0.2s ease; display: inline-block; }
+                .register-link:hover { transform: translateX(3px); color: #1d4ed8 !important; }
                 @media (max-width: 900px) { .left-panel { display: none !important; } }
             `}</style>
         </div>
