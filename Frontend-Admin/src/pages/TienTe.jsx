@@ -10,20 +10,37 @@ const { Search } = Input;
 const TienTe = () => {
   const [form] = Form.useForm();
   const [dataSource, setDataSource] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [searchText, setSearchText] = useState('');
-  const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
+  
+  // ✅ State phân trang backend
+  const [pagination, setPagination] = useState({ 
+    current: 1, 
+    pageSize: 10,
+    total: 0
+  });
 
-  const loadCurrencies = async () => {
+  // ✅ Hàm load với phân trang backend
+  const loadCurrencies = async (page = 1, pageSize = 10) => {
     try {
       setLoading(true);
-      const response = await currencyAPI.getAll();
-      const data = response.data?.data || response.data || [];
+      const response = await currencyAPI.getAll({
+        page,
+        limit: pageSize,
+        search: searchText
+      });
+      
+      const data = response.data?.data || [];
+      const paginationInfo = response.data?.pagination || {};
+      
       setDataSource(data);
-      setFilteredData(data);
+      setPagination({
+        current: paginationInfo.page || 1,
+        pageSize: paginationInfo.limit || 10,
+        total: paginationInfo.total || 0
+      });
     } catch (error) {
       console.error('Error loading currencies:', error);
       showLoadError('danh sách tiền tệ');
@@ -36,14 +53,18 @@ const TienTe = () => {
     loadCurrencies();
   }, []);
 
+  // ✅ Handler khi search
   const handleSearch = (value) => {
     setSearchText(value);
-    const filtered = dataSource.filter(
-      (item) =>
-        item.ma_tt?.toLowerCase().includes(value.toLowerCase()) ||
-        item.ten_tt?.toLowerCase().includes(value.toLowerCase())
-    );
-    setFilteredData(filtered);
+    // Gọi lại API với search text mới, reset về trang 1
+    setTimeout(() => {
+      loadCurrencies(1, pagination.pageSize);
+    }, 300); // Debounce 300ms
+  };
+
+  // ✅ Handler khi thay đổi trang
+  const handleTableChange = (paginationConfig) => {
+    loadCurrencies(paginationConfig.current, paginationConfig.pageSize);
   };
 
   const handleAdd = () => {
@@ -79,7 +100,8 @@ const TienTe = () => {
         showCreateSuccess(`Tiền tệ "${values.ma_tt}"`);
       }
       setIsModalOpen(false);
-      loadCurrencies();
+      // ✅ Reload lại trang hiện tại sau khi thêm/sửa
+      loadCurrencies(pagination.current, pagination.pageSize);
     } catch (error) {
       showSaveError('tiền tệ');
     }
@@ -170,7 +192,7 @@ const TienTe = () => {
           <Card className="stat-card stat-card-blue hover-lift fade-in-up stagger-1" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: 'none' }}>
             <Statistic
               title={<span style={{ color: '#64748b' }}>Tổng số tiền tệ</span>}
-              value={dataSource.length}
+              value={pagination.total}
               prefix={<DollarOutlined style={{ color: '#2563eb' }} />}
               valueStyle={{ color: '#2563eb', fontWeight: 700 }}
             />
@@ -195,17 +217,17 @@ const TienTe = () => {
         <Spin spinning={loading} tip="Đang tải dữ liệu...">
           <Table
             columns={columns}
-            dataSource={filteredData}
+            dataSource={dataSource}
             rowKey="id_tt"
             scroll={{ y: 'calc(100vh - 450px)' }}
             pagination={{
               ...pagination,
               showSizeChanger: true,
-              pageSizeOptions: ['5', '10', '15', '50', '100', '1000', '10000'],
-              onChange: (page, pageSize) => {
-                setPagination({ current: page, pageSize });
-              },
+              showQuickJumper: true,
+              showTotal: (total) => `Tổng ${total} tiền tệ`,
+              pageSizeOptions: ['5', '10', '20', '50', '100'],
             }}
+            onChange={handleTableChange}
             locale={{
               emptyText: <Empty description={searchText ? 'Không tìm thấy kết quả' : 'Chưa có dữ liệu'} />,
             }}

@@ -319,7 +319,7 @@ const DoanhNghiep = () => {
             <Descriptions.Item label="Email">{selectedDN.email}</Descriptions.Item>
             <Descriptions.Item label="Số điện thoại">{selectedDN.sdt || '—'}</Descriptions.Item>
             <Descriptions.Item label="Địa chỉ">{selectedDN.dia_chi || '—'}</Descriptions.Item>
-            <Descriptions.Item label="Trạng thái">{getStatusTag(selectedDN.trang_thai)}</Descriptions.Item>
+            <Descriptions.Item label="Trạng thái">{getStatusTag(selectedDN.status)}</Descriptions.Item>
             <Descriptions.Item label="Giấy phép KD">
               {selectedDN.file_giay_phep ? (
                 <a

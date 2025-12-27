@@ -19,9 +19,21 @@ const createCurrency = async (req, res) => {
 
 const getAllCurrencies = async (req, res) => {
   try {
-    const result = await currencyService.getAllCurrencies();
-    res.status(200).json({ success: true, data: result });
+    // Lấy params phân trang từ query string
+    const { page = 1, limit = 10, search = '' } = req.query;
+    
+    const result = await currencyService.getAllCurrencies({
+      page: Number(page),
+      limit: Number(limit),
+      search
+    });
+    
+    res.status(200).json({ 
+      success: true, 
+      ...result  // { data: [...], pagination: {...} }
+    });
   } catch (error) {
+    console.error('Error in getAllCurrencies:', error);
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };

@@ -16,8 +16,34 @@ const createCurrency = async (ma_tt, ten_tt) => {
     return currency;
 };
 
-const getAllCurrencies = async () => {
-    return await TienTe.findAll();
+const getAllCurrencies = async ({ page = 1, limit = 10, search = '' } = {}) => {
+    const offset = (page - 1) * limit;
+    
+    // Điều kiện tìm kiếm
+    const whereCondition = {};
+    if (search) {
+        whereCondition[Op.or] = [
+            { ma_tt: { [Op.like]: `%${search}%` } },
+            { ten_tt: { [Op.like]: `%${search}%` } }
+        ];
+    }
+    
+    const { rows, count } = await TienTe.findAndCountAll({
+        where: whereCondition,
+        order: [['id_tt', 'DESC']],
+        offset,
+        limit
+    });
+    
+    return {
+        data: rows,
+        pagination: {
+            total: count,
+            page: Number(page),
+            limit: Number(limit),
+            totalPages: Math.ceil(count / limit)
+        }
+    };
 };
 
 const getCurrencyById = async (id_tt) => {

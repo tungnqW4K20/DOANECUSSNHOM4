@@ -474,7 +474,7 @@ const NhapToKhaiNhap = () => {
                                         icon={<PlusOutlined />}
                                         style={{ marginBottom: 10 }}
                                     >
-                                        Thêm dòng
+                                        Thêm nguyên phụ liệu
                                     </Button>
                                     <Table
                                         columns={columnsChiTiet}

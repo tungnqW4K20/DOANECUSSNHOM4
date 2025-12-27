@@ -251,7 +251,8 @@ const NhapKhoSP = () => {
                 showError("Vui lòng chọn sản phẩm cho tất cả dòng!", "Có dòng chưa chọn sản phẩm");
                 return;
             }
-            if (!item.so_luong || item.so_luong <= 0) {
+            const soLuong = item.so_luong_hq || item.so_luong_dn;
+            if (!soLuong || soLuong <= 0) {
                 showError("Số lượng phải lớn hơn 0!", "Kiểm tra lại số lượng nhập");
                 return;
             }

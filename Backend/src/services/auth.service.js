@@ -94,8 +94,7 @@ const loginBussiness = async (loginData) => {
 const loginHQ = async (loginData) => {
     const { tai_khoan, mat_khau } = loginData;
 
-    // Kiểm tra input
-    if (!tai_khoan || !mat_khau) {
+     if (!tai_khoan || !mat_khau) {
         const error = new Error('Vui lòng nhập tài khoản và mật khẩu.');
         error.statusCode = 400;
         throw error;

@@ -39,7 +39,14 @@ api.interceptors.response.use(
 
 // API cho tiền tệ
 export const currencyAPI = {
-    getAll: () => api.get('/tiente'),
+    getAll: (params = {}) => {
+        const { page = 1, limit = 10, search = '' } = params;
+        const queryParams = new URLSearchParams();
+        queryParams.append('page', page);
+        queryParams.append('limit', limit);
+        if (search) queryParams.append('search', search);
+        return api.get(`/tiente?${queryParams.toString()}`);
+    },
     getById: (id) => api.get(`/tiente/${id}`),
     create: (data) => api.post('/tiente', data),
     update: (id, data) => api.put(`/tiente/${id}`, data),
