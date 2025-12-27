@@ -67,10 +67,15 @@ const createXuatSP = async ({ id_kho, ngay_xuat, file_phieu, chi_tiets }) => {
   }
 };
 
-const getAllXuatSP = async () => {
+const getAllXuatSP = async (id_dn) => {
   return await XuatKhoSP.findAll({
     include: [
-      { model: Kho, as: 'kho' },
+      { 
+        model: Kho, 
+        as: 'kho',
+        where: { id_dn },
+        required: true
+      },
       { model: HoaDonXuat, as: 'hoaDonXuat' },
       { model: XuatKhoSPChiTiet, as: 'chiTiets', include: [{ model: SanPham, as: 'sanPham' }] }
     ],
@@ -91,10 +96,76 @@ const getXuatSPById = async (id_xuat) => {
 };
 
 const updateXuatSP = async (id_xuat, data) => {
-  const rec = await XuatKhoSP.findByPk(id_xuat);
+  const { id_kho, ngay_xuat, file_phieu, chi_tiets } = data;
+  
+  const rec = await XuatKhoSP.findByPk(id_xuat, {
+    include: [{ model: XuatKhoSPChiTiet, as: 'chiTiets' }]
+  });
   if (!rec) throw new Error(`Không tìm thấy phiếu xuất SP ID=${id_xuat}`);
-  await rec.update(data);
-  return rec;
+
+  const t = await db.sequelize.transaction();
+
+  try {
+    // Hoàn trả tồn kho cũ (cộng lại vì đã trừ khi xuất)
+    const oldChiTiets = rec.chiTiets || [];
+    for (const oldCt of oldChiTiets) {
+      const tonKho = await TonKhoSP.findOne({ 
+        where: { id_kho: rec.id_kho, id_sp: oldCt.id_sp }, 
+        transaction: t 
+      });
+      if (tonKho) {
+        await tonKho.increment('so_luong_ton', { by: oldCt.so_luong, transaction: t });
+      }
+    }
+
+    // Cập nhật thông tin phiếu xuất
+    await rec.update({ id_kho, ngay_xuat, file_phieu }, { transaction: t });
+
+    // Xóa chi tiết cũ
+    await XuatKhoSPChiTiet.destroy({ where: { id_xuat }, transaction: t });
+
+    // Thêm chi tiết mới và cập nhật tồn kho
+    if (Array.isArray(chi_tiets)) {
+      const id_kho_new = id_kho || rec.id_kho;
+      
+      for (const ct of chi_tiets) {
+        const { id_sp, so_luong } = ct;
+        if (!id_sp || !so_luong) continue;
+
+        const sp = await SanPham.findByPk(id_sp, { transaction: t });
+        if (!sp) throw new Error(`Không tìm thấy SP ID=${id_sp}`);
+
+        // Kiểm tra tồn kho
+        const tonKho = await TonKhoSP.findOne({ 
+          where: { id_kho: id_kho_new, id_sp }, 
+          transaction: t 
+        });
+        if (!tonKho) throw new Error(`Kho ID=${id_kho_new} chưa có tồn kho cho SP ID=${id_sp}`);
+        if (tonKho.so_luong_ton < so_luong) 
+          throw new Error(`SP ID=${id_sp} không đủ tồn kho. Hiện có ${tonKho.so_luong_ton}`);
+
+        await XuatKhoSPChiTiet.create(
+          { id_xuat, id_sp, so_luong },
+          { transaction: t }
+        );
+
+        // Trừ tồn kho
+        await tonKho.decrement('so_luong_ton', { by: so_luong, transaction: t });
+      }
+    }
+
+    await t.commit();
+
+    return await XuatKhoSP.findByPk(id_xuat, {
+      include: [
+        { model: XuatKhoSPChiTiet, as: 'chiTiets' },
+        { model: Kho, as: 'kho' }
+      ]
+    });
+  } catch (err) {
+    if (!t.finished) await t.rollback();
+    throw err;
+  }
 };
 
 const deleteXuatSP = async (id_xuat) => {

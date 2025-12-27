@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Table,
   Button,
@@ -42,6 +42,7 @@ const NguyenPhuLieu = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [searchText, setSearchText] = useState("");
+  const [saving, setSaving] = useState(false);
 
   /* ============================================================
      🟢 FETCH DỮ LIỆU BAN ĐẦU
@@ -81,24 +82,32 @@ const NguyenPhuLieu = () => {
   /* ============================================================
      🟢 THÊM / SỬA / XÓA
   ============================================================ */
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setEditingRecord(null);
     form.resetFields();
     setIsModalVisible(true);
-  };
+  }, [form]);
 
-  const handleEdit = async (record) => {
+  const handleEdit = useCallback(async (record) => {
     try {
       const res = await getNguyenPhuLieuById(record.id_npl);
       if (res.success) {
         setEditingRecord(record);
-        form.setFieldsValue(res.data);
+        setTimeout(() => form.setFieldsValue(res.data), 0);
         setIsModalVisible(true);
       }
     } catch (err) {
       showLoadError("chi tiết nguyên phụ liệu");
     }
-  };
+  }, [form]);
+
+  const closeModal = useCallback(() => {
+    setIsModalVisible(false);
+    setTimeout(() => {
+      setEditingRecord(null);
+      form.resetFields();
+    }, 300);
+  }, [form]);
 
   const handleDelete = async (id_npl) => {
     try {
@@ -114,6 +123,7 @@ const NguyenPhuLieu = () => {
 
   const onFinish = async (values) => {
     try {
+      setSaving(true);
       if (editingRecord) {
         const res = await updateNguyenPhuLieu(editingRecord.id_npl, values);
         if (res.success) {
@@ -127,9 +137,11 @@ const NguyenPhuLieu = () => {
           fetchData();
         }
       }
-      setIsModalVisible(false);
+      closeModal();
     } catch (err) {
       showSaveError("nguyên phụ liệu");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -226,8 +238,10 @@ const NguyenPhuLieu = () => {
       <Modal
         title={editingRecord ? "Chỉnh sửa NPL" : "Thêm mới NPL"}
         open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
+        onCancel={closeModal}
         footer={null}
+        destroyOnClose
+        maskClosable={false}
       >
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Form.Item
@@ -258,10 +272,10 @@ const NguyenPhuLieu = () => {
 
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit">
+              <Button type="primary" htmlType="submit" loading={saving}>
                 Lưu
               </Button>
-              <Button onClick={() => setIsModalVisible(false)}>Hủy</Button>
+              <Button onClick={closeModal}>Hủy</Button>
             </Space>
           </Form.Item>
         </Form>

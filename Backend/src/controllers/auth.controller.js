@@ -69,10 +69,12 @@ const loginBusiness = async (req, res) => {
 const loginHaiQuan = async (req, res, next) => {
     try {
         const { tai_khoan, mat_khau } = req.body;
+        
+        // Validate input
         if (!tai_khoan || !mat_khau) {
             return res.status(400).json({
                 success: false,
-                message: 'Vui lòng nhập tài khoản và mật khẩu.'
+                message: 'Vui lòng nhập đầy đủ tài khoản và mật khẩu.'
             });
         }
 
@@ -80,6 +82,7 @@ const loginHaiQuan = async (req, res, next) => {
             tai_khoan,
             mat_khau
         };
+        
         const result = await authService.loginHQ(loginData);
 
         res.status(200).json({
@@ -89,14 +92,15 @@ const loginHaiQuan = async (req, res, next) => {
         });
     } catch (error) {
         console.error("Login Error:", error.message);
-        if (error.message.includes('không chính xác')) {
-            return res.status(401).json({ success: false, message: error.message });
-        }
-        if (error.message.includes('Vui lòng nhập')) {
-            return res.status(400).json({ success: false, message: error.message });
-        }
-        res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi đăng nhập.' });
-
+        
+        // Trả về status code và message cụ thể từ service
+        const statusCode = error.statusCode || 500;
+        const message = error.message || 'Lỗi máy chủ nội bộ khi đăng nhập.';
+        
+        return res.status(statusCode).json({ 
+            success: false, 
+            message: message 
+        });
     }
 };
 

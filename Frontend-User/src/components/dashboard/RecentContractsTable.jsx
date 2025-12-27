@@ -10,17 +10,39 @@ const RecentContractsTable = ({ contracts, liquidationReports, onRowClick }) => 
     const report = liquidationReports.find(r => r.id_hd === id_hd);
     
     if (!report) {
-      return <Tag color="gold">Chưa thanh khoản</Tag>;
+      return <Tag color="orange" style={{ fontWeight: 600 }}>Chưa thanh khoản</Tag>;
     }
     
     const statusConfig = {
-      'HopLe': { color: 'success', text: 'Hợp lệ' },
-      'ViPham': { color: 'error', text: 'Vi phạm' },
-      'DuNPL': { color: 'warning', text: 'Dư NPL' }
+      'HopLe': { 
+        color: 'green', 
+        text: 'Hợp lệ',
+        style: { backgroundColor: '#52c41a', color: 'white', fontWeight: 600, border: 'none' }
+      },
+      'ViPham': { 
+        color: 'red', 
+        text: 'Vi phạm',
+        style: { backgroundColor: '#ff4d4f', color: 'white', fontWeight: 600, border: 'none' }
+      },
+      'DuNPL': { 
+        color: 'orange', 
+        text: 'Dư NPL',
+        style: { backgroundColor: '#faad14', color: 'white', fontWeight: 600, border: 'none' }
+      },
+      'CanhBao': { 
+        color: 'volcano', 
+        text: 'Cảnh báo',
+        style: { backgroundColor: '#ff7a45', color: 'white', fontWeight: 600, border: 'none' }
+      }
     };
     
-    const config = statusConfig[report.ket_luan] || { color: 'default', text: report.ket_luan };
-    return <Tag color={config.color}>{config.text}</Tag>;
+    const config = statusConfig[report.ket_luan] || { 
+      color: 'default', 
+      text: report.ket_luan,
+      style: { fontWeight: 600 }
+    };
+    
+    return <Tag color={config.color} style={config.style}>{config.text}</Tag>;
   };
 
   // Define table columns
@@ -36,16 +58,24 @@ const RecentContractsTable = ({ contracts, liquidationReports, onRowClick }) => 
       dataIndex: 'ngay_ky',
       key: 'ngay_ky',
       render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-',
-      width: '20%',
+      width: '15%',
       align: 'center'
     },
     {
-      title: 'Giá trị (VND)',
+      title: 'Giá trị',
       dataIndex: 'gia_tri',
       key: 'gia_tri',
-      render: (value) => value ? value.toLocaleString('vi-VN') : '-',
-      width: '30%',
+      render: (value) => value ? new Intl.NumberFormat('vi-VN').format(value) : '0',
+      width: '20%',
       align: 'right'
+    },
+    {
+      title: 'Tiền tệ',
+      dataIndex: ['tienTe', 'ma_tt'],
+      key: 'tien_te',
+      render: (text) => text || 'VND',
+      width: '15%',
+      align: 'center'
     },
     {
       title: 'Trạng thái Thanh khoản',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+    import React, { useState, useEffect } from "react";
 import {
     Form,
     Select,
@@ -21,9 +21,11 @@ import dayjs from "dayjs";
 import { uploadSingleFile } from "../../services/upload.service";
 import { getAllHoaDonNhap, getHoaDonNhapById } from "../../services/hoadonnhap.service";
 import { getAllKho } from "../../services/kho.service";
-import { getAllNhapKhoNPL, createNhapKhoNPL, addChiTietNhapKhoNPL } from "../../services/nhapkhonpl.service";
+import { getAllNhapKhoNPL, createNhapKhoNPL, updateNhapKhoNPL, deleteNhapKhoNPL } from "../../services/nhapkhonpl.service";
+import { getQuyDoiListNPL, calculateNPL_DN_to_HQ } from "../../services/quyDoiHelper.service";
 import { 
-    showCreateSuccess, 
+    showCreateSuccess,
+    showUpdateSuccess,
     showDeleteSuccess, 
     showLoadError, 
     showSaveError,
@@ -33,7 +35,13 @@ import {
 } from "../../components/notification";
 
 const { Option } = Select;
-const { Title } = Typography;
+const { Title, Text } = Typography;
+
+// Hàm format số theo kiểu Việt Nam (1.000.000)
+const formatVNNumber = (value) => {
+    if (value === null || value === undefined) return '';
+    return Number(value).toLocaleString('vi-VN');
+};
 
 const NhapKhoNPL = () => {
     const [form] = Form.useForm();
@@ -59,7 +67,7 @@ const NhapKhoNPL = () => {
         try {
             const data = await getAllNhapKhoNPL();
             setLichSuPhieu(data || []);
-        } catch (err) {
+        } catch {
             showLoadError('lịch sử phiếu nhập NPL');
         } finally {
             setLoadingLichSu(false);
@@ -77,7 +85,8 @@ const NhapKhoNPL = () => {
                     getAllKho(),
                 ]);
                 setHoaDonNhapList(resHDN || []);
-                setKhoList(resKho || []);
+                // getAllKho trả về { data: [...] }, cần lấy resKho.data
+                setKhoList(resKho?.data || []);
             } catch (err) {
                 console.error(err);
                 showLoadError('dữ liệu hóa đơn nhập và kho');
@@ -95,13 +104,39 @@ const NhapKhoNPL = () => {
             const res = await getHoaDonNhapById(id_hd_nhap);
             console.log("Chi tiết HĐN:", res);
 
-            const chiTiet = (res?.chiTiets || []).map((item, index) => ({
-                key: index + 1,
-                id_npl: item.nguyenPhuLieu.id_npl,
-                ten_npl: item.nguyenPhuLieu.ten_npl,
-                so_luong_hd: item.so_luong,
-                so_luong_nhap: item.so_luong, // mặc định bằng số lượng theo HĐ
-            }));
+            // Lấy data từ response (có thể là res.data hoặc res trực tiếp)
+            const hoaDonData = res?.data || res;
+            const chiTiets = hoaDonData?.chiTiets || [];
+
+            // Load chi tiết và quy đổi cho từng NPL
+            const chiTietPromises = chiTiets.map(async (item, index) => {
+                const id_npl = item.nguyenPhuLieu?.id_npl || item.id_npl;
+                
+                // Load danh sách quy đổi cho NPL này
+                let quyDoiList = [];
+                try {
+                    quyDoiList = await getQuyDoiListNPL(id_npl);
+                } catch (err) {
+                    console.log(`NPL ${id_npl} không có quy đổi`, err);
+                }
+
+                return {
+                    key: index + 1,
+                    id_npl,
+                    ten_npl: item.nguyenPhuLieu?.ten_npl || item.ten_npl || 'N/A',
+                    so_luong_hd: item.so_luong,
+                    so_luong_dn: item.so_luong, // Số lượng DN (user nhập)
+                    so_luong_hq: item.so_luong, // Số lượng HQ (tính toán)
+                    quyDoiList: quyDoiList,
+                    id_qd: null, // ID quy đổi được chọn
+                    ten_dvt_dn: null,
+                    ten_dvt_hq: null
+                };
+            });
+
+            const chiTiet = await Promise.all(chiTietPromises);
+            
+            console.log("Chi tiết NPL đã xử lý:", chiTiet);
             setChiTietNhap(chiTiet);
         } catch (err) {
             console.error(err);
@@ -110,14 +145,66 @@ const NhapKhoNPL = () => {
     };
 
     /* ============================================================
-       🟢 THAY ĐỔI SỐ LƯỢNG
+       🟢 CHỌN ĐƠN VỊ QUY ĐỔI
     ============================================================ */
-    const handleSoLuongChange = (key, value) => {
+    const handleQuyDoiChange = (key, id_qd) => {
         setChiTietNhap((prev) =>
-            prev.map((item) =>
-                item.key === key ? { ...item, so_luong_nhap: value } : item
-            )
+            prev.map((item) => {
+                if (item.key === key) {
+                    const qd = item.quyDoiList.find(q => q.id_qd === id_qd);
+                    return {
+                        ...item,
+                        id_qd,
+                        ten_dvt_dn: qd?.ten_dvt_dn || null,
+                        ten_dvt_hq: qd?.ten_dvt_hq || null,
+                        // Reset số lượng khi đổi đơn vị
+                        so_luong_dn: item.so_luong_hd,
+                        so_luong_hq: item.so_luong_hd
+                    };
+                }
+                return item;
+            })
         );
+    };
+
+    /* ============================================================
+       🟢 THAY ĐỔI SỐ LƯỢNG (CÓ QUY ĐỔI)
+    ============================================================ */
+    const handleSoLuongChange = async (key, value) => {
+        const item = chiTietNhap.find(ct => ct.key === key);
+        
+        if (!item.id_qd) {
+            // Không có quy đổi → Nhập trực tiếp số lượng HQ
+            setChiTietNhap((prev) =>
+                prev.map((ct) =>
+                    ct.key === key ? { ...ct, so_luong_dn: value, so_luong_hq: value } : ct
+                )
+            );
+            return;
+        }
+
+        // Có quy đổi → Tính toán
+        try {
+            const result = await calculateNPL_DN_to_HQ(
+                item.id_npl,
+                item.ten_dvt_dn,
+                value
+            );
+            
+            setChiTietNhap((prev) =>
+                prev.map((ct) =>
+                    ct.key === key ? { 
+                        ...ct, 
+                        so_luong_dn: value,
+                        so_luong_hq: result.so_luong_hq,
+                        ten_dvt_hq: result.ten_dvt_hq
+                    } : ct
+                )
+            );
+        } catch (error) {
+            console.error('Lỗi tính toán quy đổi:', error);
+            showWarning('Lỗi quy đổi', error.message || 'Không thể tính toán quy đổi');
+        }
     };
 
     /* ============================================================
@@ -147,24 +234,31 @@ const NhapKhoNPL = () => {
     const handleEdit = (record) => {
         setEditingRecord(record);
         form.setFieldsValue({
-            id_hd_nhap: record.hoaDonNhap.id_hd_nhap,
-            id_kho: record.kho.id_kho,
+            id_hd_nhap: record.hoaDonNhap?.id_hd_nhap,
+            id_kho: record.kho?.id_kho,
             ngay_nhap: dayjs(record.ngay_nhap),
         });
-        setChiTietNhap(record.chiTietNhapKhoNPLs.map(item => ({
-            key: item.id_ct,
-            id_npl: item.nguyenPhuLieu.id_npl,
-            ten_npl: item.nguyenPhuLieu.ten_npl,
-            so_luong_hd: item.so_luong, // Giả sử SL hóa đơn bằng SL nhập
+        // Backend trả về chiTiets, không phải chiTietNhapKhoNPLs
+        const chiTiets = record.chiTiets || [];
+        setChiTietNhap(chiTiets.map((item, index) => ({
+            key: item.id_ct || index,
+            id_npl: item.nguyenPhuLieu?.id_npl,
+            ten_npl: item.nguyenPhuLieu?.ten_npl,
+            so_luong_hd: item.so_luong,
             so_luong_nhap: item.so_luong,
         })));
-        window.scrollTo(0, 0); // Cuộn lên đầu trang
+        window.scrollTo(0, 0);
     };
 
-    const handleDelete = () => {
-        // Logic gọi API xóa
-        showDeleteSuccess('Phiếu nhập NPL');
-        // fetchLichSu();
+    const handleDelete = async (id_nhap) => {
+        try {
+            await deleteNhapKhoNPL(id_nhap);
+            showDeleteSuccess('Phiếu nhập NPL');
+            fetchLichSu(); // Refresh danh sách
+        } catch (err) {
+            console.error(err);
+            showSaveError('xóa phiếu nhập NPL');
+        }
     };
 
     const cancelEdit = () => {
@@ -174,11 +268,11 @@ const NhapKhoNPL = () => {
     };
 
     /* ============================================================
-       🟢 SUBMIT FORM — TẠO PHIẾU NHẬP KHO
+       🟢 SUBMIT FORM — TẠO/CẬP NHẬT PHIẾU NHẬP KHO
     ============================================================ */
     const onFinish = async (values) => {
         console.log("values-----------------", values)
-            console.log("values----------------- 🟢 Chi tiết NPL:", chiTietNhap);
+        console.log("values----------------- 🟢 Chi tiết NPL:", chiTietNhap);
 
         if (!chiTietNhap.length) {
             showWarning('Vui lòng chọn hóa đơn nhập', 'Cần có chi tiết NPL để tạo phiếu nhập kho');
@@ -192,7 +286,11 @@ const NhapKhoNPL = () => {
                 ? dayjs(values.ngay_nhap).format("YYYY-MM-DD")
                 : null,
             file_phieu: fileUrl || null,
-            chi_tiets: chiTietNhap
+            chi_tiets: chiTietNhap.map(item => ({
+                id_npl: item.id_npl,
+                so_luong: item.so_luong_hq || item.so_luong_dn, // Lưu số lượng HQ
+                so_luong_nhap: item.so_luong_hq || item.so_luong_dn // Alias
+            }))
         };
 
         console.log("📦 Dữ liệu gửi đi:", payloadPhieu);
@@ -200,37 +298,32 @@ const NhapKhoNPL = () => {
         try {
             setSubmitting(true);
 
-            // 1️⃣ Tạo phiếu nhập NPL
-            const resPhieu = await createNhapKhoNPL(payloadPhieu);
-            if (!resPhieu?.success || !resPhieu?.data?.id_nhap) {
-                showSaveError('phiếu nhập NPL');
-                return;
-            }
-
-            const id_nhap = resPhieu.data.id_nhap;
-            console.log("✅ Đã tạo phiếu nhập:", id_nhap);
-
-            // 2️⃣ Thêm chi tiết phiếu nhập NPL
-            const promises = chiTietNhap.map((item) =>
-                addChiTietNhapKhoNPL(id_nhap, {
-                    id_nhap: id_nhap,
-                    id_npl: item.id_npl,
-                    so_luong: item.so_luong_nhap,
-
-                })
-            );
-
-            const results = await Promise.all(promises);
-            const allSuccess = results.every((r) => r?.success);
-
-            if (allSuccess) {
-                showCreateSuccess('Phiếu nhập NPL');
-                form.resetFields();
-                setChiTietNhap([]);
-                setFileUrl(null);
+            if (editingRecord) {
+                // Cập nhật phiếu nhập
+                const resUpdate = await updateNhapKhoNPL(editingRecord.id_nhap, payloadPhieu);
+                if (!resUpdate?.success) {
+                    showSaveError('cập nhật phiếu nhập NPL');
+                    return;
+                }
+                console.log("✅ Đã cập nhật phiếu nhập:", editingRecord.id_nhap);
+                showUpdateSuccess('Phiếu nhập NPL');
             } else {
-                showWarning('Tạo phiếu nhập thành công', 'Nhưng có một số chi tiết bị lỗi');
+                // Tạo mới phiếu nhập
+                const resPhieu = await createNhapKhoNPL(payloadPhieu);
+                if (!resPhieu?.success || !resPhieu?.data?.id_nhap) {
+                    showSaveError('phiếu nhập NPL');
+                    return;
+                }
+                console.log("✅ Đã tạo phiếu nhập:", resPhieu.data.id_nhap);
+                showCreateSuccess('Phiếu nhập NPL');
             }
+
+            // Reset form
+            setEditingRecord(null);
+            form.resetFields();
+            setChiTietNhap([]);
+            setFileUrl(null);
+            fetchLichSu(); // Refresh danh sách
         } catch (err) {
             console.error(err);
             showSaveError('phiếu nhập kho NPL');
@@ -240,34 +333,80 @@ const NhapKhoNPL = () => {
     };
 
     const showDrawer = (record) => { setSelectedPhieu(record); setIsDrawerOpen(true); };
+    
+    const closeDrawer = () => {
+        setIsDrawerOpen(false);
+        setTimeout(() => setSelectedPhieu(null), 300);
+    };
 
     /* ============================================================
        🟢 CỘT BẢNG CHI TIẾT
     ============================================================ */
     const columns = [
-        { title: "Tên Nguyên phụ liệu", dataIndex: "ten_npl", key: "ten_npl" },
+        { 
+            title: "Tên Nguyên phụ liệu", 
+            dataIndex: "ten_npl", 
+            key: "ten_npl",
+            width: '25%'
+        },
         {
             title: "Số lượng theo HĐ",
             dataIndex: "so_luong_hd",
             key: "so_luong_hd",
+            width: '15%',
+            align: 'right',
+            render: (val) => formatVNNumber(val)
         },
         {
-            title: "Số lượng thực nhập",
-            dataIndex: "so_luong_nhap",
+            title: "Đơn vị",
+            key: "don_vi",
+            width: '20%',
+            render: (_, record) => {
+                if (!record.quyDoiList || record.quyDoiList.length === 0) {
+                    return <span style={{ color: '#999' }}>Không có quy đổi</span>;
+                }
+                return (
+                    <Select
+                        style={{ width: '100%' }}
+                        placeholder="Chọn đơn vị"
+                        value={record.id_qd}
+                        onChange={(val) => handleQuyDoiChange(record.key, val)}
+                    >
+                        {record.quyDoiList.map(qd => (
+                            <Option key={qd.id_qd} value={qd.id_qd}>
+                                {qd.ten_dvt_dn} (1 = {qd.he_so} {qd.ten_dvt_hq})
+                            </Option>
+                        ))}
+                    </Select>
+                );
+            }
+        },
+        {
+            title: "Số lượng nhập",
             key: "so_luong_nhap",
-            render: (text, record) => (
-                <InputNumber
-                    min={0}
-                    defaultValue={text}
-                    onChange={(val) => handleSoLuongChange(record.key, val)}
-                />
-            ),
+            width: '25%',
+            render: (_, record) => (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                    <InputNumber
+                        min={0}
+                        style={{ width: '100%' }}
+                        value={record.so_luong_dn}
+                        onChange={(val) => handleSoLuongChange(record.key, val)}
+                        placeholder={record.id_qd ? `Nhập ${record.ten_dvt_dn}` : 'Nhập số lượng'}
+                    />
+                    {record.id_qd && record.so_luong_hq !== record.so_luong_dn && (
+                        <Typography.Text type="secondary" style={{ fontSize: '12px' }}>
+                            = {formatVNNumber(record.so_luong_hq)} {record.ten_dvt_hq}
+                        </Typography.Text>
+                    )}
+                </Space>
+            )
         },
     ];
 
     const lichSuColumns = [
         { title: 'Số phiếu', dataIndex: 'so_phieu', render: (text, record) => text || `PNKNPL-${record.id_nhap}` },
-        { title: 'Ngày nhập', dataIndex: 'ngay_nhap', render: (text) => dayjs(text).format('DD/MM/YYYY') },
+        { title: 'Ngày nhập', dataIndex: 'ngay_nhap', render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
         { title: 'Kho nhận', dataIndex: ['kho', 'ten_kho'] },
         { title: 'Hóa đơn liên quan', dataIndex: ['hoaDonNhap', 'so_hd'] },
         { title: 'Hành động', key: 'action', render: (_, record) => (
@@ -283,14 +422,23 @@ const NhapKhoNPL = () => {
     
     const chiTietColumns = [
         { title: 'Tên Nguyên phụ liệu', dataIndex: ['nguyenPhuLieu', 'ten_npl'] },
-        { title: 'Số lượng nhập', dataIndex: 'so_luong', align: 'right' },
+        { 
+            title: 'Số lượng nhập', 
+            dataIndex: 'so_luong', 
+            align: 'right', 
+            render: (val, record) => {
+                // Hiển thị số lượng HQ (đã lưu trong DB)
+                const dvtHQ = record.nguyenPhuLieu?.donViTinhHQ?.ten_dvt || '';
+                return `${formatVNNumber(val)} ${dvtHQ}`;
+            }
+        },
     ];
 
     return (
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <Card bordered={false}>
                 <Title level={3} style={{ marginBottom: 24 }}>
-                    {editingRecord ? `Chỉnh sửa Phiếu Nhập kho NPL #${editingRecord.so_phieu}` : 'Tạo Phiếu Nhập Kho Nguyên Phụ Liệu'}
+                    {editingRecord ? `Chỉnh sửa Phiếu Nhập kho NPL #${editingRecord.so_phieu || `PNKNPL-${editingRecord.id_nhap}`}` : 'Tạo Phiếu Nhập Kho Nguyên Phụ Liệu'}
                 </Title>
                 <Form form={form} layout="vertical" onFinish={onFinish}>
                     {/* Hóa đơn nhập */}
@@ -383,15 +531,15 @@ const NhapKhoNPL = () => {
                 <Table columns={lichSuColumns} dataSource={lichSuPhieu} rowKey="id_nhap" loading={loadingLichSu} />
             </Card>
 
-            <Drawer title={`Chi tiết Phiếu nhập: ${selectedPhieu?.so_phieu}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
+            <Drawer title={`Chi tiết Phiếu nhập: ${selectedPhieu?.so_phieu || `PNKNPL-${selectedPhieu?.id_nhap}`}`} width={600} open={isDrawerOpen} onClose={closeDrawer} destroyOnClose>
                 {selectedPhieu && <>
                     <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
                         <Descriptions.Item label="Ngày nhập">{dayjs(selectedPhieu.ngay_nhap).format('DD/MM/YYYY')}</Descriptions.Item>
-                        <Descriptions.Item label="Kho nhận">{selectedPhieu.kho.ten_kho}</Descriptions.Item>
-                        <Descriptions.Item label="Hóa đơn">{selectedPhieu.hoaDonNhap.so_hd}</Descriptions.Item>
+                        <Descriptions.Item label="Kho nhận">{selectedPhieu.kho?.ten_kho}</Descriptions.Item>
+                        <Descriptions.Item label="Hóa đơn">{selectedPhieu.hoaDonNhap?.so_hd}</Descriptions.Item>
                     </Descriptions>
                     <Title level={5}>Danh sách NPL đã nhập</Title>
-                    <Table columns={chiTietColumns} dataSource={selectedPhieu.chiTietNhapKhoNPLs} rowKey="id_ct" pagination={false} size="small" bordered />
+                    <Table columns={chiTietColumns} dataSource={selectedPhieu.chiTiets || []} rowKey="id_ct" pagination={false} size="small" bordered />
                 </>}
             </Drawer>
         </Space>

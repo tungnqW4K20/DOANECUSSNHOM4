@@ -1,15 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Select, DatePicker, Button, Table, InputNumber, Upload, Typography, Tag, Space, Row, Col, Card, Drawer, Descriptions, Popconfirm } from 'antd';
-import { SendOutlined, EyeOutlined, EditOutlined, DeleteOutlined, CloseCircleOutlined, UploadOutlined } from '@ant-design/icons';
+﻿import React, { useState, useEffect } from 'react';
+import { Form, Select, DatePicker, Button, Table, InputNumber, Typography, Tag, Space, Row, Col, Card, Drawer, Descriptions, Popconfirm } from 'antd';
+import { SendOutlined, EyeOutlined, EditOutlined, DeleteOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import axios from 'axios';
 import * as XuatKhoSPService from '../../services/xuatkhosp.service';
 import * as KhoService from '../../services/kho.service';
 import * as HoaDonXuatService from '../../services/hoadonxuat.service';
+
 import { showCreateSuccess, showUpdateSuccess, showDeleteSuccess, showLoadError, showSaveError, showError } from '../../components/notification';
 import { requiredSelectRule, pastDateRules } from '../../utils/validationRules';
 
 const { Option } = Select;
 const { Title, Text } = Typography;
+
+// Hàm format số theo kiểu Việt Nam (1.000.000)
+const formatVNNumber = (value) => {
+    if (value === null || value === undefined) return '';
+    return Number(value).toLocaleString('vi-VN');
+};
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const getAuthHeader = () => {
+    const token = localStorage.getItem('accessToken');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+// Gọi API lấy tồn kho SP theo kho
+const getTonKhoSPByKho = async (id_kho) => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/kho/${id_kho}/ton-kho-sp`, {
+            headers: getAuthHeader()
+        });
+        const data = response.data?.data || response.data || [];
+        return Array.isArray(data) ? data : [];
+    } catch (error) {
+        console.error("Lỗi getTonKhoSPByKho:", error);
+        return [];
+    }
+};
 
 const XuatKhoSP = () => {
     const [form] = Form.useForm();
@@ -24,6 +53,7 @@ const XuatKhoSP = () => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedPhieu, setSelectedPhieu] = useState(null);
     const [editingRecord, setEditingRecord] = useState(null);
+    const [tonKhoSP, setTonKhoSP] = useState([]);
     
     const fetchLichSu = async () => {
         setLoadingLichSu(true);
@@ -58,21 +88,48 @@ const XuatKhoSP = () => {
         setSelectedKhoId(id_kho);
         form.setFieldsValue({ id_hd_xuat: null });
         setChiTietXuat([]);
+        
+        // Lấy tồn kho SP của kho được chọn
+        if (id_kho) {
+            const tonKhoData = await getTonKhoSPByKho(id_kho);
+            console.log('Tồn kho SP:', tonKhoData);
+            setTonKhoSP(tonKhoData);
+        } else {
+            setTonKhoSP([]);
+        }
     };
     
     const handleHoaDonChange = (id_hd_xuat) => {
         const hd = hoaDonXuatList.find(h => h.id_hd_xuat === id_hd_xuat);
+        console.log('Hóa đơn xuất được chọn:', hd);
+        console.log('Chi tiết hóa đơn:', hd?.chiTiets);
+        console.log('Tồn kho hiện tại:', tonKhoSP);
+        
         if (hd && selectedKhoId && hd.chiTiets) {
-            const chiTietCapNhat = hd.chiTiets.map((item, index) => ({
-                key: index + 1,
-                id_sp: item.id_sp,
-                ten_sp: item.sanPham?.ten_sp || 'N/A',
-                so_luong_hd: item.so_luong || 0,
-                ton_kho: 999999, // Backend will validate actual ton kho
-                so_luong_xuat: item.so_luong || 0,
-                id_qd: item.id_qd || null,
-                ten_dvt_dn: item.sanPham?.ten_dvt || 'N/A',
-            }));
+            const chiTietCapNhat = hd.chiTiets.map((item, index) => {
+                // Tìm tồn kho của SP này trong kho đã chọn
+                // item.id_sp hoặc item.sanPham?.id_sp
+                const spId = item.id_sp || item.sanPham?.id_sp;
+                const tonKhoItem = tonKhoSP.find(tk => tk.id_sp === spId);
+                const soLuongTon = tonKhoItem ? parseFloat(tonKhoItem.so_luong_ton) || 0 : 0;
+                const donVi = item.sanPham?.donViTinhHQ?.ten_dvt || tonKhoItem?.don_vi || 'N/A';
+                
+                // Parse số lượng từ hóa đơn (có thể là string hoặc decimal)
+                const soLuongHD = parseFloat(item.so_luong) || 0;
+                
+                console.log(`SP ${spId} (${item.sanPham?.ten_sp}): SL theo HĐ = ${soLuongHD}, tồn kho = ${soLuongTon}`);
+                
+                return {
+                    key: index + 1,
+                    id_sp: spId,
+                    ten_sp: item.sanPham?.ten_sp || 'N/A',
+                    so_luong_hd: soLuongHD,
+                    ton_kho: soLuongTon,
+                    so_luong_xuat: Math.min(soLuongHD, soLuongTon),
+                    id_qd: item.id_qd || null,
+                    ten_dvt_dn: donVi,
+                };
+            });
             setChiTietXuat(chiTietCapNhat);
         } else {
             setChiTietXuat([]);
@@ -98,7 +155,7 @@ const XuatKhoSP = () => {
         }
 
         // Validation: Kiểm tra vượt tồn kho
-        const vuotTonKho = chiTietXuat.some(item => item.so_luong_xuat > item.ton_kho && item.ton_kho !== 999999);
+        const vuotTonKho = chiTietXuat.some(item => item.so_luong_xuat > item.ton_kho);
         if(vuotTonKho) {
             showError('Số lượng xuất không hợp lệ', 'Số lượng xuất không được vượt quá tồn kho khả dụng');
             return;
@@ -139,9 +196,18 @@ const XuatKhoSP = () => {
     
     const showDrawer = (record) => { setSelectedPhieu(record); setIsDrawerOpen(true); };
     
+    const closeDrawer = () => {
+        setIsDrawerOpen(false);
+        setTimeout(() => setSelectedPhieu(null), 300);
+    };
+    
     const handleEdit = async (record) => {
         setEditingRecord(record);
-        await handleKhoChange(record.kho.id_kho);
+        
+        // Lấy tồn kho SP trước
+        const tonKhoData = await getTonKhoSPByKho(record.kho.id_kho);
+        setTonKhoSP(tonKhoData);
+        setSelectedKhoId(record.kho.id_kho);
         
         setTimeout(() => {
             form.setFieldsValue({
@@ -157,15 +223,20 @@ const XuatKhoSP = () => {
                     const chiTiet = hd.chiTiets.map((itemHD, index) => {
                         const chiTietDaXuat = record.chiTiets?.find(ctx => ctx.sanPham?.id_sp === itemHD.id_sp);
                         const soLuongDaXuat = chiTietDaXuat ? chiTietDaXuat.so_luong : 0;
+                        const tonKhoItem = tonKhoData.find(tk => tk.id_sp === itemHD.id_sp);
+                        const soLuongTon = tonKhoItem ? tonKhoItem.so_luong_ton : 0;
+                        const donVi = itemHD.sanPham?.donViTinhHQ?.ten_dvt || tonKhoItem?.don_vi || 'N/A';
+                        
                         return {
                             key: index + 1,
                             id_sp: itemHD.id_sp,
                             ten_sp: itemHD.sanPham?.ten_sp || 'N/A',
                             so_luong_hd: itemHD.so_luong || 0,
-                            ton_kho: 999999, // Backend will validate
+                            // Tồn kho khả dụng khi sửa = tồn kho hiện tại + lượng đã xuất của chính phiếu này
+                            ton_kho: soLuongTon + soLuongDaXuat,
                             so_luong_xuat: soLuongDaXuat,
                             id_qd: itemHD.id_qd || null,
-                            ten_dvt_dn: itemHD.sanPham?.ten_dvt || 'N/A',
+                            ten_dvt_dn: donVi,
                         }
                     });
                     setChiTietXuat(chiTiet);
@@ -191,12 +262,14 @@ const XuatKhoSP = () => {
         form.resetFields();
         setChiTietXuat([]);
         setSelectedKhoId(null);
+        setTonKhoSP([]);
     };
 
     const columns = [
-        { title: 'Tên Sản phẩm', dataIndex: 'ten_sp' }, { title: 'Đơn vị tính', dataIndex: 'ten_dvt_dn' },
-        { title: 'Số lượng theo HĐ', dataIndex: 'so_luong_hd', align: 'center' },
-        { title: 'Tồn kho khả dụng', dataIndex: 'ton_kho', align: 'center', render: text => <Text strong>{text}</Text> },
+        { title: 'Tên Sản phẩm', dataIndex: 'ten_sp' }, 
+        { title: 'Đơn vị tính', dataIndex: 'ten_dvt_dn' },
+        { title: 'Số lượng theo HĐ', dataIndex: 'so_luong_hd', align: 'center', render: val => formatVNNumber(val) },
+        { title: 'Tồn kho khả dụng', dataIndex: 'ton_kho', align: 'center', render: text => <Text strong>{formatVNNumber(text)}</Text> },
         { title: 'Số lượng thực xuất', dataIndex: 'so_luong_xuat', width: 250, render: (text, record) => (
             <Space>
                 <InputNumber min={0} max={record.ton_kho} value={text} onChange={(val) => handleSoLuongChange(record.key, val)}/>
@@ -207,9 +280,8 @@ const XuatKhoSP = () => {
 
     const lichSuColumns = [
         { title: 'Số phiếu', dataIndex: 'so_phieu', render: (text, record) => text || `PXKSP-${record.id_xuat}` }, 
-        { title: 'Ngày xuất', dataIndex: 'ngay_xuat', render: (text) => dayjs(text).format('DD/MM/YYYY') },
-        { title: 'Kho xuất', dataIndex: ['kho', 'ten_kho'] }, 
-        { title: 'Hóa đơn liên quan', dataIndex: ['hoaDonXuat', 'so_hd'], render: (text) => text || 'N/A' },
+        { title: 'Ngày xuất', dataIndex: 'ngay_xuat', render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
+        { title: 'Kho xuất', dataIndex: ['kho', 'ten_kho'] },
         { title: 'Hành động', key: 'action', width: 220, align: 'center', render: (_, record) => (
             <Space>
                 <Button size="small" icon={<EyeOutlined />} onClick={() => showDrawer(record)}>Xem</Button>
@@ -221,15 +293,15 @@ const XuatKhoSP = () => {
 
     const chiTietColumns = [
         { title: 'Tên sản phẩm', dataIndex: ['sanPham', 'ten_sp'] },
-        { title: 'Số lượng xuất', dataIndex: 'so_luong', align: 'right' },
+        { title: 'Số lượng xuất', dataIndex: 'so_luong', align: 'right', render: (val) => formatVNNumber(val) },
     ];
     
-    const isSubmitDisabled = !selectedKhoId || chiTietXuat.length === 0 || chiTietXuat.some(item => item.so_luong_xuat > item.ton_kho && item.ton_kho !== 999999) || chiTietXuat.reduce((sum, item) => sum + item.so_luong_xuat, 0) === 0;
+    const isSubmitDisabled = !selectedKhoId || chiTietXuat.length === 0 || chiTietXuat.some(item => item.so_luong_xuat > item.ton_kho) || chiTietXuat.reduce((sum, item) => sum + item.so_luong_xuat, 0) === 0;
 
     return (
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <Card bordered={false}>
-                <Title level={3}>{editingRecord ? `Chỉnh sửa Phiếu Xuất kho SP #${editingRecord.so_phieu}` : 'Tạo Phiếu Xuất Kho Sản Phẩm'}</Title>
+                <Title level={3}>{editingRecord ? `Chỉnh sửa Phiếu Xuất kho SP #${editingRecord.so_phieu || `PXKSP-${editingRecord.id_xuat}`}` : 'Tạo Phiếu Xuất Kho Sản Phẩm'}</Title>
                  <Form form={form} layout="vertical" onFinish={onFinish}>
                     <Row gutter={24}>
                         <Col span={8}><Form.Item label="Kho xuất hàng" name="id_kho" rules={[requiredSelectRule('kho xuất')]}><Select placeholder="-- Chọn kho trước --" onChange={handleKhoChange} disabled={!!editingRecord}>{khoList.map(k => <Option key={k.id_kho} value={k.id_kho}>{k.ten_kho}</Option>)}</Select></Form.Item></Col>
@@ -240,7 +312,7 @@ const XuatKhoSP = () => {
                     <Table columns={columns} dataSource={chiTietXuat} pagination={false} rowKey="key" bordered/>
                     <Form.Item style={{ marginTop: 24 }}>
                         <Space>
-                            <Button type="primary" htmlType="submit" icon={<SendOutlined />} loading={submitting} disabled={isSubmitDisabled}>
+                            <Button type="primary" htmlType="submit" icon={<SendOutlined />} loading={submitting} disabled={isSubmitDisabled} style={{ color: '#fff' }}>
                                 {editingRecord ? 'Cập nhật' : 'Xác nhận Xuất kho'}
                             </Button>
                             {editingRecord && <Button icon={<CloseCircleOutlined />} onClick={cancelEdit}>Hủy sửa</Button>}
@@ -253,12 +325,11 @@ const XuatKhoSP = () => {
                 <Table columns={lichSuColumns} dataSource={lichSuPhieu} rowKey="id_xuat" loading={loadingLichSu} />
             </Card>
 
-            <Drawer title={`Chi tiết Phiếu xuất: ${selectedPhieu?.so_phieu || `PXKSP-${selectedPhieu?.id_xuat}`}`} width={600} open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
+            <Drawer title={`Chi tiết Phiếu xuất: ${selectedPhieu?.so_phieu || `PXKSP-${selectedPhieu?.id_xuat}`}`} width={600} open={isDrawerOpen} onClose={closeDrawer} destroyOnClose>
                 {selectedPhieu && <>
                     <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
                         <Descriptions.Item label="Ngày xuất">{dayjs(selectedPhieu.ngay_xuat).format('DD/MM/YYYY')}</Descriptions.Item>
                         <Descriptions.Item label="Kho xuất">{selectedPhieu.kho?.ten_kho}</Descriptions.Item>
-                        <Descriptions.Item label="Hóa đơn liên quan">{selectedPhieu.hoaDonXuat?.so_hd || 'N/A'}</Descriptions.Item>
                     </Descriptions>
                     <Title level={5}>Danh sách sản phẩm đã xuất</Title>
                     <Table columns={chiTietColumns} dataSource={selectedPhieu.chiTiets || []} rowKey="id_ct" pagination={false} size="small" bordered />

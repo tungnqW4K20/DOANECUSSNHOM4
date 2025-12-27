@@ -8,6 +8,12 @@ const loHangService = require('../services/lohang.service');
 const create = async (req, res) => {
   try {
     const { id_hd, ngay_dong_goi, ngay_xuat_cang, cang_xuat, cang_nhap, file_chung_tu } = req.body;
+    const id_dn = req.user?.id;
+    const role = req.user?.role;
+
+    if (!id_dn && role !== 'Admin') {
+      return res.status(400).json({ success: false, message: 'Thiếu thông tin xác thực' });
+    }
 
     const result = await loHangService.createLH({
       id_hd,
@@ -16,7 +22,7 @@ const create = async (req, res) => {
       cang_xuat,
       cang_nhap,
       file_chung_tu
-    });
+    }, id_dn, role);
 
     res.status(201).json({
       success: true,
@@ -36,7 +42,14 @@ const create = async (req, res) => {
 // =============================
 const getAll = async (req, res) => {
   try {
-    const result = await loHangService.getAllLH();
+    const id_dn = req.user?.id;
+    const role = req.user?.role;
+
+    if (!id_dn && role !== 'Admin') {
+      return res.status(400).json({ success: false, message: 'Thiếu thông tin xác thực' });
+    }
+
+    const result = await loHangService.getAllLH(id_dn, role);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -49,7 +62,14 @@ const getAll = async (req, res) => {
 const getById = async (req, res) => {
   try {
     const { id_lh } = req.params;
-    const result = await loHangService.getLHById(id_lh);
+    const id_dn = req.user?.id;
+    const role = req.user?.role;
+
+    if (!id_dn && role !== 'Admin') {
+      return res.status(400).json({ success: false, message: 'Thiếu thông tin xác thực' });
+    }
+
+    const result = await loHangService.getLHById(id_lh, id_dn, role);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     res.status(404).json({ success: false, message: error.message });
@@ -62,7 +82,14 @@ const getById = async (req, res) => {
 const getByHopDong = async (req, res) => {
   try {
     const { id_hd } = req.params;
-    const result = await loHangService.getLHByHopDong(id_hd);
+    const id_dn = req.user?.id;
+    const role = req.user?.role;
+
+    if (!id_dn && role !== 'Admin') {
+      return res.status(400).json({ success: false, message: 'Thiếu thông tin xác thực' });
+    }
+
+    const result = await loHangService.getLHByHopDong(id_hd, id_dn, role);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     res.status(404).json({ success: false, message: error.message });
@@ -75,7 +102,14 @@ const getByHopDong = async (req, res) => {
 const update = async (req, res) => {
   try {
     const { id_lh } = req.params;
-    const result = await loHangService.updateLH(id_lh, req.body);
+    const id_dn = req.user?.id;
+    const role = req.user?.role;
+
+    if (!id_dn && role !== 'Admin') {
+      return res.status(400).json({ success: false, message: 'Thiếu thông tin xác thực' });
+    }
+
+    const result = await loHangService.updateLH(id_lh, req.body, id_dn, role);
     res.status(200).json({
       success: true,
       message: 'Cập nhật lô hàng thành công',
@@ -92,7 +126,14 @@ const update = async (req, res) => {
 const remove = async (req, res) => {
   try {
     const { id_lh } = req.params;
-    await loHangService.deleteLH(id_lh);
+    const id_dn = req.user?.id;
+    const role = req.user?.role;
+
+    if (!id_dn && role !== 'Admin') {
+      return res.status(400).json({ success: false, message: 'Thiếu thông tin xác thực' });
+    }
+
+    await loHangService.deleteLH(id_lh, id_dn, role);
     res.status(200).json({
       success: true,
       message: 'Xóa lô hàng thành công'

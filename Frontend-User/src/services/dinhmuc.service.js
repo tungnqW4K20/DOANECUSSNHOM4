@@ -56,9 +56,37 @@ export const deleteDinhMuc = async (id_dinhmuc) => {
     }
 };
 
+/* ============================================================
+   🟢 LẤY DANH SÁCH SẢN PHẨM THEO DOANH NGHIỆP (DROPDOWN)
+============================================================ */
+export const getSanPhamByDN = async () => {
+    try {
+        const res = await api.get("/san-pham");
+        return res.data; // { success, data }
+    } catch (err) {
+        console.error("❌ Lỗi getSanPhamByDN:", err);
+        throw err.response?.data || { message: "Lỗi khi lấy danh sách sản phẩm" };
+    }
+};
+
+/* ============================================================
+   🟢 LẤY DANH SÁCH NGUYÊN LIỆU THEO DOANH NGHIỆP (DROPDOWN)
+============================================================ */
+export const getNguyenLieuByDN = async () => {
+    try {
+        const res = await api.get("/nguyen-lieu");
+        return res.data; // { success, data }
+    } catch (err) {
+        console.error("❌ Lỗi getNguyenLieuByDN:", err);
+        throw err.response?.data || { message: "Lỗi khi lấy danh sách nguyên liệu" };
+    }
+};
+
 export default {
     getAllDinhMuc,
     getDinhMucBySanPham,
     createDinhMuc,
     deleteDinhMuc,
+    getSanPhamByDN,
+    getNguyenLieuByDN,
 };

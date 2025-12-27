@@ -17,6 +17,7 @@ import {
   PackageX,
   DollarSign,
   Calculator,
+  Ruler,
 } from 'lucide-react';
 
 const menuItems = [
@@ -37,12 +38,13 @@ const menuItems = [
         label: 'Hợp đồng',
         path: '/hop-dong',
       },
-      {
-        key: '/lo-hang',
-        icon: <Package size={16} />,
-        label: 'Quản lý Lô hàng',
-        path: '/lo-hang',
-      },
+      // Tạm ẩn - xem lô hàng trong hợp đồng
+      // {
+      //   key: '/lo-hang',
+      //   icon: <Package size={16} />,
+      //   label: 'Quản lý Lô hàng',
+      //   path: '/lo-hang',
+      // },
       {
         key: '/san-pham',
         icon: <PackageCheck size={16} />,
@@ -61,6 +63,12 @@ const menuItems = [
         label: 'Định mức',
         path: '/dinh-muc',
       },
+      {
+        key: '/quy-doi-don-vi',
+        icon: <Ruler size={16} />,
+        label: 'Quy đổi đơn vị',
+        path: '/quy-doi-don-vi',
+      },
     ],
   },
   {
@@ -68,18 +76,6 @@ const menuItems = [
     icon: <FileBarChart size={18} />,
     label: 'Tờ khai Hải quan',
     children: [
-      {
-        key: '/quan-ly-to-khai-nhap',
-        icon: <FileText size={16} />,
-        label: 'Quản lý Tờ khai nhập',
-        path: '/quan-ly-to-khai-nhap',
-      },
-      {
-        key: '/quan-ly-to-khai-xuat',
-        icon: <FileText size={16} />,
-        label: 'Quản lý Tờ khai xuất',
-        path: '/quan-ly-to-khai-xuat',
-      },
       {
         key: '/to-khai-nhap',
         icon: <PackagePlus size={16} />,
@@ -91,6 +87,18 @@ const menuItems = [
         icon: <PackageMinus size={16} />,
         label: 'Nhập Tờ khai xuất',
         path: '/to-khai-xuat',
+      },
+      {
+        key: '/quan-ly-to-khai-nhap',
+        icon: <FileText size={16} />,
+        label: 'Quản lý Tờ khai nhập',
+        path: '/quan-ly-to-khai-nhap',
+      },
+      {
+        key: '/quan-ly-to-khai-xuat',
+        icon: <FileText size={16} />,
+        label: 'Quản lý Tờ khai xuất',
+        path: '/quan-ly-to-khai-xuat',
       },
     ],
   },
@@ -104,6 +112,12 @@ const menuItems = [
         icon: <Warehouse size={16} />,
         label: 'Danh sách kho',
         path: '/kho',
+      },
+      {
+        key: '/kho/ton-kho',
+        icon: <Package size={16} />,
+        label: 'Theo dõi tồn kho',
+        path: '/kho/ton-kho',
       },
       {
         key: '/kho/nhap-npl',
@@ -147,12 +161,6 @@ const menuItems = [
         icon: <DollarSign size={16} />,
         label: 'Tỷ giá',
         path: '/ty-gia',
-      },
-      {
-        key: '/quy-doi-don-vi',
-        icon: <Calculator size={16} />,
-        label: 'Quy đổi đơn vị',
-        path: '/quy-doi-don-vi',
       },
     ],
   },

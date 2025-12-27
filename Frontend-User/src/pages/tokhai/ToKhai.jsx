@@ -59,7 +59,9 @@ const ToKhai = () => {
 
     const handleCrudSave = () => { message.success('Lưu thành công!'); setIsCrudModalOpen(false); };
     const showDrawer = (record) => { setSelectedToKhai(record); setIsDrawerOpen(true); };
+    const closeDrawer = () => { setIsDrawerOpen(false); setTimeout(() => setSelectedToKhai(null), 300); };
     const showChiTietDrawer = (hoaDon) => { setSelectedHoaDon(hoaDon); setIsChiTietDrawerOpen(true); };
+    const closeChiTietDrawer = () => { setIsChiTietDrawerOpen(false); setTimeout(() => setSelectedHoaDon(null), 300); };
 
     const handleAddChiTietRow = () => setHoaDonChiTiet([...hoaDonChiTiet, { key: Date.now(), so_luong: 1, don_gia: 0 }]);
     const handleRemoveChiTietRow = (key) => setHoaDonChiTiet(hoaDonChiTiet.filter(item => item.key !== key));
@@ -177,11 +179,11 @@ const ToKhai = () => {
             </Row>
             <Card bordered={false}><Table columns={mainColumns} dataSource={dataSource} rowKey="id" /></Card>
 
-            <Modal title={crudModalContent.title} open={isCrudModalOpen} onCancel={() => setIsCrudModalOpen(false)} onOk={handleCrudSave} okText="Lưu" cancelText="Hủy" width={crudModalContent.type === 'hoaDon' ? 1000 : 800}>
+            <Modal title={crudModalContent.title} open={isCrudModalOpen} onCancel={() => { setIsCrudModalOpen(false); crudForm.resetFields(); }} onOk={handleCrudSave} okText="Lưu" cancelText="Hủy" width={crudModalContent.type === 'hoaDon' ? 1000 : 800} destroyOnClose maskClosable={false}>
                 <Form form={crudForm} layout="vertical">{renderCrudForm()}</Form>
             </Modal>
 
-            <Drawer title={`Chi tiết Tờ khai: ${selectedToKhai?.so_tk}`} width="80vw" open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
+            <Drawer title={`Chi tiết Tờ khai: ${selectedToKhai?.so_tk || ''}`} width="80vw" open={isDrawerOpen} onClose={closeDrawer} destroyOnClose>
                 {selectedToKhai?.details ? (
                     <Tabs defaultActiveKey="1" type="card">
                         <TabPane tab="Lô hàng" key="1">
@@ -200,7 +202,7 @@ const ToKhai = () => {
                 ) : <Text>Không có dữ liệu chi tiết cho Tờ khai này.</Text>}
             </Drawer>
 
-            <Drawer title={`Chi tiết Hóa đơn: ${selectedHoaDon?.so_hd}`} width={720} open={isChiTietDrawerOpen} onClose={() => setIsChiTietDrawerOpen(false)}>
+            <Drawer title={`Chi tiết Hóa đơn: ${selectedHoaDon?.so_hd || ''}`} width={720} open={isChiTietDrawerOpen} onClose={closeChiTietDrawer} destroyOnClose>
                 <Table title={() => <Text strong>Danh sách hàng hóa</Text>} columns={hoaDonChiTietColumns.slice(0, 4)} dataSource={selectedHoaDon?.chiTiet} rowKey="id_ct" size="small" pagination={false} bordered />
             </Drawer>
         </>

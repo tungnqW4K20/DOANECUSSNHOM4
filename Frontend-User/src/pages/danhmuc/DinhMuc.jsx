@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     Table,
     Button,
@@ -21,18 +21,17 @@ import {
     SaveOutlined,
     ReloadOutlined,
 } from '@ant-design/icons';
-import { getAllSanPham } from '../../services/sanpham.service';
-import { getAllNguyenPhuLieu } from '../../services/nguyenphulieu.service';
 import {
     getAllDinhMuc,
     getDinhMucBySanPham,
     createDinhMuc,
     deleteDinhMuc,
 } from '../../services/dinhmuc.service';
+import { getAllSanPham } from '../../services/sanpham.service';
+import { getAllNguyenPhuLieu } from '../../services/nguyenphulieu.service';
 import {
     showCreateSuccess,
     showUpdateSuccess,
-    showDeleteSuccess,
     showLoadError,
     showSaveError,
     showError,
@@ -51,11 +50,13 @@ const DinhMuc = () => {
     const [allDinhMuc, setAllDinhMuc] = useState([]);
     const [spList, setSpList] = useState([]);
     const [nplList, setNplList] = useState([]);
+    const [saving, setSaving] = useState(false);
 
     // ===================== FETCH DATA =====================
     const fetchAll = async () => {
         try {
             setLoading(true);
+            // Sử dụng API sản phẩm và nguyên liệu đã có (đã phân quyền theo id_dn)
             const [spRes, nplRes, dmRes] = await Promise.all([
                 getAllSanPham(),
                 getAllNguyenPhuLieu(),
@@ -98,10 +99,11 @@ const DinhMuc = () => {
     }, []);
 
     // ===================== MODAL =====================
-    const handleOpenModal = async (product = null) => {
+    const handleOpenModal = useCallback(async (product = null) => {
         setEditingProduct(product);
-        setIsModalOpen(true);
+        setDinhMucDetails([]);
         form.resetFields();
+        setIsModalOpen(true);
 
         if (product) {
             setLoadingModal(true);
@@ -115,26 +117,26 @@ const DinhMuc = () => {
                     ghi_chu: dm.ghi_chu || '',
                 }));
                 setDinhMucDetails(details);
-                form.setFieldsValue({ id_sp: product.id_sp });
+                setTimeout(() => form.setFieldsValue({ id_sp: product.id_sp }), 0);
             } catch (err) {
                 showLoadError('định mức chi tiết');
             } finally {
                 setLoadingModal(false);
             }
-        } else {
-            setDinhMucDetails([]);
         }
-    };
+    }, [form]);
 
-    const handleCloseModal = () => {
+    const handleCloseModal = useCallback(() => {
         setIsModalOpen(false);
-        setDinhMucDetails([]);
-        setEditingProduct(null);
-        form.resetFields();
-    };
+        setTimeout(() => {
+            setDinhMucDetails([]);
+            setEditingProduct(null);
+            form.resetFields();
+        }, 300);
+    }, [form]);
 
     const handleAddRow = () => {
-        const newRow = { key: Date.now(), id_npl: null, so_luong: 1, ghi_chu: '' };
+        const newRow = { key: Date.now(), id_npl: null, so_luong: 0.01, ghi_chu: '' };
         setDinhMucDetails([...dinhMucDetails, newRow]);
     };
 
@@ -156,11 +158,21 @@ const DinhMuc = () => {
                 return;
             }
 
+            // Kiểm tra dữ liệu hợp lệ
+            const invalidRows = dinhMucDetails.filter(
+                (item) => !item.id_npl || !item.so_luong || item.so_luong <= 0
+            );
+            if (invalidRows.length > 0) {
+                showError('Dữ liệu không hợp lệ', 'Vui lòng chọn nguyên phụ liệu và nhập số lượng hợp lệ cho tất cả các dòng!');
+                return;
+            }
+
+            setSaving(true);
             const payload = {
                 id_sp: values.id_sp,
                 dinh_muc_chi_tiet: dinhMucDetails.map((item) => ({
                     id_nguyen_lieu: item.id_npl,
-                    so_luong: item.so_luong,
+                    so_luong: parseFloat(item.so_luong),
                     ghi_chu: item.ghi_chu || '',
                 })),
             };
@@ -184,6 +196,8 @@ const DinhMuc = () => {
             fetchAll();
         } catch (err) {
             showSaveError('định mức');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -240,7 +254,14 @@ const DinhMuc = () => {
                     step="0.01"
                     style={{ width: '100%' }}
                     value={record.so_luong}
-                    onChange={(val) => handleRowChange(record.key, 'so_luong', val)}
+                    onChange={(val) => handleRowChange(record.key, 'so_luong', val || 0.01)}
+                    placeholder="Nhập số lượng"
+                    formatter={(value) => {
+                        if (!value) return '';
+                        const num = parseFloat(value);
+                        return num % 1 === 0 ? num.toString() : value;
+                    }}
+                    parser={(value) => value}
                 />
             ),
         },
@@ -293,6 +314,8 @@ const DinhMuc = () => {
                 onCancel={handleCloseModal}
                 footer={null}
                 width={850}
+                destroyOnClose
+                maskClosable={false}
             >
                 <Spin spinning={loadingModal}>
                     <Form form={form} layout="vertical">
@@ -336,6 +359,7 @@ const DinhMuc = () => {
                                     type="primary"
                                     icon={<SaveOutlined />}
                                     onClick={handleSave}
+                                    loading={saving}
                                 >
                                     Lưu Định mức
                                 </Button>
