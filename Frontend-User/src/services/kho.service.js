@@ -25,8 +25,9 @@ export const createKho = async (data) => {
 export const getAllKho = async () => {
     try {
         const res = await api.get("/");
-        // Backend trả về array trực tiếp (không wrap)
-        return Array.isArray(res.data) ? res.data : (res.data?.data || res.data || []);
+        // Backend trả về { success: true, data: [...] }
+        const data = res.data?.data || res.data || [];
+        return { data: Array.isArray(data) ? data : [] };
     } catch (err) {
         console.error("Lỗi getAllKho:", err);
         throw err.response?.data || { message: "Lỗi kết nối máy chủ" };
@@ -67,6 +68,34 @@ export const deleteKho = async (id_kho) => {
 };
 
 // =======================
+// 📦 Tồn kho
+// =======================
+
+// 🟢 Lấy tồn kho NPL theo kho
+export const getTonKhoNPLByKho = async (id_kho) => {
+    try {
+        const res = await api.get(`/${id_kho}/ton-kho-npl`);
+        const data = res.data?.data || res.data || [];
+        return { data: Array.isArray(data) ? data : [] };
+    } catch (err) {
+        console.error("Lỗi getTonKhoNPLByKho:", err);
+        throw err.response?.data || { message: "Lỗi kết nối máy chủ" };
+    }
+};
+
+// 🟢 Lấy tồn kho SP theo kho
+export const getTonKhoSPByKho = async (id_kho) => {
+    try {
+        const res = await api.get(`/${id_kho}/ton-kho-sp`);
+        const data = res.data?.data || res.data || [];
+        return { data: Array.isArray(data) ? data : [] };
+    } catch (err) {
+        console.error("Lỗi getTonKhoSPByKho:", err);
+        throw err.response?.data || { message: "Lỗi kết nối máy chủ" };
+    }
+};
+
+// =======================
 // 📤 Xuất các hàm
 // =======================
 export default {
@@ -75,4 +104,6 @@ export default {
     getKhoById,
     updateKho,
     deleteKho,
+    getTonKhoNPLByKho,
+    getTonKhoSPByKho,
 };

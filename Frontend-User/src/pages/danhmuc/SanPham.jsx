@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Table,
   Button,
@@ -78,21 +78,31 @@ const SanPham = () => {
   /* ============================================================
      🟢 XỬ LÝ CRUD
   ============================================================ */
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setEditingRecord(null);
     form.resetFields();
     setIsModalVisible(true);
-  };
+  }, [form]);
 
-  const handleEdit = (record) => {
+  const handleEdit = useCallback((record) => {
     setEditingRecord(record);
-    form.setFieldsValue({
-      ten_sp: record.ten_sp,
-      mo_ta: record.mo_ta,
-      id_dvt_hq: record.id_dvt_hq,
-    });
+    setTimeout(() => {
+      form.setFieldsValue({
+        ten_sp: record.ten_sp,
+        mo_ta: record.mo_ta,
+        id_dvt_hq: record.id_dvt_hq,
+      });
+    }, 0);
     setIsModalVisible(true);
-  };
+  }, [form]);
+
+  const closeModal = useCallback(() => {
+    setIsModalVisible(false);
+    setTimeout(() => {
+      setEditingRecord(null);
+      form.resetFields();
+    }, 300);
+  }, [form]);
 
   const handleDelete = async (id_sp) => {
     try {
@@ -104,9 +114,9 @@ const SanPham = () => {
     }
   };
 
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
+  const handleCancel = useCallback(() => {
+    closeModal();
+  }, [closeModal]);
 
   const onFinish = async (values) => {
     try {
@@ -117,7 +127,7 @@ const SanPham = () => {
         await createSanPham(values);
         showCreateSuccess("Sản phẩm");
       }
-      setIsModalVisible(false);
+      closeModal();
       fetchData();
     } catch (err) {
       showSaveError("sản phẩm");
@@ -141,7 +151,7 @@ const SanPham = () => {
      🟢 CỘT TABLE
   ============================================================ */
   const columns = [
-    { title: "Mã SP", dataIndex: "id_sp", key: "id_sp", sorter: (a, b) => a.id_sp - b.id_sp },
+    { title: "Mã SP", dataIndex: "id_sp", key: "id_sp", sorter: (a, b) => a.id_sp - b.id_sp, width: 100 },
     { title: "Tên sản phẩm", dataIndex: "ten_sp", key: "ten_sp" },
     { title: "Mô tả", dataIndex: "mo_ta", key: "mo_ta" },
     { title: "Đơn vị tính HQ", dataIndex: "ten_dvt", key: "ten_dvt" },
@@ -196,9 +206,10 @@ const SanPham = () => {
       <Modal
         title={editingRecord ? "Chỉnh sửa Sản phẩm" : "Thêm mới Sản phẩm"}
         open={isModalVisible}
-        onCancel={handleCancel}
+        onCancel={closeModal}
         footer={null}
         destroyOnClose
+        maskClosable={false}
       >
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Form.Item

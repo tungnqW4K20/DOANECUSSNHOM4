@@ -163,10 +163,15 @@ const createNhapNPL = async ({ id_kho, id_hd_nhap, ngay_nhap, file_phieu, chi_ti
   }
 };
 
-const getAllNhapNPL = async () => {
+const getAllNhapNPL = async (id_dn) => {
   return await NhapKhoNPL.findAll({
     include: [
-      { model: Kho, as: 'kho' },
+      { 
+        model: Kho, 
+        as: 'kho',
+        where: { id_dn },
+        required: true
+      },
       { model: HoaDonNhap, as: 'hoaDonNhap' },
       { model: NhapKhoNPLChiTiet, as: 'chiTiets', include: [{ model: NguyenPhuLieu, as: 'nguyenPhuLieu' }] }
     ],
@@ -187,10 +192,76 @@ const getNhapNPLById = async (id_nhap) => {
 };
 
 const updateNhapNPL = async (id_nhap, data) => {
-  const rec = await NhapKhoNPL.findByPk(id_nhap);
+  const { id_kho, id_hd_nhap, ngay_nhap, file_phieu, chi_tiets } = data;
+  
+  const rec = await NhapKhoNPL.findByPk(id_nhap, {
+    include: [{ model: NhapKhoNPLChiTiet, as: 'chiTiets' }]
+  });
   if (!rec) throw new Error(`Không tìm thấy phiếu nhập ID=${id_nhap}`);
-  await rec.update(data);
-  return rec;
+
+  const t = await db.sequelize.transaction();
+
+  try {
+    // Hoàn trả tồn kho cũ trước khi cập nhật
+    const oldChiTiets = rec.chiTiets || [];
+    for (const oldCt of oldChiTiets) {
+      const tonKho = await TonKhoNPL.findOne({ 
+        where: { id_kho: rec.id_kho, id_npl: oldCt.id_npl }, 
+        transaction: t 
+      });
+      if (tonKho) {
+        await tonKho.decrement('so_luong_ton', { by: oldCt.so_luong, transaction: t });
+      }
+    }
+
+    // Cập nhật thông tin phiếu nhập
+    await rec.update({ id_kho, id_hd_nhap, ngay_nhap, file_phieu }, { transaction: t });
+
+    // Xóa chi tiết cũ
+    await NhapKhoNPLChiTiet.destroy({ where: { id_nhap }, transaction: t });
+
+    // Thêm chi tiết mới và cập nhật tồn kho
+    if (Array.isArray(chi_tiets)) {
+      for (const ct of chi_tiets) {
+        const { id_npl, so_luong_nhap, so_luong } = ct;
+        const qty = so_luong_nhap || so_luong;
+        if (!id_npl || !qty) continue;
+
+        const npl = await NguyenPhuLieu.findByPk(id_npl, { transaction: t });
+        if (!npl) throw new Error(`Không tìm thấy nguyên phụ liệu ID=${id_npl}`);
+
+        await NhapKhoNPLChiTiet.create(
+          { id_nhap, id_npl, so_luong: qty },
+          { transaction: t }
+        );
+
+        // Cập nhật tồn kho mới
+        const id_kho_new = id_kho || rec.id_kho;
+        const tonKho = await TonKhoNPL.findOne({ 
+          where: { id_kho: id_kho_new, id_npl }, 
+          transaction: t 
+        });
+        if (tonKho) {
+          await tonKho.increment('so_luong_ton', { by: qty, transaction: t });
+        } else {
+          await TonKhoNPL.create({ id_kho: id_kho_new, id_npl, so_luong_ton: qty }, { transaction: t });
+        }
+      }
+    }
+
+    await t.commit();
+
+    return await NhapKhoNPL.findByPk(id_nhap, {
+      include: [
+        { model: Kho, as: 'kho' },
+        { model: HoaDonNhap, as: 'hoaDonNhap' },
+        { model: NhapKhoNPLChiTiet, as: 'chiTiets' }
+      ]
+    });
+  } catch (err) {
+    if (!t.finished) await t.rollback();
+    throw err;
+  }
 };
 
 const deleteNhapNPL = async (id_nhap) => {

@@ -13,6 +13,7 @@ const donvitinhHaiQuanRoutes = require('./routes/donvitinhHaiQuan.routes')
 const QuyDoiDonViSPRoutes = require('./routes/quydoi_sp.routes')
 const QuyDoiDonViDNRoutes = require('./routes/quydoi_dn.routes')
 const QuyDoiDonNPLDNRoutes = require('./routes/quydoi_npl.route')
+const quyDoiHelperRoutes = require('./routes/quyDoiHelper.routes')
 const dinhmucRoutes = require('./routes/dinhmuc.route')
 const nguyenlieuRoutes = require('./routes/nguyenlieu.route')
 const hopdongRoutes = require('./routes/hopdong.route')
@@ -35,6 +36,7 @@ const nhapKhoSPRoutes = require('./routes/nhapKhoSP.routes');
 const xuatKhoSPRoutes = require('./routes/xuatKhoSP.routes');
 const baocaothanhkhoanRoutes = require('./routes/baocaothanhkhoan.routes');
 const toKhaiRoutes = require('./routes/tokhai.routes');
+const profileRoutes = require('./routes/profile.routes');
 const scheduleTyGiaUpdate = require('./cron/tygia.cron');
 
 // const donvitinhhaiquanRoutes = require('./routes/dvtinh.routes')
@@ -56,6 +58,7 @@ app.use('/api/don-vi-tinh-hai-quan', donvitinhHaiQuanRoutes)
 app.use('/api/quy-doi-don-vi-san-pham', QuyDoiDonViSPRoutes)
 app.use('/api/quy-doi-don-vi-doanh-nghiep', QuyDoiDonViDNRoutes)
 app.use('/api/quy-doi-don-vi-npl', QuyDoiDonNPLDNRoutes)
+app.use('/api/quy-doi', quyDoiHelperRoutes)
 app.use('/api/dinh-muc', dinhmucRoutes)
 app.use('/api/nguyen-lieu', nguyenlieuRoutes)
 app.use('/api/hop-dong', hopdongRoutes)
@@ -78,6 +81,7 @@ app.use('/api/xuatkho-sp', xuatKhoSPRoutes);
 app.use('/api/bao-cao-thanh-khoan', baocaothanhkhoanRoutes);
 app.use('/api/thanh-khoan', baocaothanhkhoanRoutes);
 app.use('/api/to-khai', toKhaiRoutes);
+app.use('/api/profile', profileRoutes);
 
 
 // --- Kết nối DB và khởi động Server ---

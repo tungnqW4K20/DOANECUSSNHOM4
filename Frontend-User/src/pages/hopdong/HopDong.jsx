@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
     Table, Button, Modal, Form, Input, Select, DatePicker, Space, Popconfirm,
     InputNumber, Row, Col, Typography, Card, Upload, Tooltip
@@ -9,7 +9,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { getAllHopDong, createHopDong, updateHopDong, deleteHopDong } from "../../services/hopdong.service";
-import { getLoHangByHopDong, createLoHang, updateLoHang, deleteLoHang } from "../../services/lohang.service";
+import { getLoHangByHopDong } from "../../services/lohang.service";
 import { uploadSingleFile } from "../../services/upload.service";
 import { getAllTienTe } from '../../services/tiente.service';
 import { 
@@ -26,8 +26,11 @@ const { Option } = Select;
 const { Title } = Typography;
 const { Search } = Input;
 
-const userData = JSON.parse(localStorage.getItem('user'));
-const LOGGED_IN_DN_ID = userData?.id_dn;
+// Hàm format số theo kiểu Việt Nam (1.000.000)
+const formatVNNumber = (value) => {
+    if (value === null || value === undefined) return '';
+    return Number(value).toLocaleString('vi-VN');
+};
 
 const HopDong = () => {
     const [crudForm] = Form.useForm();
@@ -39,6 +42,7 @@ const HopDong = () => {
     const [loHangDataSource, setLoHangDataSource] = useState([]);
     const [tienTeList, setTienTeList] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
 
 
     // ✅ upload file
@@ -78,7 +82,7 @@ const HopDong = () => {
         fetchTienTe();
     }, []);
 
-    const showDetailModal = async (record) => {
+    const showDetailModal = useCallback(async (record) => {
         try {
             setSelectedHopDong(record);
             const res = await getLoHangByHopDong(record.id_hd);
@@ -87,13 +91,22 @@ const HopDong = () => {
         } catch {
             showLoadError('danh sách lô hàng');
         }
-    };
+    }, []);
 
-    const handleOpenCrudModal = (type, record = null) => {
+    const closeDetailModal = useCallback(() => {
+        setDetailModalOpen(false);
+        // Delay reset để tránh flicker
+        setTimeout(() => {
+            setSelectedHopDong(null);
+            setLoHangDataSource([]);
+        }, 300);
+    }, []);
+
+    const handleOpenCrudModal = useCallback((type, record = null) => {
         const title = `${record ? "Chỉnh sửa" : "Thêm mới"} ${type === "hopDong" ? "Hợp đồng" : "Lô hàng"}`;
         setCrudModalContent({ type, record, title });
-        crudForm.resetFields();
         setFileUrl(null);
+        crudForm.resetFields();
 
         if (record) {
             const dateFields = ["ngay_ky", "ngay_hieu_luc", "ngay_het_han", "ngay_dong_goi", "ngay_xuat_cang"];
@@ -101,12 +114,25 @@ const HopDong = () => {
             dateFields.forEach((f) => {
                 if (record[f]) recordWithDayjs[f] = dayjs(record[f]);
             });
-            crudForm.setFieldsValue(recordWithDayjs);
+            // Dùng setTimeout để đảm bảo form đã mount
+            setTimeout(() => {
+                crudForm.setFieldsValue(recordWithDayjs);
+            }, 0);
             if (type === "hopDong" && record.file_hop_dong) setFileUrl(record.file_hop_dong);
             if (type === "loHang" && record.file_chung_tu) setFileUrl(record.file_chung_tu);
         }
         setIsCrudModalOpen(true);
-    };
+    }, [crudForm]);
+
+    const closeCrudModal = useCallback(() => {
+        setIsCrudModalOpen(false);
+        // Delay reset để tránh flicker
+        setTimeout(() => {
+            setCrudModalContent({ type: null, record: null, title: "" });
+            setFileUrl(null);
+            crudForm.resetFields();
+        }, 300);
+    }, [crudForm]);
 
     // ✅ Upload file (theo mẫu LoHang.jsx)
     const handleUpload = async ({ file, onSuccess, onError }) => {
@@ -130,9 +156,11 @@ const HopDong = () => {
         }
     };
 
-    const handleCrudSave = async () => {
+    const handleCrudSave = useCallback(async () => {
         try {
             const values = await crudForm.validateFields();
+            setSaving(true);
+            
             Object.keys(values).forEach((key) => {
                 if (dayjs.isDayjs(values[key])) {
                     values[key] = values[key].format("YYYY-MM-DD");
@@ -140,7 +168,7 @@ const HopDong = () => {
             });
 
             if (crudModalContent.type === "hopDong") {
-                const payload = { ...values, file_hop_dong: fileUrl || null, id_dn: LOGGED_IN_DN_ID };
+                const payload = { ...values, file_hop_dong: fileUrl || null };
 
                 if (crudModalContent.record) {
                     await updateHopDong(crudModalContent.record.id_hd, payload);
@@ -150,29 +178,16 @@ const HopDong = () => {
                     showCreateSuccess('Hợp đồng');
                 }
                 fetchHopDong();
-            } else if (crudModalContent.type === "loHang") {
-                const payload = {
-                    ...values,
-                    so_hd: selectedHopDong.so_hd,
-                    file_chung_tu: fileUrl || null,
-                };
-                if (crudModalContent.record) {
-                    await updateLoHang(crudModalContent.record.id_lh, payload);
-                    showUpdateSuccess('Lô hàng');
-                } else {
-                    await createLoHang(payload);
-                    showCreateSuccess('Lô hàng');
-                }
-                const res = await getLoHangByHopDong(selectedHopDong.so_hd);
-                setLoHangDataSource(res.data || []);
             }
 
-            setIsCrudModalOpen(false);
+            closeCrudModal();
         } catch (err) {
             console.error(err);
-            showSaveError(crudModalContent.type === "hopDong" ? 'hợp đồng' : 'lô hàng');
+            showSaveError('hợp đồng');
+        } finally {
+            setSaving(false);
         }
-    };
+    }, [crudForm, crudModalContent, fileUrl, closeCrudModal]);
 
     const handleDeleteHopDong = async (id_hd) => {
         try {
@@ -184,27 +199,16 @@ const HopDong = () => {
         }
     };
 
-    const handleDeleteLoHang = async (id_lh) => {
-        try {
-            await deleteLoHang(id_lh);
-            showDeleteSuccess('Lô hàng');
-            const res = await getLoHangByHopDong(selectedHopDong.so_hd);
-            setLoHangDataSource(res.data || []);
-        } catch {
-            showSaveError('lô hàng');
-        }
-    };
-
     const mainColumns = [
         { title: "Số Hợp đồng", dataIndex: "so_hd" },
-        { title: "Ngày ký", dataIndex: "ngay_ky" },
-        { title: "Ngày hiệu lực", dataIndex: "ngay_hieu_luc" },
-        { title: "Ngày hết hạn", dataIndex: "ngay_het_han" },
+        { title: "Ngày ký", dataIndex: "ngay_ky", render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
+        { title: "Ngày hiệu lực", dataIndex: "ngay_hieu_luc", render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
+        { title: "Ngày hết hạn", dataIndex: "ngay_het_han", render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
         {
             title: "Giá trị",
             dataIndex: "gia_tri",
             align: "right",
-            render: (val) => val?.toLocaleString(),
+            render: (val) => formatVNNumber(val),
         },
         {
             title: "Tiền tệ",
@@ -241,7 +245,7 @@ const HopDong = () => {
                     <Button icon={<EditOutlined />} onClick={() => handleOpenCrudModal("hopDong", record)}>
                         Sửa
                     </Button>
-                    <Popconfirm title="Bạn có chắc muốn xóa?" onConfirm={() => handleDeleteHopDong(record.so_hd)}>
+                    <Popconfirm title="Bạn có chắc muốn xóa?" onConfirm={() => handleDeleteHopDong(record.id_hd)}>
                         <Button icon={<DeleteOutlined />} danger>
                             Xóa
                         </Button>
@@ -253,8 +257,8 @@ const HopDong = () => {
 
     const loHangColumns = [
         // { title: "Số Lô hàng", dataIndex: "id_lh" },
-        { title: "Ngày đóng gói", dataIndex: "ngay_dong_goi" },
-        { title: "Ngày xuất cảng", dataIndex: "ngay_xuat_cang" },
+        { title: "Ngày đóng gói", dataIndex: "ngay_dong_goi", render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
+        { title: "Ngày xuất cảng", dataIndex: "ngay_xuat_cang", render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
         { title: "Cảng xuất", dataIndex: "cang_xuat" },
         { title: "Cảng nhập", dataIndex: "cang_nhap" },
         {
@@ -273,23 +277,6 @@ const HopDong = () => {
                 ) : (
                     "-"
                 ),
-        },
-        {
-            title: "Hành động",
-            key: "action",
-            align: "center",
-            render: (_, record) => (
-                <Space>
-                    <Button type="link" onClick={() => handleOpenCrudModal("loHang", record)}>
-                        Sửa
-                    </Button>
-                    <Popconfirm title="Xóa lô hàng này?" onConfirm={() => handleDeleteLoHang(record.id_lh)}>
-                        <Button type="link" danger>
-                            Xóa
-                        </Button>
-                    </Popconfirm>
-                </Space>
-            ),
         },
     ];
 
@@ -322,8 +309,8 @@ const HopDong = () => {
                             <Form.Item name="gia_tri" label="Giá trị hợp đồng">
                                 <InputNumber
                                     style={{ width: "100%" }}
-                                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                                    parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
+                                    formatter={(value) => formatVNNumber(value)}
+                                    parser={(value) => value.replace(/\./g, "")}
                                 />
                             </Form.Item>
                         </Col>
@@ -342,61 +329,6 @@ const HopDong = () => {
 
                     {/* ✅ Upload file thật + xem trước (giống LoHang.jsx) */}
                     <Form.Item label="File scan hợp đồng">
-                        <Upload
-                            customRequest={handleUpload}
-                            maxCount={1}
-                            showUploadList={false}
-                        >
-                            <Button icon={<UploadOutlined />} loading={uploading}>
-                                Tải lên file
-                            </Button>
-                        </Upload>
-
-                        {fileUrl && (
-                            <div style={{ marginTop: 8 }}>
-                                <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-                                    Xem file đã tải lên
-                                </a>
-                            </div>
-                        )}
-                    </Form.Item>
-                </>
-            );
-        }
-
-        if (crudModalContent.type === "loHang") {
-            return (
-                <>
-                    {/* <Form.Item name="id_lh" label="Số Lô hàng" rules={[{ required: true }]}>
-                        <Input />
-                    </Form.Item> */}
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item name="ngay_dong_goi" label="Ngày đóng gói">
-                                <DatePicker style={{ width: "100%" }} />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="ngay_xuat_cang" label="Ngày xuất cảng">
-                                <DatePicker style={{ width: "100%" }} />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item name="cang_xuat" label="Cảng xuất">
-                                <Input />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="cang_nhap" label="Cảng nhập">
-                                <Input />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-
-                    {/* ✅ Upload file thật + xem trước (giống LoHang.jsx) */}
-                    <Form.Item label="File chứng từ">
                         <Upload
                             customRequest={handleUpload}
                             maxCount={1}
@@ -443,25 +375,27 @@ const HopDong = () => {
             </Card>
 
             <Modal
-                title={`Danh sách Lô hàng của Hợp đồng: ${selectedHopDong?.so_hd}`}
+                title={`Danh sách Lô hàng của Hợp đồng: ${selectedHopDong?.so_hd || ''}`}
                 open={isDetailModalOpen}
-                onCancel={() => setDetailModalOpen(false)}
+                onCancel={closeDetailModal}
                 footer={null}
                 width="80vw"
+                destroyOnClose
+                maskClosable={false}
             >
-                <Button onClick={() => handleOpenCrudModal("loHang")} icon={<PlusOutlined />} style={{ marginBottom: 16 }}>
-                    Thêm Lô hàng
-                </Button>
                 <Table columns={loHangColumns} dataSource={loHangDataSource} rowKey="id_lh" size="small" />
             </Modal>
 
             <Modal
                 title={crudModalContent.title}
                 open={isCrudModalOpen}
-                onCancel={() => setIsCrudModalOpen(false)}
+                onCancel={closeCrudModal}
                 onOk={handleCrudSave}
                 okText="Lưu"
                 cancelText="Hủy"
+                confirmLoading={saving}
+                destroyOnClose
+                maskClosable={false}
             >
                 <Form form={crudForm} layout="vertical">
                     {renderCrudForm()}

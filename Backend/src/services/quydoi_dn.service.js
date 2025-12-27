@@ -18,8 +18,12 @@ const createQD = async ({ id_dn, id_mat_hang, ten_dvt_dn, id_dvt_hq, he_so }) =>
   return await QuyDoiDonViDN.create({ id_dn, id_mat_hang, ten_dvt_dn, id_dvt_hq, he_so });
 };
 
-const getAllQD = async () => {
+const getAllQD = async (id_dn, role) => {
+  // Admin xem tất cả, doanh nghiệp chỉ xem của mình
+  const whereClause = role === 'Admin' ? {} : { id_dn };
+  
   return await QuyDoiDonViDN.findAll({
+    where: whereClause,
     include: [
       { model: db.DoanhNghiep, as: 'doanhNghiep' },
       { model: db.DonViTinhHQ, as: 'donViTinhHQ' }
@@ -36,16 +40,28 @@ const getQDById = async (id_qd) => {
   });
 };
 
-const updateQD = async (id_qd, data) => {
+const updateQD = async (id_qd, data, id_dn, role) => {
   const qd = await QuyDoiDonViDN.findByPk(id_qd);
   if (!qd) throw new Error(`Không tìm thấy quy đổi ID=${id_qd}`);
+  
+  // Kiểm tra quyền sở hữu (trừ Admin)
+  if (role !== 'Admin' && qd.id_dn !== id_dn) {
+    throw new Error('Bạn không có quyền cập nhật quy đổi này');
+  }
+  
   await qd.update(data);
   return qd;
 };
 
-const deleteQD = async (id_qd) => {
+const deleteQD = async (id_qd, id_dn, role) => {
   const qd = await QuyDoiDonViDN.findByPk(id_qd);
   if (!qd) throw new Error(`Không tìm thấy quy đổi ID=${id_qd}`);
+  
+  // Kiểm tra quyền sở hữu (trừ Admin)
+  if (role !== 'Admin' && qd.id_dn !== id_dn) {
+    throw new Error('Bạn không có quyền xóa quy đổi này');
+  }
+  
   await qd.destroy();
 };
 

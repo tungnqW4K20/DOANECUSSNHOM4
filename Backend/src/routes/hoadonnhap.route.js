@@ -5,9 +5,10 @@ const { authenticateToken, authorizeRole } = require('../middlewares/auth.middle
 
 const router = express.Router();
 
-router.post('/', authenticateToken, authorizeRole('business'), controller.create);
-router.get('/', controller.getAll);
-router.get('/:id_hd_nhap', controller.getById);
-router.delete('/:id_hd_nhap', authenticateToken, authorizeRole('business'), controller.remove);
+router.post('/', authenticateToken, authorizeRole(['business', 'Admin']), controller.create);
+router.get('/', authenticateToken, authorizeRole(['business', 'Admin']), controller.getAll);
+router.get('/:id_hd_nhap', authenticateToken, authorizeRole(['business', 'Admin']), controller.getById);
+router.put('/:id_hd_nhap', authenticateToken, authorizeRole(['business', 'Admin']), controller.update);
+router.delete('/:id_hd_nhap', authenticateToken, authorizeRole(['business', 'Admin']), controller.remove);
 
 module.exports = router;

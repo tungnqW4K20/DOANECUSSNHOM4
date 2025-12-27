@@ -12,7 +12,11 @@ exports.create = async (req, res) => {
 
 exports.getAll = async (req, res) => {
   try {
-    const list = await service.getAllNhapNPL();
+    const id_dn = req.user?.id;
+    if (!id_dn) {
+      return res.status(400).json({ success: false, message: "Thiếu thông tin xác thực" });
+    }
+    const list = await service.getAllNhapNPL(id_dn);
     res.json({ success: true, data: list });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

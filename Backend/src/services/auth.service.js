@@ -75,6 +75,7 @@ const loginBussiness = async (loginData) => {
     }
     const payload = {
         id: doanhnghiep.id_dn,
+        id_dn: doanhnghiep.id_dn,  // Thêm id_dn để các controller có thể sử dụng
         email: doanhnghiep.email,
         ten: doanhnghiep.ten_dn,
         role: "business"
@@ -93,26 +94,50 @@ const loginBussiness = async (loginData) => {
 const loginHQ = async (loginData) => {
     const { tai_khoan, mat_khau } = loginData;
 
+    // Kiểm tra input
     if (!tai_khoan || !mat_khau) {
-        throw new Error('Vui lòng nhập tài khoản và mật khẩu.');
+        const error = new Error('Vui lòng nhập tài khoản và mật khẩu.');
+        error.statusCode = 400;
+        throw error;
     }
 
-
+    // Tìm tài khoản
     const haiquan = await HaiQuan.findOne({
         where: {
             [db.Sequelize.Op.or]: [{ tai_khoan: tai_khoan }]
         }
     });
+
+    // Tài khoản không tồn tại
     if (!haiquan) {
-        throw new Error('Không tìm thấy tài khoản');
+        const error = new Error('Tài khoản chưa được đăng ký trong hệ thống.');
+        error.statusCode = 404;
+        throw error;
     }
 
+    // Kiểm tra mật khẩu
     const isPasswordMatch = mat_khau === haiquan.mat_khau;
 
     if (!isPasswordMatch) {
-        throw new Error('Tài khoản hoặc mật khẩu không chính xác.');
+        const error = new Error('Mật khẩu không chính xác. Vui lòng thử lại.');
+        error.statusCode = 401;
+        throw error;
     }
 
+    // Kiểm tra trạng thái tài khoản (nếu có field status)
+    if (haiquan.status && haiquan.status === 'INACTIVE') {
+        const error = new Error('Tài khoản đã bị vô hiệu hóa.');
+        error.statusCode = 403;
+        throw error;
+    }
+
+    if (haiquan.status && haiquan.status === 'LOCKED') {
+        const error = new Error('Tài khoản đã bị khóa do vi phạm chính sách.');
+        error.statusCode = 403;
+        throw error;
+    }
+
+    // Tạo token
     const payload = {
         id: haiquan.id_hq,
         ten_hq: haiquan.ten_hq,

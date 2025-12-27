@@ -1,20 +1,17 @@
 import { useState, useEffect } from 'react';
 import { 
   Card, 
-  Descriptions, 
   Avatar, 
   Tag, 
   Spin, 
-  message,
   Row,
   Col,
   Typography,
-  Divider,
   Button,
-  Modal,
   Form,
   Input,
-  Upload
+  Upload,
+  App
 } from 'antd';
 import { 
   User, 
@@ -24,12 +21,15 @@ import {
   FileText, 
   Building2,
   Shield,
-  Calendar,
   Edit,
   Camera,
   Save,
-  X
+  X,
+  CheckCircle,
+  Clock,
+  XCircle
 } from 'lucide-react';
+import profileService from '../../services/profile.service';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -39,23 +39,37 @@ const Profile = () => {
   const [editMode, setEditMode] = useState(false);
   const [form] = Form.useForm();
   const [businessInfo, setBusinessInfo] = useState(null);
+  const { notification } = App.useApp();
+
+  const loadProfile = async () => {
+    setLoading(true);
+    try {
+      const response = await profileService.getProfile();
+      if (response.success) {
+        setBusinessInfo(response.data);
+        form.setFieldsValue(response.data);
+      } else {
+        notification.error({
+          message: 'Lỗi tải dữ liệu',
+          description: 'Không thể tải thông tin doanh nghiệp',
+          placement: 'topRight'
+        });
+      }
+    } catch (error) {
+      notification.error({
+        message: 'Lỗi kết nối',
+        description: error.response?.data?.message || 'Không thể kết nối đến máy chủ',
+        placement: 'topRight'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadData = () => {
-      setLoading(true);
-      try {
-        // Lấy thông tin từ localStorage
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        setBusinessInfo(user);
-        form.setFieldsValue(user);
-      } catch {
-        message.error('Không thể tải thông tin doanh nghiệp');
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, [form]);
+    loadProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Chỉ chạy 1 lần khi component mount
 
   const handleEdit = () => {
     setEditMode(true);
@@ -70,26 +84,73 @@ const Profile = () => {
     try {
       const values = await form.validateFields();
       
-      // Cập nhật localStorage
-      const updatedInfo = { ...businessInfo, ...values };
-      localStorage.setItem('user', JSON.stringify(updatedInfo));
-      setBusinessInfo(updatedInfo);
+      const response = await profileService.updateProfile(values);
       
-      message.success('Cập nhật thông tin thành công!');
-      setEditMode(false);
-    } catch {
-      message.error('Vui lòng kiểm tra lại thông tin!');
+      if (response.success) {
+        setBusinessInfo(response.data);
+        notification.success({
+          message: 'Cập nhật thành công',
+          description: 'Thông tin doanh nghiệp đã được cập nhật',
+          placement: 'topRight'
+        });
+        setEditMode(false);
+      } else {
+        notification.error({
+          message: 'Cập nhật thất bại',
+          description: response.message || 'Không thể cập nhật thông tin',
+          placement: 'topRight'
+        });
+      }
+    } catch (error) {
+      if (error.errorFields) {
+        notification.warning({
+          message: 'Thông tin chưa hợp lệ',
+          description: 'Vui lòng kiểm tra lại các trường thông tin',
+          placement: 'topRight'
+        });
+      } else {
+        notification.error({
+          message: 'Lỗi cập nhật',
+          description: error.response?.data?.message || 'Không thể cập nhật thông tin',
+          placement: 'topRight'
+        });
+      }
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusConfig = (status) => {
     const statusMap = {
-      'approved': { color: 'success', text: 'Đã duyệt' },
-      'pending': { color: 'warning', text: 'Chờ duyệt' },
-      'rejected': { color: 'error', text: 'Từ chối' },
-      'active': { color: 'success', text: 'Hoạt động' },
+      'APPROVED': { 
+        color: '#52c41a', 
+        text: 'Đã duyệt',
+        icon: <CheckCircle size={40} />,
+        description: 'Tài khoản đã được xác thực và hoạt động bình thường'
+      },
+      'PENDING': { 
+        color: '#faad14', 
+        text: 'Chờ duyệt',
+        icon: <Clock size={40} />,
+        description: 'Tài khoản đang chờ xét duyệt từ quản trị viên'
+      },
+      'REJECTED': { 
+        color: '#ff4d4f', 
+        text: 'Từ chối',
+        icon: <XCircle size={40} />,
+        description: 'Tài khoản đã bị từ chối. Vui lòng liên hệ quản trị viên'
+      },
+      'ACTIVE': { 
+        color: '#52c41a', 
+        text: 'Hoạt động',
+        icon: <CheckCircle size={40} />,
+        description: 'Tài khoản đang hoạt động bình thường'
+      },
     };
-    return statusMap[status] || { color: 'default', text: status || 'Không xác định' };
+    return statusMap[status] || { 
+      color: '#d9d9d9', 
+      text: status || 'Không xác định',
+      icon: <Shield size={40} />,
+      description: 'Trạng thái không xác định'
+    };
   };
 
   if (loading) {
@@ -100,7 +161,7 @@ const Profile = () => {
     );
   }
 
-  const statusInfo = getStatusColor(businessInfo?.status);
+  const statusConfig = getStatusConfig(businessInfo?.status);
 
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto' }}>
@@ -160,16 +221,17 @@ const Profile = () => {
             </Title>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: 12 }}>
               <Tag 
-                color={statusInfo.color} 
                 style={{ 
                   fontSize: '14px', 
                   padding: '4px 12px',
                   borderRadius: '6px',
-                  border: 'none'
+                  border: 'none',
+                  backgroundColor: statusConfig.color,
+                  color: 'white',
+                  fontWeight: 600
                 }}
               >
-                <Shield size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
-                {statusInfo.text}
+                {statusConfig.text}
               </Tag>
               <Text style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '14px' }}>
                 <FileText size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
@@ -185,20 +247,20 @@ const Profile = () => {
               <Button
                 type="primary"
                 size="large"
-                icon={<Edit size={18} />}
+                icon={<Edit size={18} color="white" />}
                 onClick={handleEdit}
                 style={{
-                  background: 'white',
-                  color: '#667eea',
+                  background: '#667eea',
+                  color: 'white',
                   border: 'none',
                   borderRadius: '10px',
                   height: '44px',
                   padding: '0 24px',
                   fontWeight: 600,
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
                 }}
               >
-                Chỉnh sửa
+                <span style={{ color: 'white' }}>Chỉnh sửa</span>
               </Button>
             ) : (
               <div style={{ display: 'flex', gap: '12px' }}>
@@ -212,27 +274,29 @@ const Profile = () => {
                     border: 'none',
                     borderRadius: '10px',
                     height: '44px',
-                    padding: '0 20px'
-                  }}
-                >
-                  Hủy
-                </Button>
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<Save size={18} />}
-                  onClick={handleSave}
-                  style={{
-                    background: 'white',
-                    color: '#667eea',
-                    border: 'none',
-                    borderRadius: '10px',
-                    height: '44px',
                     padding: '0 24px',
                     fontWeight: 600
                   }}
                 >
-                  Lưu
+                  <span style={{ color: 'white' }}>Hủy</span>
+                </Button>
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<Save size={18} color="white" />}
+                  onClick={handleSave}
+                  style={{
+                    background: '#667eea',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    height: '44px',
+                    padding: '0 24px',
+                    fontWeight: 600,
+                    boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
+                  }}
+                >
+                  <span style={{ color: 'white' }}>Lưu</span>
                 </Button>
               </div>
             )}
@@ -415,32 +479,24 @@ const Profile = () => {
           >
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
               <div style={{
-                width: 80,
-                height: 80,
+                width: 100,
+                height: 100,
                 borderRadius: '50%',
-                background: `linear-gradient(135deg, ${
-                  statusInfo.color === 'success' ? '#52c41a, #73d13d' :
-                  statusInfo.color === 'warning' ? '#faad14, #ffc53d' :
-                  '#ff4d4f, #ff7875'
-                })`,
+                background: statusConfig.color,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                margin: '0 auto 16px',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                margin: '0 auto 20px',
+                boxShadow: `0 8px 24px ${statusConfig.color}40`,
+                color: 'white'
               }}>
-                <Shield size={40} color="white" />
+                {statusConfig.icon}
               </div>
-              <Title level={4} style={{ marginBottom: 8 }}>
-                {statusInfo.text}
+              <Title level={4} style={{ marginBottom: 12, color: statusConfig.color }}>
+                {statusConfig.text}
               </Title>
-              <Text type="secondary">
-                {statusInfo.color === 'success' 
-                  ? 'Tài khoản đã được xác thực và hoạt động bình thường'
-                  : statusInfo.color === 'warning'
-                  ? 'Tài khoản đang chờ xét duyệt từ quản trị viên'
-                  : 'Tài khoản đã bị từ chối hoặc tạm khóa'
-                }
+              <Text type="secondary" style={{ fontSize: '14px', lineHeight: '1.6' }}>
+                {statusConfig.description}
               </Text>
             </div>
           </Card>

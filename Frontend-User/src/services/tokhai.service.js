@@ -207,6 +207,59 @@ export const deleteVanDon = async (id) => {
     }
 };
 
+/* ============================================================
+   🟢 UPDATE FUNCTIONS
+============================================================ */
+export const updateLoHang = async (id, data) => {
+    try {
+        const res = await api.put(`/lo-hang/${id}`, data);
+        return res.data;
+    } catch (err) {
+        console.error("❌ Lỗi updateLoHang:", err);
+        throw err.response?.data || { message: "Lỗi khi cập nhật lô hàng" };
+    }
+};
+
+export const updateHoaDonNhap = async (id, data) => {
+    try {
+        const res = await api.put(`/hoa-don-nhap/${id}`, data);
+        return res.data;
+    } catch (err) {
+        console.error("❌ Lỗi updateHoaDonNhap:", err);
+        throw err.response?.data || { message: "Lỗi khi cập nhật hóa đơn nhập" };
+    }
+};
+
+export const updateHoaDonXuat = async (id, data) => {
+    try {
+        const res = await api.put(`/hoa-don-xuat/${id}`, data);
+        return res.data;
+    } catch (err) {
+        console.error("❌ Lỗi updateHoaDonXuat:", err);
+        throw err.response?.data || { message: "Lỗi khi cập nhật hóa đơn xuất" };
+    }
+};
+
+export const updateVanDonNhap = async (id, data) => {
+    try {
+        const res = await api.put(`/van-don-nhap/${id}`, data);
+        return res.data;
+    } catch (err) {
+        console.error("❌ Lỗi updateVanDonNhap:", err);
+        throw err.response?.data || { message: "Lỗi khi cập nhật vận đơn nhập" };
+    }
+};
+
+export const updateVanDonXuat = async (id, data) => {
+    try {
+        const res = await api.put(`/van-don-xuat/${id}`, data);
+        return res.data;
+    } catch (err) {
+        console.error("❌ Lỗi updateVanDonXuat:", err);
+        throw err.response?.data || { message: "Lỗi khi cập nhật vận đơn xuất" };
+    }
+};
+
 export default {
     getAllToKhaiNhap,
     getAllToKhaiXuat,
@@ -224,4 +277,9 @@ export default {
     deleteHoaDonNhap,
     deleteHoaDonXuat,
     deleteVanDon,
+    updateLoHang,
+    updateHoaDonNhap,
+    updateHoaDonXuat,
+    updateVanDonNhap,
+    updateVanDonXuat,
 };
