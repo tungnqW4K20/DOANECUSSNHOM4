@@ -258,25 +258,21 @@ const TongQuan = () => {
   
   // Calculate statistics
   const totalContracts = dashboardData.contracts.length;
-  const compliantCount = dashboardData.liquidationReports.filter(r => r.ket_luan === 'HopLe').length;
+  const compliantCount = dashboardData.liquidationReports.filter(r => 
+    (r.ket_luan_tong_the || r.ket_luan) === 'HopLe'
+  ).length;
   const nonCompliantCount = dashboardData.liquidationReports.filter(r => 
-    ['ViPham', 'DuNPL'].includes(r.ket_luan)
+    ['ViPham', 'DuNPL', 'CanhBao'].includes(r.ket_luan_tong_the || r.ket_luan)
   ).length;
   const pendingCount = totalContracts - dashboardData.liquidationReports.length;
   const importCount = dashboardData.importDeclarations.length;
   const exportCount = dashboardData.exportDeclarations.length;
   
-  // Calculate inventory value
+  // Calculate inventory data (for potential future use)
   const inventoryData = processInventoryData(
     dashboardData.inventory.npl,
     dashboardData.inventory.sp
   );
-  const inventoryValue = [...dashboardData.inventory.npl, ...dashboardData.inventory.sp]
-    .reduce((sum, item) => {
-      const quantity = item.ton_kho || item.quantity || 0;
-      const price = item.don_gia || item.unit_price || 0;
-      return sum + (quantity * price);
-    }, 0);
 
   // Sort contracts by date for recent contracts table
   const recentContracts = [...dashboardData.contracts]
@@ -361,14 +357,6 @@ const TongQuan = () => {
               value={exportCount}
               icon={<ExportOutlined />}
               color="#52c41a"
-            />
-          </Col>
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <StatCard
-              title="Giá trị Tồn kho"
-              value={formatCurrency(inventoryValue)}
-              icon={<InboxOutlined />}
-              color="#722ed1"
             />
           </Col>
         </Row>

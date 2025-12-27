@@ -36,9 +36,11 @@ const RecentContractsTable = ({ contracts, liquidationReports, onRowClick }) => 
       }
     };
     
-    const config = statusConfig[report.ket_luan] || { 
+    // Sử dụng ket_luan_tong_the thay vì ket_luan
+    const ketLuan = report.ket_luan_tong_the || report.ket_luan;
+    const config = statusConfig[ketLuan] || { 
       color: 'default', 
-      text: report.ket_luan,
+      text: ketLuan,
       style: { fontWeight: 600 }
     };
     
@@ -86,20 +88,11 @@ const RecentContractsTable = ({ contracts, liquidationReports, onRowClick }) => 
     }
   ];
 
-  // Sort contracts by date (most recent first) and limit to 5
-  const recentContracts = [...contracts]
-    .sort((a, b) => {
-      const dateA = dayjs(a.ngay_ky);
-      const dateB = dayjs(b.ngay_ky);
-      return dateB.diff(dateA);
-    })
-    .slice(0, 5);
-
   return (
     <div className="recent-contracts-table-wrapper">
       <Table
         columns={columns}
-        dataSource={recentContracts}
+        dataSource={contracts}
         rowKey="id_hd"
         pagination={false}
         onRow={(record) => ({

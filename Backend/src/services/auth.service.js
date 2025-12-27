@@ -69,10 +69,28 @@ const loginBussiness = async (loginData) => {
 
 
 
-    console.log("payload", doanhnghiep)
-    if (doanhnghiep?.status === 'PENDING') {
-        throw new Error('Tài khoản chưa được duyệt!');
+    console.log("Doanh nghiep data:", {
+        id_dn: doanhnghiep.id_dn,
+        ten_dn: doanhnghiep.ten_dn,
+        status: doanhnghiep.status,
+        status_uppercase: doanhnghiep?.status?.toUpperCase()
+    });
+    
+    // Kiểm tra status (case-insensitive)
+    const status = doanhnghiep?.status?.toUpperCase();
+    
+    if (status === 'PENDING') {
+        console.log('❌ Login blocked: Status is PENDING');
+        throw new Error(`Doanh nghiệp "${doanhnghiep.ten_dn}" (MST: ${doanhnghiep.ma_so_thue}) chưa được duyệt!`);
     }
+    
+    if (status === 'REJECTED') {
+        console.log('❌ Login blocked: Status is REJECTED');
+        throw new Error(`Doanh nghiệp "${doanhnghiep.ten_dn}" (MST: ${doanhnghiep.ma_so_thue}) đã bị từ chối. Vui lòng liên hệ quản trị viên để biết thêm chi tiết.`);
+    }
+    
+    console.log('✅ Login allowed: Status is', status);
+    
     const payload = {
         id: doanhnghiep.id_dn,
         id_dn: doanhnghiep.id_dn,  // Thêm id_dn để các controller có thể sử dụng

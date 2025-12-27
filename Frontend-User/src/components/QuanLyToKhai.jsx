@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Table, Button, Modal, Form, Input, Select, DatePicker, Space, Popconfirm, InputNumber, Row, Col, Typography, Card, Upload, Tooltip, Tabs, Drawer, Spin } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, FileOutlined, UploadOutlined, FolderOpenOutlined, SearchOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Input, Select, DatePicker, Space, Popconfirm, InputNumber, Row, Col, Typography, Card, Upload, Tooltip, Tabs, Drawer, Spin, Tag } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, FileOutlined, UploadOutlined, FolderOpenOutlined, SearchOutlined, WarningOutlined, CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import * as ToKhaiService from '../services/tokhai.service';
+import * as BaoCaoThanhKhoanService from '../services/baocaothanhkhoan.service';
 import { 
     showUpdateSuccess, 
     showDeleteSuccess, 
@@ -34,6 +35,8 @@ const QuanLyToKhai = ({ type }) => {
     const [crudModalContent, setCrudModalContent] = useState({ type: null, record: null, title: '' });
     const [selectedHoaDon, setSelectedHoaDon] = useState(null);
     const [hoaDonChiTiet, setHoaDonChiTiet] = useState([]);
+    const [baoCaoList, setBaoCaoList] = useState([]);
+    const [loadingBaoCao, setLoadingBaoCao] = useState(false);
     
     // State for dropdown data
     const [tienTeList, setTienTeList] = useState([]);
@@ -89,6 +92,7 @@ const QuanLyToKhai = ({ type }) => {
                 
                 const loHangData = loHang ? [{
                     id_lh: loHang.id_lh,
+                    id_hd: loHang.id_hd, // Thêm id_hd
                     so_lh: `LH-${loHang.id_lh}`,
                     ngay_dong_goi: loHang.ngay_dong_goi ? dayjs(loHang.ngay_dong_goi).format('YYYY-MM-DD') : '',
                     ngay_xuat_cang: loHang.ngay_xuat_cang ? dayjs(loHang.ngay_xuat_cang).format('YYYY-MM-DD') : '',
@@ -254,15 +258,48 @@ const QuanLyToKhai = ({ type }) => {
         }
     }, [crudModalContent, crudForm, hoaDonChiTiet, selectedToKhai, handleCloseCrudModal, fetchToKhaiData]);
 
+    // Load báo cáo thanh khoản theo hợp đồng
+    const loadBaoCaoThanhKhoan = useCallback(async (id_hd) => {
+        try {
+            setLoadingBaoCao(true);
+            const response = await BaoCaoThanhKhoanService.getAllReports({ id_hd, limit: 100 });
+            setBaoCaoList(response.data || []);
+        } catch (err) {
+            console.error('Error loading báo cáo:', err);
+            showLoadError('báo cáo thanh khoản');
+        } finally {
+            setLoadingBaoCao(false);
+        }
+    }, []);
+
+    // Xóa báo cáo thanh khoản
+    const handleDeleteBaoCao = useCallback(async (id_bc, id_hd) => {
+        try {
+            await BaoCaoThanhKhoanService.deleteReport(id_bc);
+            showDeleteSuccess('Báo cáo thanh khoản');
+            // Reload danh sách báo cáo
+            await loadBaoCaoThanhKhoan(id_hd);
+        } catch (err) {
+            console.error('Error deleting báo cáo:', err);
+            showDeleteError('báo cáo thanh khoản');
+        }
+    }, [loadBaoCaoThanhKhoan]);
+
     const showDrawer = useCallback((record) => { 
         setSelectedToKhai(record);
         selectedToKhaiIdRef.current = record.id;
-        setIsDrawerOpen(true); 
-    }, []);
+        setIsDrawerOpen(true);
+        
+        // Load báo cáo thanh khoản nếu có id_hd
+        if (record.details?.loHang?.[0]?.id_hd) {
+            loadBaoCaoThanhKhoan(record.details.loHang[0].id_hd);
+        }
+    }, [loadBaoCaoThanhKhoan]);
     
     const closeDrawer = useCallback(() => {
         setSelectedToKhai(null);
         selectedToKhaiIdRef.current = null;
+        setBaoCaoList([]);
         setIsDrawerOpen(false);
     }, []);
 
@@ -299,6 +336,27 @@ const QuanLyToKhai = ({ type }) => {
             }
             return item;
         }));
+    }, []);
+
+    // Render kết luận với icon và màu sắc
+    const renderKetLuan = useCallback((ketLuan) => {
+        const config = {
+            'HopLe': { color: 'success', icon: <CheckCircleOutlined />, text: 'Hợp lệ' },
+            'CanhBao': { color: 'warning', icon: <WarningOutlined />, text: 'Cảnh báo' },
+            'ViPham': { color: 'error', icon: <ExclamationCircleOutlined />, text: 'Vi phạm' }
+        };
+        const item = config[ketLuan] || config['HopLe'];
+        return <Tag color={item.color} icon={item.icon}>{item.text}</Tag>;
+    }, []);
+
+    const renderTrangThai = useCallback((trangThai) => {
+        const config = {
+            'HopLe': { color: 'green', text: 'Hợp lệ' },
+            'TamKhoa': { color: 'orange', text: 'Tạm khóa' },
+            'Huy': { color: 'red', text: 'Đã hủy' }
+        };
+        const item = config[trangThai] || config['HopLe'];
+        return <Tag color={item.color}>{item.text}</Tag>;
     }, []);
 
     // Delete handlers
@@ -480,6 +538,54 @@ const QuanLyToKhai = ({ type }) => {
         ];
     }, [selectedToKhai?.loai, nplList, spList]);
 
+    // Columns cho bảng báo cáo thanh khoản
+    const baoCaoColumns = useMemo(() => {
+        const id_hd = selectedToKhai?.details?.loHang?.[0]?.id_hd;
+        return [
+            { 
+                title: 'Kỳ Báo cáo', 
+                render: (_, record) => `${dayjs(record.tu_ngay).format('DD/MM/YYYY')} - ${dayjs(record.den_ngay).format('DD/MM/YYYY')}`,
+                width: '30%'
+            },
+            { 
+                title: 'Thời gian tạo', 
+                dataIndex: 'thoi_gian_tao', 
+                render: (text) => text ? dayjs(text).format('DD/MM/YYYY HH:mm') : '-',
+                width: '25%'
+            },
+            { 
+                title: 'Kết luận', 
+                dataIndex: 'ket_luan', 
+                render: renderKetLuan,
+                width: '15%'
+            },
+            { 
+                title: 'Trạng thái', 
+                dataIndex: 'trang_thai', 
+                render: renderTrangThai,
+                width: '15%'
+            },
+            { 
+                title: 'Hành động', 
+                key: 'action', 
+                width: '15%',
+                align: 'center',
+                render: (_, record) => (
+                    <Popconfirm
+                        title="Xóa báo cáo thanh khoản?"
+                        description="Bạn có chắc chắn muốn xóa báo cáo này?"
+                        onConfirm={() => handleDeleteBaoCao(record.id_bc, id_hd)}
+                        okText="Xóa"
+                        cancelText="Hủy"
+                        okButtonProps={{ danger: true }}
+                    >
+                        <Button type="link" danger icon={<DeleteOutlined />}>Xóa</Button>
+                    </Popconfirm>
+                )
+            },
+        ];
+    }, [selectedToKhai, handleDeleteBaoCao, renderKetLuan, renderTrangThai]);
+
     const renderCrudForm = () => { 
         const { type: formType } = crudModalContent;
         if (formType === 'loHang') {
@@ -577,6 +683,28 @@ const QuanLyToKhai = ({ type }) => {
                         <TabPane tab="Vận đơn" key="3">
                             <Button onClick={() => handleOpenCrudModal('vanDon')} icon={<PlusOutlined />} style={{ marginBottom: 16 }}>Thêm Vận đơn</Button>
                             <Table columns={vanDonColumns} dataSource={selectedToKhai.details.vanDon} rowKey="id_vd" pagination={false} size="small" />
+                        </TabPane>
+                        <TabPane tab={`Báo cáo thanh khoản (${baoCaoList.length})`} key="4">
+                            <Spin spinning={loadingBaoCao}>
+                                {baoCaoList.length > 0 ? (
+                                    <>
+                                        <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+                                            Danh sách báo cáo thanh khoản liên quan đến hợp đồng này. Bạn có thể xóa báo cáo để sửa thông tin tờ khai.
+                                        </Text>
+                                        <Table 
+                                            columns={baoCaoColumns} 
+                                            dataSource={baoCaoList} 
+                                            rowKey="id_bc" 
+                                            pagination={false} 
+                                            size="small" 
+                                        />
+                                    </>
+                                ) : (
+                                    <Card style={{ textAlign: 'center', padding: '40px 0' }}>
+                                        <Text type="secondary">Chưa có báo cáo thanh khoản nào cho hợp đồng này</Text>
+                                    </Card>
+                                )}
+                            </Spin>
                         </TabPane>
                     </Tabs>
                 )}

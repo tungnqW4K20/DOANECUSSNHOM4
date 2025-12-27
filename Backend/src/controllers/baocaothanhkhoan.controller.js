@@ -87,14 +87,15 @@ const updateStatus = async (req, res) => {
 // API bổ sung: Lấy danh sách báo cáo thanh khoản
 const getThanhKhoanReports = async (req, res) => {
   try {
-    const { page = 1, limit = 10, q, ket_luan_tong_the, trang_thai } = req.query;
+    const { page = 1, limit = 10, q, ket_luan_tong_the, trang_thai, id_hd } = req.query;
     
     const data = await thanhKhoanService.getThanhKhoanReports({
       page: Number(page),
       limit: Number(limit),
       q,
       ket_luan_tong_the,
-      trang_thai
+      trang_thai,
+      id_hd: id_hd ? Number(id_hd) : undefined
     });
     
     res.json(data);
@@ -142,6 +143,25 @@ const updateBaoCao = async (req, res) => {
   }
 };
 
+// API bổ sung: Xóa báo cáo thanh khoản
+const deleteBaoCao = async (req, res) => {
+  try {
+    const { id_bc } = req.params;
+
+    if (!id_bc) {
+      return res.status(400).json({ error: 'Thiếu id_bc' });
+    }
+
+    await thanhKhoanService.deleteBaoCao(id_bc);
+    res.json({
+      message: 'Xóa báo cáo thành công!'
+    });
+  } catch (err) {
+    console.error('Error in deleteBaoCao:', err);
+    res.status(400).json({ error: err.message });
+  }
+};
+
 module.exports = { 
   getHopDong, 
   calculate, 
@@ -149,5 +169,6 @@ module.exports = {
   updateStatus, 
   getThanhKhoanReports,
   getBaoCaoById,
-  updateBaoCao
+  updateBaoCao,
+  deleteBaoCao
 };

@@ -110,6 +110,20 @@ export const deleteChiTietNhapKhoNPL = async (id_ct) => {
     }
 };
 
+/* ============================================================
+   🟢 LẤY SỐ LƯỢNG NPL CÓ THỂ NHẬP THEO HÓA ĐƠN NHẬP
+   Trả về: [{ id_npl, ten_npl, so_luong_hd, da_nhap, co_the_nhap }]
+============================================================ */
+export const getSoLuongCoTheNhap = async (id_hd_nhap) => {
+    try {
+        const res = await api.get(`/so-luong-co-the-nhap/${id_hd_nhap}`);
+        return res.data?.data || []; // { success, data }
+    } catch (err) {
+        console.error("❌ Lỗi getSoLuongCoTheNhap:", err);
+        throw err.response?.data || { message: "Lỗi khi lấy số lượng có thể nhập" };
+    }
+};
+
 export default {
     getAllNhapKhoNPL,
     getNhapKhoNPLById,
@@ -119,4 +133,5 @@ export default {
     addChiTietNhapKhoNPL,
     getChiTietByPhieuNhap,
     deleteChiTietNhapKhoNPL,
+    getSoLuongCoTheNhap,
 };

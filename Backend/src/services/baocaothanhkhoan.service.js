@@ -513,7 +513,7 @@ const updateBaoCao = async (id_bc, { ket_luan_tong_the, data_snapshot }) => {
 };
 
 // ========== API bổ sung: Lấy danh sách báo cáo thanh khoản ==========
-const getThanhKhoanReports = async ({ page = 1, limit = 10, q, ket_luan_tong_the, trang_thai }) => {
+const getThanhKhoanReports = async ({ page = 1, limit = 10, q, ket_luan_tong_the, trang_thai, id_hd }) => {
   try {
     const offset = (page - 1) * limit;
 
@@ -524,6 +524,9 @@ const getThanhKhoanReports = async ({ page = 1, limit = 10, q, ket_luan_tong_the
     }
     if (trang_thai) {
       whereBC.trang_thai = trang_thai;
+    }
+    if (id_hd) {
+      whereBC.id_hd = id_hd;
     }
 
     const { rows, count } = await BaoCaoThanhKhoan.findAndCountAll({
@@ -577,7 +580,7 @@ const getThanhKhoanReports = async ({ page = 1, limit = 10, q, ket_luan_tong_the
       tu_ngay: bc.tu_ngay,
       den_ngay: bc.den_ngay,
       thoi_gian_tao: bc.thoi_gian_tao,
-      ket_luan: bc.ket_luan_tong_the, // ← Đổi tên cho khớp với frontend
+      ket_luan_tong_the: bc.ket_luan_tong_the, // ← Sửa lại tên field
       trang_thai: bc.trang_thai
     }));
 
@@ -648,6 +651,21 @@ const getBaoCaoById = async (id_bc) => {
   };
 };
 
+// ========== API bổ sung: Xóa báo cáo thanh khoản ==========
+const deleteBaoCao = async (id_bc) => {
+  if (!id_bc) {
+    throw new Error('Thiếu id_bc');
+  }
+
+  const baoCao = await BaoCaoThanhKhoan.findByPk(id_bc);
+  if (!baoCao) {
+    throw new Error('Không tìm thấy báo cáo thanh khoản');
+  }
+
+  await baoCao.destroy();
+  return { message: 'Xóa báo cáo thành công' };
+};
+
 module.exports = { 
   getHopDongByDN, 
   calculateBaoCao, 
@@ -655,5 +673,6 @@ module.exports = {
   updateTrangThaiBaoCao,
   updateBaoCao,
   getThanhKhoanReports,
-  getBaoCaoById
+  getBaoCaoById,
+  deleteBaoCao
 };

@@ -49,7 +49,7 @@ export const updateReport = async (id_bc, data) => {
 // Lấy danh sách báo cáo đã lưu (có phân trang và filter)
 export const getAllReports = async (params = {}) => {
     try {
-        const { page = 1, limit = 10, q, ket_luan_tong_the, trang_thai } = params;
+        const { page = 1, limit = 10, q, ket_luan_tong_the, trang_thai, id_hd } = params;
         const queryParams = new URLSearchParams();
         
         queryParams.append('page', page);
@@ -57,6 +57,7 @@ export const getAllReports = async (params = {}) => {
         if (q) queryParams.append('q', q);
         if (ket_luan_tong_the) queryParams.append('ket_luan_tong_the', ket_luan_tong_the);
         if (trang_thai) queryParams.append('trang_thai', trang_thai);
+        if (id_hd) queryParams.append('id_hd', id_hd);
 
         const response = await api.get(`/reports?${queryParams.toString()}`);
         return response.data;
@@ -85,6 +86,16 @@ export const updateReportStatus = async (id_bc, trang_thai) => {
     }
 };
 
+// Xóa báo cáo thanh khoản
+export const deleteReport = async (id_bc) => {
+    try {
+        const response = await api.delete(`/reports/${id_bc}`);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
 export default {
     getAllHopDong,
     calculateReport,
@@ -93,4 +104,5 @@ export default {
     getAllReports,
     getReportById,
     updateReportStatus,
+    deleteReport,
 };

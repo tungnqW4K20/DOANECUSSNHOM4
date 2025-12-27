@@ -1597,3 +1597,183 @@ body.ant-scrolling-effect {
 .ant-modal-body > * {
   animation: fadeInUp 0.3s ease-out;
 }
+
+/* ========================================
+   🖨️ PRINT STYLES - BÁO CÁO THANH KHOẢN
+   Chỉ in nội dung báo cáo, ẩn header, sidebar, buttons
+   ======================================== */
+@media print {
+  /* Ẩn tất cả các phần không cần thiết */
+  .ant-layout-header,
+  .ant-layout-sider,
+  .ant-layout-footer,
+  .no-print,
+  .ant-btn,
+  button,
+  .ant-space,
+  .ant-pagination,
+  .ant-table-pagination,
+  .ant-card-head,
+  .ant-tabs-nav,
+  .ant-page-header-footer,
+  .page-header-actions,
+  .search-add-container,
+  .table-toolbar,
+  .ant-drawer,
+  .ant-modal-mask,
+  .ant-back-top {
+    display: none !important;
+  }
+
+  /* Reset layout cho print */
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .ant-layout {
+    background: white !important;
+  }
+
+  .ant-layout-content {
+    margin: 0 !important;
+    padding: 20px !important;
+    background: white !important;
+  }
+
+  /* Card styles cho print */
+  .ant-card {
+    border: none !important;
+    box-shadow: none !important;
+    background: white !important;
+    page-break-inside: avoid;
+  }
+
+  .ant-card-body {
+    padding: 0 !important;
+  }
+
+  /* Print area - chỉ in phần này */
+  #print-area {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Descriptions (Thông tin chung) */
+  .ant-descriptions {
+    page-break-inside: avoid;
+    margin-bottom: 20px !important;
+  }
+
+  .ant-descriptions-title {
+    font-size: 16px !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    margin-bottom: 10px !important;
+  }
+
+  .ant-descriptions-item-label {
+    font-weight: 600 !important;
+    background: #f5f5f5 !important;
+  }
+
+  /* Tabs - hiển thị tất cả nội dung */
+  .ant-tabs-content {
+    display: block !important;
+  }
+
+  .ant-tabs-tabpane {
+    display: block !important;
+    page-break-before: always;
+  }
+
+  .ant-tabs-tabpane:first-child {
+    page-break-before: avoid;
+  }
+
+  /* Table styles cho print */
+  .ant-table {
+    page-break-inside: avoid;
+    font-size: 10px !important;
+  }
+
+  .ant-table-wrapper {
+    margin-bottom: 30px !important;
+  }
+
+  .ant-table-thead > tr > th {
+    background: #f0f0f0 !important;
+    border: 1px solid #000 !important;
+    padding: 8px 4px !important;
+    font-size: 9px !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .ant-table-tbody > tr > td {
+    border: 1px solid #000 !important;
+    padding: 6px 4px !important;
+    font-size: 9px !important;
+  }
+
+  .ant-table-tbody > tr:nth-child(even) {
+    background: #fafafa !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Title của mỗi bảng */
+  .ant-typography {
+    page-break-after: avoid;
+    margin-bottom: 10px !important;
+  }
+
+  h5.ant-typography {
+    font-size: 14px !important;
+    font-weight: bold !important;
+    text-align: center !important;
+  }
+
+  /* Tags và colors */
+  .ant-tag {
+    border: 1px solid #000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Text colors */
+  .ant-typography-warning {
+    color: #d46b08 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .ant-typography-danger {
+    color: #cf1322 !important;
+    font-weight: bold !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Page breaks */
+  .page-break {
+    page-break-after: always;
+  }
+
+  /* Đảm bảo in đầy đủ màu sắc */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Landscape orientation hint */
+  @page {
+    size: A4 landscape;
+    margin: 1cm;
+  }
+}

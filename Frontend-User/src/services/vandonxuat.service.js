@@ -5,6 +5,19 @@ const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/van-don-xuat`;
 const api = createApiInstance(API_BASE_URL);
 
 /* ============================================================
+   LẤY TẤT CẢ VẬN ĐƠN XUẤT
+============================================================ */
+export const getAllVanDonXuat = async () => {
+    try {
+        const res = await api.get("/");
+        return res.data;
+    } catch (err) {
+        console.error("❌ Lỗi getAllVanDonXuat:", err);
+        throw err.response?.data || { message: "Lỗi khi lấy danh sách vận đơn xuất" };
+    }
+};
+
+/* ============================================================
    TẠO MỚI VẬN ĐƠN XUẤT
 ============================================================ */
 export const createVanDonXuat = async (payload) => {
@@ -18,5 +31,6 @@ export const createVanDonXuat = async (payload) => {
 };
 
 export default {
+    getAllVanDonXuat,
     createVanDonXuat,
 };

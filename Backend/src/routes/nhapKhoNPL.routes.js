@@ -16,4 +16,7 @@ router.post('/:id/chi-tiet', authenticateToken, authorizeRole('business'), contr
 router.get('/:id/chi-tiet', controller.getChiTiet);
 router.delete('/chi-tiet/:id', authenticateToken, authorizeRole('business'), controller.deleteChiTiet);
 
+// Lấy số lượng NPL có thể nhập theo hóa đơn nhập
+router.get('/so-luong-co-the-nhap/:id_hd_nhap', authenticateToken, authorizeRole('business'), controller.getSoLuongCoTheNhap);
+
 module.exports = router;

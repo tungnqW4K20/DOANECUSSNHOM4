@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
     Table, Button, Form, Select, message, Typography, Space, Spin, 
-    DatePicker, Row, Col, Card, Tabs, Tooltip, Descriptions, Tag, Input 
+    DatePicker, Row, Col, Card, Tabs, Tooltip, Descriptions, Tag, Input, Popconfirm 
 } from 'antd';
 import { 
     CalculatorOutlined, DownloadOutlined, SaveOutlined, ArrowLeftOutlined, 
     QuestionCircleOutlined, PrinterOutlined, EyeOutlined, SearchOutlined,
-    WarningOutlined, CheckCircleOutlined, ExclamationCircleOutlined
+    WarningOutlined, CheckCircleOutlined, ExclamationCircleOutlined, DeleteOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import * as BaoCaoThanhKhoanService from '../../services/baocaothanhkhoan.service';
@@ -35,6 +35,14 @@ const ThanhKhoan = () => {
         fetchHopDongList();
         loadSavedReports();
     }, []);
+
+    // Auto-fetch when filter changes
+    useEffect(() => {
+        if (step === 1) {
+            fetchSavedReports(1, pagination.pageSize);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filterKetLuan]);
 
     const loadSavedReports = async () => {
         try {
@@ -253,6 +261,19 @@ const ThanhKhoan = () => {
         fetchSavedReports(1, pagination.pageSize);
     };
 
+    const handleDeleteReport = async (id_bc) => {
+        try {
+            setLoading(true);
+            await BaoCaoThanhKhoanService.deleteReport(id_bc);
+            message.success('Xóa báo cáo thành công!');
+            await fetchSavedReports(pagination.current, pagination.pageSize);
+        } catch (error) {
+            message.error(error.error || error.message || 'Lỗi khi xóa báo cáo!');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Render kết luận với icon và màu sắc
     const renderKetLuan = (ketLuan) => {
         const config = {
@@ -382,16 +403,33 @@ const ThanhKhoan = () => {
         { 
             title: 'Hành động', 
             key: 'action', 
-            width: 150,
+            width: 200,
             render: (_, record) => (
-                <Button 
-                    type="primary"
-                    icon={<EyeOutlined />} 
-                    onClick={() => handleViewReport(record)}
-                    style={{ color: '#fff' }}
-                >
-                    Xem chi tiết
-                </Button>
+                <Space>
+                    <Button 
+                        type="primary"
+                        icon={<EyeOutlined />} 
+                        onClick={() => handleViewReport(record)}
+                        style={{ color: '#fff' }}
+                    >
+                        Xem
+                    </Button>
+                    <Popconfirm
+                        title="Xóa báo cáo thanh khoản?"
+                        description="Bạn có chắc chắn muốn xóa báo cáo này? Hành động này không thể hoàn tác."
+                        onConfirm={() => handleDeleteReport(record.id_bc)}
+                        okText="Xóa"
+                        cancelText="Hủy"
+                        okButtonProps={{ danger: true }}
+                    >
+                        <Button 
+                            danger
+                            icon={<DeleteOutlined />}
+                        >
+                            Xóa
+                        </Button>
+                    </Popconfirm>
+                </Space>
             )
         },
     ];
@@ -615,10 +653,7 @@ const ThanhKhoan = () => {
                             allowClear
                             style={{ width: '100%' }}
                             value={filterKetLuan}
-                            onChange={(value) => {
-                                setFilterKetLuan(value);
-                                fetchSavedReports(1, pagination.pageSize);
-                            }}
+                            onChange={(value) => setFilterKetLuan(value)}
                         >
                             <Option value="HopLe">Hợp lệ</Option>
                             <Option value="CanhBao">Cảnh báo</Option>

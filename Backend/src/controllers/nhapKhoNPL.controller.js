@@ -77,3 +77,14 @@ exports.deleteChiTiet = async (req, res) => {
     res.status(400).json({ success: false, message: err.message });
   }
 };
+
+// Lấy số lượng NPL có thể nhập theo hóa đơn nhập
+exports.getSoLuongCoTheNhap = async (req, res) => {
+  try {
+    const { id_hd_nhap } = req.params;
+    const result = await service.getSoLuongCoTheNhap(id_hd_nhap);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};

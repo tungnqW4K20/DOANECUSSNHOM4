@@ -37,13 +37,13 @@ export const processMonthlyData = (imports = [], exports = []) => {
     const monthKey = month.format('MM/YYYY');
     
     const importCount = imports.filter(item => {
-      if (!item.ngay_dang_ky) return false;
-      return dayjs(item.ngay_dang_ky).format('MM/YYYY') === monthKey;
+      if (!item.ngay_tk) return false;
+      return dayjs(item.ngay_tk).format('MM/YYYY') === monthKey;
     }).length;
     
     const exportCount = exports.filter(item => {
-      if (!item.ngay_dang_ky) return false;
-      return dayjs(item.ngay_dang_ky).format('MM/YYYY') === monthKey;
+      if (!item.ngay_tk) return false;
+      return dayjs(item.ngay_tk).format('MM/YYYY') === monthKey;
     }).length;
     
     return {
@@ -118,14 +118,14 @@ const calculateQuarterlyTrends = (imports = [], exports = []) => {
     const quarterEnd = quarterDate.endOf('quarter');
     
     const importCount = imports.filter(item => {
-      if (!item.ngay_dang_ky) return false;
-      const date = dayjs(item.ngay_dang_ky);
+      if (!item.ngay_tk) return false;
+      const date = dayjs(item.ngay_tk);
       return date.isAfter(quarterStart) && date.isBefore(quarterEnd);
     }).length;
     
     const exportCount = exports.filter(item => {
-      if (!item.ngay_dang_ky) return false;
-      const date = dayjs(item.ngay_dang_ky);
+      if (!item.ngay_tk) return false;
+      const date = dayjs(item.ngay_tk);
       return date.isAfter(quarterStart) && date.isBefore(quarterEnd);
     }).length;
     

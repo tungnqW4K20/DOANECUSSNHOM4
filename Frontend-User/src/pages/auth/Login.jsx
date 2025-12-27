@@ -27,8 +27,10 @@ const Login = () => {
             
             showSuccess('Đăng nhập thành công', 'Chào mừng bạn trở lại');
             setTimeout(() => navigate('/'), 500);
-        } catch {
-            showError('Đăng nhập thất bại', 'Mã số thuế hoặc mật khẩu không đúng');
+        } catch (error) {
+            // Hiển thị thông báo lỗi cụ thể từ backend
+            const errorMessage = error?.message || 'Mã số thuế hoặc mật khẩu không đúng';
+            showError('Đăng nhập thất bại', errorMessage);
         } finally {
             setLoading(false);
         }

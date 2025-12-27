@@ -4,7 +4,7 @@ const db = require('../models');
 const DoanhNghiep = db.DoanhNghiep;
 
 // Lấy thông tin profile doanh nghiệp
-const getProfile = async (id_dn) => {
+const getProfile = async (id_dn, req) => {
   try {
     const doanhNghiep = await DoanhNghiep.findByPk(id_dn, {
       attributes: { exclude: ['mat_khau'] } // Không trả về mật khẩu
@@ -14,7 +14,16 @@ const getProfile = async (id_dn) => {
       throw new Error('Không tìm thấy thông tin doanh nghiệp');
     }
 
-    return doanhNghiep;
+    // Chuyển đổi sang plain object để thêm trường mới
+    const result = doanhNghiep.toJSON();
+
+    // Thêm URL đầy đủ cho file giấy phép nếu có
+    if (result.file_giay_phep && req) {
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      result.file_giay_phep_url = `${baseUrl}/uploads/${result.file_giay_phep}`;
+    }
+
+    return result;
   } catch (error) {
     throw error;
   }

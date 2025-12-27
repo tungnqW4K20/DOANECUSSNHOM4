@@ -5,7 +5,7 @@ const getProfile = async (req, res) => {
   try {
     const id_dn = req.user.id_dn; // Lấy từ middleware auth
     
-    const profile = await profileService.getProfile(id_dn);
+    const profile = await profileService.getProfile(id_dn, req);
     
     return res.status(200).json({
       success: true,

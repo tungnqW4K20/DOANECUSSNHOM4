@@ -48,6 +48,14 @@ const Profile = () => {
       if (response.success) {
         setBusinessInfo(response.data);
         form.setFieldsValue(response.data);
+        
+        // Kiểm tra nếu trạng thái là REJECTED thì tự động logout (case-insensitive)
+        // Không hiển thị notification ở đây vì API interceptor đã xử lý
+        if (response.data.status?.toUpperCase() === 'REJECTED') {
+          // API interceptor sẽ tự động hiển thị notification và logout
+          // Chỉ cần return để không xử lý tiếp
+          return;
+        }
       } else {
         notification.error({
           message: 'Lỗi tải dữ liệu',
@@ -68,6 +76,14 @@ const Profile = () => {
 
   useEffect(() => {
     loadProfile();
+    
+    // Kiểm tra status định kỳ mỗi 30 giây
+    const intervalId = setInterval(() => {
+      loadProfile();
+    }, 30000); // 30 giây
+    
+    // Cleanup interval khi component unmount
+    return () => clearInterval(intervalId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Chỉ chạy 1 lần khi component mount
 
@@ -524,11 +540,26 @@ const Profile = () => {
                   textAlign: 'center'
                 }}>
                   <FileText size={48} color="#667eea" style={{ marginBottom: 8 }} />
-                  <Text type="secondary" style={{ fontSize: '12px', display: 'block' }}>
-                    {businessInfo.file_giay_phep}
+                  <Text type="secondary" style={{ fontSize: '12px', display: 'block', wordBreak: 'break-all' }}>
+                    {businessInfo.file_giay_phep.split('-').slice(2).join('-') || businessInfo.file_giay_phep}
                   </Text>
                 </div>
-                <Button type="primary" block style={{ borderRadius: '8px' }}>
+                <Button 
+                  type="primary" 
+                  block 
+                  style={{ borderRadius: '8px' }}
+                  onClick={() => {
+                    if (businessInfo.file_giay_phep_url) {
+                      window.open(businessInfo.file_giay_phep_url, '_blank');
+                    } else {
+                      notification.error({
+                        message: 'Lỗi',
+                        description: 'Không tìm thấy đường dẫn file',
+                        placement: 'topRight'
+                      });
+                    }
+                  }}
+                >
                   Xem giấy phép
                 </Button>
               </div>

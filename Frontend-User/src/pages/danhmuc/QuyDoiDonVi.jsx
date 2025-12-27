@@ -123,7 +123,7 @@ const QuyDoiTable = ({ type, dataSource, itemList, dvtHqList, loading, fetchData
         { 
             title: type === 'NPL' ? 'Nguyên phụ liệu' : 'Sản phẩm', 
             dataIndex: type === 'NPL' ? 'id_npl' : 'id_sp',
-            width: '25%',
+            width: '29%',
             render: (id, record) => {
                 const name = type === 'NPL' 
                     ? (record.nguyenPhuLieu?.ten_npl || itemList.find(i => i.id_npl === id)?.ten_npl)

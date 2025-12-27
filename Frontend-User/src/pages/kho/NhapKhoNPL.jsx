@@ -21,7 +21,7 @@ import dayjs from "dayjs";
 import { uploadSingleFile } from "../../services/upload.service";
 import { getAllHoaDonNhap, getHoaDonNhapById } from "../../services/hoadonnhap.service";
 import { getAllKho } from "../../services/kho.service";
-import { getAllNhapKhoNPL, createNhapKhoNPL, updateNhapKhoNPL, deleteNhapKhoNPL } from "../../services/nhapkhonpl.service";
+import { getAllNhapKhoNPL, createNhapKhoNPL, updateNhapKhoNPL, deleteNhapKhoNPL, getSoLuongCoTheNhap } from "../../services/nhapkhonpl.service";
 import { getQuyDoiListNPL, calculateNPL_DN_to_HQ } from "../../services/quyDoiHelper.service";
 import { 
     showCreateSuccess,
@@ -108,9 +108,16 @@ const NhapKhoNPL = () => {
             const hoaDonData = res?.data || res;
             const chiTiets = hoaDonData?.chiTiets || [];
 
+            // 🆕 Lấy số lượng có thể nhập
+            const soLuongCoTheNhap = await getSoLuongCoTheNhap(id_hd_nhap);
+            console.log("Số lượng có thể nhập:", soLuongCoTheNhap);
+
             // Load chi tiết và quy đổi cho từng NPL
             const chiTietPromises = chiTiets.map(async (item, index) => {
                 const id_npl = item.nguyenPhuLieu?.id_npl || item.id_npl;
+                
+                // Tìm thông tin số lượng có thể nhập
+                const nplInfo = soLuongCoTheNhap.find(info => info.id_npl === id_npl);
                 
                 // Load danh sách quy đổi cho NPL này
                 let quyDoiList = [];
@@ -125,10 +132,12 @@ const NhapKhoNPL = () => {
                     id_npl,
                     ten_npl: item.nguyenPhuLieu?.ten_npl || item.ten_npl || 'N/A',
                     so_luong_hd: item.so_luong,
-                    so_luong_dn: item.so_luong, // Số lượng DN (user nhập)
-                    so_luong_hq: item.so_luong, // Số lượng HQ (tính toán)
+                    so_luong_dn: nplInfo?.co_the_nhap || 0, // Mặc định = số lượng có thể nhập
+                    so_luong_hq: nplInfo?.co_the_nhap || 0,
+                    co_the_nhap: nplInfo?.co_the_nhap || 0, // 🆕 Số lượng tối đa có thể nhập
+                    da_nhap: nplInfo?.da_nhap || 0, // 🆕 Số lượng đã nhập trước đó
                     quyDoiList: quyDoiList,
-                    id_qd: null, // ID quy đổi được chọn
+                    id_qd: null,
                     ten_dvt_dn: null,
                     ten_dvt_hq: null
                 };
@@ -147,22 +156,55 @@ const NhapKhoNPL = () => {
     /* ============================================================
        🟢 CHỌN ĐƠN VỊ QUY ĐỔI
     ============================================================ */
-    const handleQuyDoiChange = (key, id_qd) => {
+    const handleQuyDoiChange = async (key, id_qd) => {
+        const item = chiTietNhap.find(ct => ct.key === key);
+        if (!item) return;
+
+        // Nếu bỏ chọn (clear), reset về trạng thái không có quy đổi
+        if (!id_qd) {
+            setChiTietNhap((prev) =>
+                prev.map((ct) => {
+                    if (ct.key === key) {
+                        return {
+                            ...ct,
+                            id_qd: null,
+                            ten_dvt_dn: null,
+                            ten_dvt_hq: null,
+                            he_so: 1,
+                            co_the_nhap_dn: null,
+                            so_luong_dn: ct.co_the_nhap,
+                            so_luong_hq: ct.co_the_nhap
+                        };
+                    }
+                    return ct;
+                })
+            );
+            return;
+        }
+
+        const qd = item.quyDoiList.find(q => q.id_qd === id_qd);
+        if (!qd) return;
+
+        // Tính giới hạn có thể nhập theo đơn vị DN
+        // Ví dụ: co_the_nhap = 100 Mét, he_so = 100 (1 Cây = 100 Mét)
+        // => co_the_nhap_dn = 100 / 100 = 1 Cây
+        const co_the_nhap_dn = item.co_the_nhap / parseFloat(qd.he_so || 1);
+
         setChiTietNhap((prev) =>
-            prev.map((item) => {
-                if (item.key === key) {
-                    const qd = item.quyDoiList.find(q => q.id_qd === id_qd);
+            prev.map((ct) => {
+                if (ct.key === key) {
                     return {
-                        ...item,
+                        ...ct,
                         id_qd,
-                        ten_dvt_dn: qd?.ten_dvt_dn || null,
-                        ten_dvt_hq: qd?.ten_dvt_hq || null,
-                        // Reset số lượng khi đổi đơn vị
-                        so_luong_dn: item.so_luong_hd,
-                        so_luong_hq: item.so_luong_hd
+                        ten_dvt_dn: qd.ten_dvt_dn,
+                        ten_dvt_hq: qd.ten_dvt_hq,
+                        he_so: parseFloat(qd.he_so || 1),
+                        co_the_nhap_dn, // Giới hạn theo đơn vị DN
+                        so_luong_dn: Math.min(co_the_nhap_dn, ct.so_luong_dn || 0),
+                        so_luong_hq: ct.co_the_nhap
                     };
                 }
-                return item;
+                return ct;
             })
         );
     };
@@ -279,6 +321,29 @@ const NhapKhoNPL = () => {
             return;
         }
 
+        // 🆕 Kiểm tra số lượng nhập <= 0
+        const zeroItems = chiTietNhap.filter(item => !item.so_luong_hq || item.so_luong_hq <= 0);
+        if (zeroItems.length > 0) {
+            const errorMsg = zeroItems.map(item => 
+                `${item.ten_npl}: Số lượng phải lớn hơn 0`
+            ).join('\n');
+            showWarning('Số lượng nhập không hợp lệ', errorMsg);
+            return;
+        }
+
+        // 🆕 Kiểm tra số lượng nhập không vượt quá số lượng có thể nhập
+        const invalidItems = chiTietNhap.filter(item => {
+            
+            return item.so_luong_hq > item.co_the_nhap; // Luôn kiểm tra theo đơn vị HQ
+        });
+        if (invalidItems.length > 0) {
+            const errorMsg = invalidItems.map(item => 
+                `${item.ten_npl}: Nhập ${formatVNNumber(item.so_luong_hq)} ${item.ten_dvt_hq || ''} > Có thể nhập ${formatVNNumber(item.co_the_nhap)}`
+            ).join('\n');
+            showWarning('Số lượng nhập vượt quá giới hạn', errorMsg);
+            return;
+        }
+
         const payloadPhieu = {
             id_hd_nhap: values.id_hd_nhap,
             id_kho: values.id_kho,
@@ -326,7 +391,8 @@ const NhapKhoNPL = () => {
             fetchLichSu(); // Refresh danh sách
         } catch (err) {
             console.error(err);
-            showSaveError('phiếu nhập kho NPL');
+            const errorMsg = err?.message || 'Lỗi không xác định';
+            showSaveError(`phiếu nhập kho NPL: ${errorMsg}`);
         } finally {
             setSubmitting(false);
         }
@@ -347,20 +413,36 @@ const NhapKhoNPL = () => {
             title: "Tên Nguyên phụ liệu", 
             dataIndex: "ten_npl", 
             key: "ten_npl",
-            width: '25%'
+            width: '20%'
         },
         {
             title: "Số lượng theo HĐ",
             dataIndex: "so_luong_hd",
             key: "so_luong_hd",
-            width: '15%',
+            width: '12%',
             align: 'right',
             render: (val) => formatVNNumber(val)
         },
         {
+            title: "Đã nhập",
+            dataIndex: "da_nhap",
+            key: "da_nhap",
+            width: '10%',
+            align: 'right',
+            render: (val) => <span style={{ color: '#ff4d4f', fontWeight: 'bold' }}>{formatVNNumber(val)}</span>
+        },
+        {
+            title: "Có thể nhập",
+            dataIndex: "co_the_nhap",
+            key: "co_the_nhap",
+            width: '12%',
+            align: 'right',
+            render: (val) => <span style={{ color: '#52c41a', fontWeight: 'bold' }}>{formatVNNumber(val)}</span>
+        },
+        {
             title: "Đơn vị",
             key: "don_vi",
-            width: '20%',
+            width: '18%',
             render: (_, record) => {
                 if (!record.quyDoiList || record.quyDoiList.length === 0) {
                     return <span style={{ color: '#999' }}>Không có quy đổi</span>;
@@ -371,6 +453,7 @@ const NhapKhoNPL = () => {
                         placeholder="Chọn đơn vị"
                         value={record.id_qd}
                         onChange={(val) => handleQuyDoiChange(record.key, val)}
+                        allowClear
                     >
                         {record.quyDoiList.map(qd => (
                             <Option key={qd.id_qd} value={qd.id_qd}>
@@ -384,23 +467,41 @@ const NhapKhoNPL = () => {
         {
             title: "Số lượng nhập",
             key: "so_luong_nhap",
-            width: '25%',
-            render: (_, record) => (
-                <Space direction="vertical" style={{ width: '100%' }}>
-                    <InputNumber
-                        min={0}
-                        style={{ width: '100%' }}
-                        value={record.so_luong_dn}
-                        onChange={(val) => handleSoLuongChange(record.key, val)}
-                        placeholder={record.id_qd ? `Nhập ${record.ten_dvt_dn}` : 'Nhập số lượng'}
-                    />
-                    {record.id_qd && record.so_luong_hq !== record.so_luong_dn && (
-                        <Typography.Text type="secondary" style={{ fontSize: '12px' }}>
-                            = {formatVNNumber(record.so_luong_hq)} {record.ten_dvt_hq}
-                        </Typography.Text>
-                    )}
-                </Space>
-            )
+            width: '28%',
+            render: (_, record) => {
+                // Sử dụng giới hạn theo đơn vị đang chọn
+                const maxValue = record.id_qd ? (record.co_the_nhap_dn || record.co_the_nhap) : record.co_the_nhap;
+                const isOverLimit = record.so_luong_dn > maxValue;
+                
+                return (
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                        <InputNumber
+                            min={0.01}
+                            max={maxValue}
+                            style={{ width: '100%' }}
+                            value={record.so_luong_dn}
+                            onChange={(val) => handleSoLuongChange(record.key, val)}
+                            placeholder={record.id_qd ? `Nhập ${record.ten_dvt_dn}` : 'Nhập số lượng'}
+                            status={(record.so_luong_dn <= 0 || isOverLimit) ? 'error' : ''}
+                        />
+                        {record.so_luong_dn <= 0 && (
+                            <Typography.Text type="danger" style={{ fontSize: '12px' }}>
+                                Số lượng phải lớn hơn 0!
+                            </Typography.Text>
+                        )}
+                        {record.so_luong_dn > 0 && isOverLimit && (
+                            <Typography.Text type="danger" style={{ fontSize: '12px' }}>
+                                Vượt quá số lượng có thể nhập! (Tối đa: {formatVNNumber(maxValue)} {record.id_qd ? record.ten_dvt_dn : ''})
+                            </Typography.Text>
+                        )}
+                        {record.id_qd && record.so_luong_hq !== record.so_luong_dn && record.so_luong_dn > 0 && (
+                            <Typography.Text type="secondary" style={{ fontSize: '12px' }}>
+                                = {formatVNNumber(record.so_luong_hq)} {record.ten_dvt_hq}
+                            </Typography.Text>
+                        )}
+                    </Space>
+                );
+            }
         },
     ];
 

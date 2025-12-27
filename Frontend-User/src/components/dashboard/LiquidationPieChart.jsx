@@ -3,9 +3,11 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recha
 
 const LiquidationPieChart = ({ liquidationReports, contracts }) => {
   // Calculate counts for each status
-  const compliantCount = liquidationReports.filter(r => r.ket_luan === 'HopLe').length;
+  const compliantCount = liquidationReports.filter(r => 
+    (r.ket_luan_tong_the || r.ket_luan) === 'HopLe'
+  ).length;
   const nonCompliantCount = liquidationReports.filter(r => 
-    ['ViPham', 'DuNPL'].includes(r.ket_luan)
+    ['ViPham', 'DuNPL', 'CanhBao'].includes(r.ket_luan_tong_the || r.ket_luan)
   ).length;
   const pendingCount = contracts.length - liquidationReports.length;
 

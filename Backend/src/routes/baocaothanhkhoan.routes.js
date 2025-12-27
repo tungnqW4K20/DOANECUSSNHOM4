@@ -70,4 +70,13 @@ router.put(
   thanhKhoanController.updateBaoCao
 );
 
+// Xóa báo cáo thanh khoản
+// DELETE /api/user/thanh-khoan/reports/:id_bc
+router.delete(
+  '/reports/:id_bc',
+  authenticateToken,
+  authorizeRole('business'),
+  thanhKhoanController.deleteBaoCao
+);
+
 module.exports = router;

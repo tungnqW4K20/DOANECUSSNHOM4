@@ -35,18 +35,25 @@ const approveBussiness = async (id_dn, status) => {
         throw new Error('Thiếu id doanh nghiệp');
     }
 
-     if (!status || !valid.includes(status)) {
+  // Chuẩn hóa status về chữ HOA
+  const normalizedStatus = status?.toUpperCase();
+
+  if (!normalizedStatus || !valid.includes(normalizedStatus)) {
     throw new Error("Trạng thái không hợp lệ");
   }
 
   const [updated] = await db.DoanhNghiep.update(
-    { status },
+    { status: normalizedStatus },
     { where: { id_dn } }
   );
 
   if (updated === 0) throw new Error("Không tìm thấy doanh nghiệp");
 
-  return await db.DoanhNghiep.findByPk(id_dn);
+  const updatedBusiness = await db.DoanhNghiep.findByPk(id_dn);
+  
+  console.log(`✅ Cập nhật status doanh nghiệp ${id_dn}: ${normalizedStatus}`);
+  
+  return updatedBusiness;
 };
 
 const getCategoryById = async (categoryId) => {

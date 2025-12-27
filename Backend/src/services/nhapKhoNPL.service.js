@@ -4,8 +4,9 @@ const NhapKhoNPL = db.NhapKhoNPL;
 const NhapKhoNPLChiTiet = db.NhapKhoNPLChiTiet;
 const Kho = db.Kho;
 const HoaDonNhap = db.HoaDonNhap;
+const HoaDonNhapChiTiet = db.HoaDonNhapChiTiet;
 const NguyenPhuLieu = db.NguyenPhuLieu;
-const TonKhoNPL = db.TonKhoNPL
+const TonKhoNPL = db.TonKhoNPL;
 
 // const createNhapNPL = async ({ id_kho, id_hd_nhap, ngay_nhap, file_phieu, chi_tiets }) => {
 //   // 1️⃣ Kiểm tra dữ liệu đầu vào
@@ -90,6 +91,31 @@ const createNhapNPL = async ({ id_kho, id_hd_nhap, ngay_nhap, file_phieu, chi_ti
 
   const hoaDon = await HoaDonNhap.findByPk(id_hd_nhap);
   if (!hoaDon) throw new Error(`Không tìm thấy hóa đơn nhập ID=${id_hd_nhap}`);
+
+  // 2.5️⃣ Kiểm tra số lượng có thể nhập
+  const soLuongCoTheNhap = await getSoLuongCoTheNhap(id_hd_nhap);
+  
+  for (const ct of chi_tiets) {
+    const { id_npl, so_luong_nhap, so_luong } = ct;
+    const qty = so_luong_nhap || so_luong;
+    
+    // Kiểm tra số lượng > 0
+    if (!qty || qty <= 0) {
+      throw new Error(`NPL ID=${id_npl}: Số lượng nhập phải lớn hơn 0`);
+    }
+    
+    const nplInfo = soLuongCoTheNhap.find(item => item.id_npl === id_npl);
+    if (!nplInfo) {
+      throw new Error(`NPL ID=${id_npl} không có trong hóa đơn nhập này`);
+    }
+    
+    if (qty > nplInfo.co_the_nhap) {
+      throw new Error(
+        `NPL "${nplInfo.ten_npl}": Số lượng nhập (${qty}) vượt quá số lượng có thể nhập (${nplInfo.co_the_nhap}). ` +
+        `Tổng theo HĐ: ${nplInfo.so_luong_hd}, Đã nhập: ${nplInfo.da_nhap}`
+      );
+    }
+  }
 
   // 3️⃣ Transaction để đảm bảo toàn vẹn dữ liệu
   const t = await db.sequelize.transaction();
@@ -298,7 +324,60 @@ const deleteChiTiet = async (id_ct) => {
   await ct.destroy();
 };
 
+// Lấy số lượng NPL có thể nhập theo hóa đơn nhập
+const getSoLuongCoTheNhap = async (id_hd_nhap) => {
+  if (!id_hd_nhap) throw new Error('Thiếu id_hd_nhap');
+
+  // 1. Lấy chi tiết hóa đơn nhập (tổng số lượng theo tờ khai)
+  const hoaDon = await HoaDonNhap.findByPk(id_hd_nhap, {
+    include: [{
+      model: HoaDonNhapChiTiet,
+      as: 'chiTiets',
+      include: [{ model: NguyenPhuLieu, as: 'nguyenPhuLieu' }]
+    }]
+  });
+
+  if (!hoaDon) throw new Error(`Không tìm thấy hóa đơn nhập ID=${id_hd_nhap}`);
+
+  // 2. Lấy tổng số lượng đã nhập kho từ hóa đơn này
+  const daNhapKho = await NhapKhoNPL.findAll({
+    where: { id_hd_nhap },
+    include: [{
+      model: NhapKhoNPLChiTiet,
+      as: 'chiTiets'
+    }]
+  });
+
+  // 3. Tính tổng số lượng đã nhập cho từng NPL
+  const tongDaNhap = {};
+  daNhapKho.forEach(phieu => {
+    (phieu.chiTiets || []).forEach(ct => {
+      const id_npl = ct.id_npl;
+      tongDaNhap[id_npl] = (tongDaNhap[id_npl] || 0) + parseFloat(ct.so_luong || 0);
+    });
+  });
+
+  // 4. Tính số lượng có thể nhập = Tổng HĐ - Đã nhập
+  const result = (hoaDon.chiTiets || []).map(ct => {
+    const id_npl = ct.id_npl;
+    const so_luong_hd = parseFloat(ct.so_luong || 0);
+    const da_nhap = tongDaNhap[id_npl] || 0;
+    const co_the_nhap = Math.max(0, so_luong_hd - da_nhap);
+
+    return {
+      id_npl,
+      ten_npl: ct.nguyenPhuLieu?.ten_npl || 'N/A',
+      so_luong_hd,
+      da_nhap,
+      co_the_nhap
+    };
+  });
+
+  return result;
+};
+
 module.exports = {
   createNhapNPL, getAllNhapNPL, getNhapNPLById, updateNhapNPL, deleteNhapNPL,
-  addChiTiet, getChiTietByPhieu, deleteChiTiet
+  addChiTiet, getChiTietByPhieu, deleteChiTiet,
+  getSoLuongCoTheNhap
 };

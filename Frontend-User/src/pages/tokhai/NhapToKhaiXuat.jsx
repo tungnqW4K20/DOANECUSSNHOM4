@@ -20,10 +20,10 @@ import { getAllHopDong } from "../../services/hopdong.service";
 import { getAllSanPham } from "../../services/sanpham.service";
 import { getAllTienTe } from "../../services/tiente.service";
 import { uploadSingleFile } from "../../services/upload.service";
-import { createToKhaiXuat } from "../../services/tokhaixuat.service";
+import { createToKhaiXuat, getAllToKhaiXuat } from "../../services/tokhaixuat.service";
 import { createLoHang } from "../../services/lohang.service";
-import { createHoaDonXuat } from "../../services/hoadonxuat.service";
-import { createVanDonXuat } from "../../services/vandonxuat.service";
+import { createHoaDonXuat, getAllHoaDonXuat } from "../../services/hoadonxuat.service";
+import { createVanDonXuat, getAllVanDonXuat } from "../../services/vandonxuat.service";
 
 const { Step } = Steps;
 const { Option } = Select;
@@ -38,6 +38,9 @@ const NhapToKhaiXuat = () => {
     const [hopDongList, setHopDongList] = useState([]);
     const [spList, setSpList] = useState([]);
     const [tienTeList, setTienTeList] = useState([]);
+    const [hoaDonList, setHoaDonList] = useState([]);
+    const [vanDonList, setVanDonList] = useState([]);
+    const [toKhaiList, setToKhaiList] = useState([]);
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
 
@@ -57,14 +60,20 @@ const NhapToKhaiXuat = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const [resHD, resSP, resTT] = await Promise.all([
+                const [resHD, resSP, resTT, resHDX, resVDX, resTKX] = await Promise.all([
                     getAllHopDong(),
                     getAllSanPham(),
                     getAllTienTe(),
+                    getAllHoaDonXuat(),
+                    getAllVanDonXuat(),
+                    getAllToKhaiXuat(),
                 ]);
                 setHopDongList(resHD.data || []);
                 setSpList(resSP.data || []);
                 setTienTeList(resTT.data || []);
+                setHoaDonList(Array.isArray(resHDX) ? resHDX : (resHDX.data || []));
+                setVanDonList(Array.isArray(resVDX) ? resVDX : (resVDX.data || []));
+                setToKhaiList(Array.isArray(resTKX) ? resTKX : (resTKX.data || []));
             } catch {
                 showLoadError('dữ liệu ban đầu');
             } finally {
@@ -132,10 +141,37 @@ const NhapToKhaiXuat = () => {
             }
             if (current === 1) {
                 await formHoaDonVanDon.validateFields();
+                
                 const validItems = chiTietHoaDon.filter(item => item.id_sp && item.so_luong > 0 && item.don_gia > 0);
                 if (validItems.length === 0) {
                     showSaveError('Vui lòng thêm ít nhất 1 sản phẩm với số lượng và đơn giá hợp lệ');
                     return;
+                }
+
+                // ✅ Kiểm tra trùng lặp sản phẩm trong chi tiết hóa đơn
+                const spIds = validItems.map(item => item.id_sp);
+                const duplicateSp = spIds.find((id, index) => spIds.indexOf(id) !== index);
+                if (duplicateSp) {
+                    const spName = spList.find(sp => sp.id_sp === duplicateSp)?.ten_sp || duplicateSp;
+                    showSaveError(`Sản phẩm "${spName}" đã được thêm vào hóa đơn. Vui lòng không nhập trùng lặp`);
+                    return;
+                }
+
+                // ✅ Kiểm tra trùng lặp số hóa đơn
+                const values = formHoaDonVanDon.getFieldsValue();
+                const existingHoaDon = hoaDonList.find(hd => hd.so_hd === values.so_hd);
+                if (existingHoaDon) {
+                    showSaveError(`Số hóa đơn "${values.so_hd}" đã tồn tại trong hệ thống. Vui lòng nhập số hóa đơn khác`);
+                    return;
+                }
+
+                // ✅ Kiểm tra trùng lặp số vận đơn (nếu có nhập)
+                if (values.so_vd) {
+                    const existingVanDon = vanDonList.find(vd => vd.so_vd === values.so_vd);
+                    if (existingVanDon) {
+                        showSaveError(`Số vận đơn "${values.so_vd}" đã tồn tại trong hệ thống. Vui lòng nhập số vận đơn khác`);
+                        return;
+                    }
                 }
             }
             setCurrent((c) => c + 1);
@@ -179,11 +215,18 @@ const NhapToKhaiXuat = () => {
                 return;
             }
 
+            // ✅ Kiểm tra trùng lặp số tờ khai
+            const toKhaiFormValues = formToKhai.getFieldsValue();
+            const existingToKhai = toKhaiList.find(tk => tk.so_tk === toKhaiFormValues.so_to_khai);
+            if (existingToKhai) {
+                showSaveError(`Số tờ khai "${toKhaiFormValues.so_to_khai}" đã tồn tại trong hệ thống. Vui lòng nhập số tờ khai khác`);
+                return;
+            }
+
             setLoading(true);
 
             const loHangForm = formLoHang.getFieldsValue();
             const hoaDonForm = formHoaDonVanDon.getFieldsValue();
-            const toKhaiForm = formToKhai.getFieldsValue();
 
             // 1) Tạo Lô hàng
             const payloadLoHang = {
@@ -238,8 +281,8 @@ const NhapToKhaiXuat = () => {
             // 4) Tạo Tờ khai xuất
             const payloadToKhai = {
                 id_lh,
-                so_tk: toKhaiForm.so_to_khai,
-                ngay_tk: toKhaiForm.ngay_dk ? toKhaiForm.ngay_dk.format("YYYY-MM-DD") : null,
+                so_tk: toKhaiFormValues.so_to_khai,
+                ngay_tk: toKhaiFormValues.ngay_dk ? toKhaiFormValues.ngay_dk.format("YYYY-MM-DD") : null,
                 tong_tri_gia,
                 id_tt: hoaDonForm.id_tt,
                 file_to_khai: fileToKhai || null,
